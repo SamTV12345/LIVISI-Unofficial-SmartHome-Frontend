@@ -1,26 +1,25 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
+import {useAppSelector} from "./store/hooks";
+import {LoginPage} from "./login/LoginPage";
+import {SideBar} from "./sidebar/SideBar";
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    const accessToken = useAppSelector(state => state.loginReducer.accesstoken)
+    const expiresIn = localStorage.getItem("expires_in")
+
+    if (!accessToken || !expiresIn || new Date().getTime()/1000> Number(expiresIn)) {
+        return <LoginPage/>
+    }
+
+    return (
+        <div className="grid grid-cols-5 h-full">
+            <SideBar/>
+            <div className="col-span-4">
+                Geklappt
+            </div>
+        </div>
+    )
 }
 
 export default App;
