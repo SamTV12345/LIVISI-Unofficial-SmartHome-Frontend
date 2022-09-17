@@ -1,9 +1,15 @@
+import {useAppSelector} from "../store/hooks";
+import {useNavigate} from "react-router-dom";
+
 export const SideBar  = ()=>{
-    return <aside className="w-full h-full float-left grid-cols-1" aria-label="Sidebar">
+    const sideBarCollapsed = useAppSelector(state=>state.commonReducer.sideBarCollapsed)
+    const navigate = useNavigate()
+    return <aside className={`w-full h-full float-left ${sideBarCollapsed?'hidden': 'grid-cols-1'}`} aria-label="Sidebar">
         <div className="py-4 px-3 bg-gray-50 dark:bg-gray-800 h-full w-full">
             <ul className="space-y-2">
                 <li>
-                    <a href="#"
+                    <a onClick={()=>navigate("/dashboard")
+                    }
                        className="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">
                         <svg aria-hidden="true"
                              className="w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
@@ -23,9 +29,7 @@ export const SideBar  = ()=>{
                             <path
                                 d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
                         </svg>
-                        <span className="flex-1 ml-3 whitespace-nowrap">Kanban</span>
-                        <span
-                            className="inline-flex justify-center items-center px-2 ml-3 text-sm font-medium text-gray-800 bg-gray-200 rounded-full dark:bg-gray-700 dark:text-gray-300">Pro</span>
+                        <span className="flex-1 ml-3 whitespace-nowrap">Devices</span>
                     </a>
                 </li>
                 <li>
@@ -39,9 +43,7 @@ export const SideBar  = ()=>{
                             <path
                                 d="M3 5a2 2 0 012-2h1a1 1 0 010 2H5v7h2l1 2h4l1-2h2V5h-1a1 1 0 110-2h1a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V5z"></path>
                         </svg>
-                        <span className="flex-1 ml-3 whitespace-nowrap">Inbox</span>
-                        <span
-                            className="inline-flex justify-center items-center p-3 ml-3 w-3 h-3 text-sm font-medium text-blue-600 bg-blue-200 rounded-full dark:bg-blue-900 dark:text-blue-200">3</span>
+                        <span className="flex-1 ml-3 whitespace-nowrap">Locations</span>
                     </a>
                 </li>
                 <li>
@@ -53,7 +55,7 @@ export const SideBar  = ()=>{
                             <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
                                   clipRule="evenodd"></path>
                         </svg>
-                        <span className="flex-1 ml-3 whitespace-nowrap">Users</span>
+                        <span className="flex-1 ml-3 whitespace-nowrap">Szenarios</span>
                     </a>
                 </li>
                 <li>
@@ -79,7 +81,7 @@ export const SideBar  = ()=>{
                                   d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z"
                                   clipRule="evenodd"></path>
                         </svg>
-                        <span className="flex-1 ml-3 whitespace-nowrap">Sign In</span>
+                        <span className="flex-1 ml-3 whitespace-nowrap">Accounts</span>
                     </a>
                 </li>
                 <li>

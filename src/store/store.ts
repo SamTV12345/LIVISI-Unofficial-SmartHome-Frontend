@@ -1,9 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit'
-// ...
 import loginReducer from 'src/login/loginSlice'
+import commonReducer from "../sidebar/CommonSlice";
+
 export const store = configureStore({
     reducer: {
-        loginReducer
+        loginReducer,
+        commonReducer
     },
 })
 

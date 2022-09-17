@@ -1,0 +1,12 @@
+version: "3.3"
+
+services:
+  client:
+    image: smarthome/frontend
+    ports:
+      - "80:80"
+    container_name: client
+    build:
+      dockerfile: Dockerfile
+      args:
+        - REACT_APP_SERVER_URL=your-ip
