@@ -9,19 +9,19 @@ import {Dashboard} from "./dashboard/Dashboard";
 import {serverurl} from "./index";
 import axios from "axios";
 import {Device} from "./models/Device";
-import {setCapabilities, setDevices, setLocations} from "./sidebar/CommonSlice";
+import {setCapabilities, setCapabilityStates, setDevices, setLocations} from "./sidebar/CommonSlice";
 import {ILocation} from "./models/ILocation";
 import {Capability} from "./models/Capability";
 import {MessageView} from "./messages/MessageView";
 import "./language/i18n"
 import {useTranslation} from "react-i18next";
+import {CapabilityState} from "./models/CapabilityState";
 
 function App() {
     const accessToken = useAppSelector(state => state.loginReducer.accesstoken)
     const expiresIn = localStorage.getItem("expires_in")
     const dispatch = useAppDispatch()
     const [requested, setRequested] = useState<boolean>(false)
-    const t = useTranslation()
 
     const loadDevices = async ()=>{
         const devicesInResponse: Device[] = await new Promise<Device[]>(resolve=>{
@@ -71,12 +71,29 @@ function App() {
         }
     }
 
+    const loadCapabilityStates = async ()=>{
+        const capabilitiesInResponse: CapabilityState[] = await new Promise<CapabilityState[]>(resolve=>{
+            axios.get(serverurl+"/capability/states",{
+                headers:{
+                    Authorization: `Bearer ${accessToken}`,
+                }
+            })
+                .then(resp=>resolve(resp.data))
+                .catch((error)=>{
+                    console.log(error)
+                })})
+        if(capabilitiesInResponse !== undefined){
+            dispatch(setCapabilityStates(capabilitiesInResponse))
+        }
+    }
+
     useEffect(()=>{
         if(!isAuthInvalid() && !requested){
             setRequested(true)
             loadDevices()
             loadLocations()
             loadCapabilities()
+            loadCapabilityStates()
         }
     },[])
 
@@ -93,7 +110,6 @@ function App() {
     return (
         <BrowserRouter>
         <div className="grid  grid-rows-[auto_1fr] h-full">
-
                 <Header/>
                 <SideBar/>
                 <div className="md:col-span-5 xs:col-span-6">

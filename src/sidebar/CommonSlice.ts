@@ -3,6 +3,7 @@ import {Device} from "../models/Device";
 import {ILocation} from "../models/ILocation";
 import {Capability} from "../models/Capability";
 import {Message} from "../messages/Message";
+import {CapabilityState} from "../models/CapabilityState";
 
 // Define a type for the slice state
 interface CommonProps {
@@ -10,7 +11,8 @@ interface CommonProps {
     devices: Device[],
     locations: ILocation[],
     capabilties: Capability[],
-    messages: Message[]
+    messages: Message[],
+    capabilityStates: CapabilityState[]
 }
 
 // Define the initial state using that type
@@ -19,7 +21,8 @@ const initialState: CommonProps = {
     devices: [],
     locations: [],
     capabilties: [],
-    messages:[]
+    messages:[],
+    capabilityStates:[]
 }
 
 export const commonSlice = createSlice({
@@ -41,10 +44,17 @@ export const commonSlice = createSlice({
         },
         setMessages: (state, action)=>{
             state.messages = action.payload
+        },
+        setCapabilityStates: (state, action)=>{
+            state.capabilityStates = action.payload
+        },
+        replaceCapabilityState: (state, action)=>{
+            const removedState = state.capabilityStates.filter(cp=>!(cp.id === action.payload.id))
+            state.capabilityStates = [...removedState, action.payload]
         }
     }
 })
 
-export const { setSideBarCollapsed, setDevices, setLocations, setCapabilities, setMessages  } = commonSlice.actions
+export const { setSideBarCollapsed, setDevices, setLocations, setCapabilities, setMessages, setCapabilityStates, replaceCapabilityState  } = commonSlice.actions
 
 export default commonSlice.reducer
