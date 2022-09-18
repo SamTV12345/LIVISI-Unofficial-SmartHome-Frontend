@@ -12,12 +12,16 @@ import {Device} from "./models/Device";
 import {setCapabilities, setDevices, setLocations} from "./sidebar/CommonSlice";
 import {ILocation} from "./models/ILocation";
 import {Capability} from "./models/Capability";
+import {MessageView} from "./messages/MessageView";
+import "./language/i18n"
+import {useTranslation} from "react-i18next";
 
 function App() {
     const accessToken = useAppSelector(state => state.loginReducer.accesstoken)
     const expiresIn = localStorage.getItem("expires_in")
     const dispatch = useAppDispatch()
     const [requested, setRequested] = useState<boolean>(false)
+    const t = useTranslation()
 
     const loadDevices = async ()=>{
         const devicesInResponse: Device[] = await new Promise<Device[]>(resolve=>{
@@ -96,6 +100,7 @@ function App() {
                         <Routes>
                             <Route path="/"/>
                             <Route path="/dashboard" element={<Dashboard/>}/>
+                            <Route path="/messages" element={<MessageView/>}/>
                         </Routes>
                 </div>
         </div>
