@@ -1,7 +1,6 @@
-import {Capability} from "../models/Capability";
 import {FC} from "react";
 import {CapabilityState} from "../models/CapabilityState";
-import {replaceCapabilityState, setCapabilityStates} from "../sidebar/CommonSlice";
+import {replaceCapabilityState} from "../sidebar/CommonSlice";
 import {useAppDispatch} from "../store/hooks";
 
 interface SwitchProps {
@@ -19,8 +18,8 @@ export const Switch:FC<SwitchProps> = ({capabilityState})=>{
     }
 
     return  <div>
-        <label htmlFor="default-toggle" className="inline-flex relative items-center cursor-pointer">
-            <input type="checkbox" value="" id="default-toggle" className="sr-only peer" checked={capabilityState.state.onState.value} onChange={(c)=>{
+        <label htmlFor={capabilityState.id+"-toggle"} className="inline-flex relative items-center cursor-pointer">
+            <input type="checkbox" value="" id={capabilityState.id+"-toggle"} className="sr-only peer" checked={capabilityState.state.onState.value} onChange={(c)=>{
                 switchState(c.target.checked)
             }
             }/>
