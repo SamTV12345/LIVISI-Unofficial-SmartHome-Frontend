@@ -1,7 +1,8 @@
 import {StateInfo} from "./StateInfo";
+import {BooleanStateInfo} from "./BooleanStateInfo";
 
 export interface CapabilityStateItem  {
-    onState: boolean //Switch
+    onState: BooleanStateInfo //Switch
     pointTemperature?: StateInfo //Expected
     temperature?: StateInfo //Current
     frostWarning?: StateInfo //Frost warning

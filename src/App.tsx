@@ -14,7 +14,6 @@ import {ILocation} from "./models/ILocation";
 import {Capability} from "./models/Capability";
 import {MessageView} from "./messages/MessageView";
 import "./language/i18n"
-import {useTranslation} from "react-i18next";
 import {CapabilityState} from "./models/CapabilityState";
 
 function App() {
@@ -22,6 +21,7 @@ function App() {
     const expiresIn = localStorage.getItem("expires_in")
     const dispatch = useAppDispatch()
     const [requested, setRequested] = useState<boolean>(false)
+    const capabilityStates = useAppSelector(state=>state.commonReducer.capabilityStates)
 
     const loadDevices = async ()=>{
         const devicesInResponse: Device[] = await new Promise<Device[]>(resolve=>{

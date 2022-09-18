@@ -49,8 +49,7 @@ export const commonSlice = createSlice({
             state.capabilityStates = action.payload
         },
         replaceCapabilityState: (state, action)=>{
-            const removedState = state.capabilityStates.filter(cp=>!(cp.id === action.payload.id))
-            state.capabilityStates = [...removedState, action.payload]
+            state.capabilityStates = state.capabilityStates.map(cp=>cp.id === action.payload.id?action.payload:cp)
         }
     }
 })
