@@ -21,7 +21,6 @@ function App() {
     const expiresIn = localStorage.getItem("expires_in")
     const dispatch = useAppDispatch()
     const [requested, setRequested] = useState<boolean>(false)
-    const capabilityStates = useAppSelector(state=>state.commonReducer.capabilityStates)
 
     const loadDevices = async ()=>{
         const devicesInResponse: Device[] = await new Promise<Device[]>(resolve=>{

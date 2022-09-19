@@ -8,6 +8,8 @@ The communication is done via the local REST-API.
 ## Current features
 - Login and retrieve OAuth2.0 token.
 - Retrieve locations and devices.
+- Turn off and on switches
+- Set room point temperature for the heating thermostat
 
 ## Getting started
 
@@ -21,6 +23,10 @@ The communication is done via the local REST-API.
 chmod +x prepareInstallation.sh
 ./prepareInstallation.sh
 ```
+
+
+The API reference can be found  [here](https://developer.services-smarthome.de/api_reference/HomeAPI/APIReference.html).
+
 
 During setup, you are prompted to enter your smarthome ip address (visible in the app).
 

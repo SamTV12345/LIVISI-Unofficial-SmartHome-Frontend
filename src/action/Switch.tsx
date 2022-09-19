@@ -1,20 +1,62 @@
 import {FC} from "react";
 import {CapabilityState} from "../models/CapabilityState";
-import {replaceCapabilityState} from "../sidebar/CommonSlice";
-import {useAppDispatch} from "../store/hooks";
+import {replaceCapabilityState, setDevices} from "../sidebar/CommonSlice";
+import {useAppDispatch, useAppSelector} from "../store/hooks";
+import {Device} from "../models/Device";
+import axios from "axios";
+import {serverurl} from "../index";
+import {PostSwitchResponse} from "../models/PostModels/PostSwitchResponse";
+import {PostSwitchModel} from "../models/PostModels/PostSwitchModel";
+import uuid from "react-uuid";
 
 interface SwitchProps {
-    capabilityState: CapabilityState
+    capabilityState: CapabilityState,
+    deviceIn: Device
 }
 
-export const Switch:FC<SwitchProps> = ({capabilityState})=>{
+export const Switch:FC<SwitchProps> = ({capabilityState, deviceIn})=>{
     const dispatch = useAppDispatch()
+    const accessToken = useAppSelector(state=>state.loginReducer.accesstoken)
 
     const switchState = (checked:boolean)=>{
             const clonedCapabilityState = structuredClone(capabilityState)
-            console.log(clonedCapabilityState)
             clonedCapabilityState.state.onState.value = checked
             dispatch(replaceCapabilityState(clonedCapabilityState))
+            updateStatus(clonedCapabilityState)
+    }
+
+    const constructSwitchPostModel:(cap: CapabilityState)=>PostSwitchModel = (newStatus)=>{
+        console.log(capabilityState.id.length)
+        console.log()
+
+        return {
+            target:"/capability/"+capabilityState.id,
+            namespace: deviceIn.product,
+            type: "SetState",
+            params:{
+                onState:{
+                    type:"Constant",
+                    value:newStatus.state.onState.value
+                }
+            }
+        }
+    }
+
+
+    const updateStatus = async (clonedStatus: CapabilityState)=>{
+        const response: PostSwitchResponse = await new Promise<PostSwitchResponse>(resolve=>{
+            axios.post(serverurl+"/action",constructSwitchPostModel(clonedStatus),{
+                headers:{
+                    Authorization: `Bearer ${accessToken}`,
+                }
+            })
+                .then(resp=>resolve(resp.data))
+                .catch((error)=>{
+                    console.log(error)
+                })})
+        if(response !== undefined){
+            console.log(response)
+        }
     }
 
     return  <div>
