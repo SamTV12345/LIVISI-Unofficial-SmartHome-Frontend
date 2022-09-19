@@ -5,6 +5,7 @@ import {CapabilityState} from "../models/CapabilityState";
 import {Slider} from "./Slider";
 import {Switch} from "./Switch";
 import {HeatingActions} from "./HeatingActions";
+import {useTranslation} from "react-i18next";
 
 interface ActionDeciderProps {
     device: Device,
@@ -12,6 +13,8 @@ interface ActionDeciderProps {
 }
 
 export const ActionDecider: FC<ActionDeciderProps> = ({device,capabiltyStates})=>{
+    const {t} = useTranslation()
+
     switch (device.type){
         case 'PSS':
             return <Switch key={capabiltyStates[0].id} capabilityState={capabiltyStates[0]} deviceIn={device}/>
@@ -23,5 +26,5 @@ export const ActionDecider: FC<ActionDeciderProps> = ({device,capabiltyStates})=
             )}
         </div>
     }
-    return <div>Keine Sensoren</div>
+    return <div>{t('noSensors')}</div>
 }

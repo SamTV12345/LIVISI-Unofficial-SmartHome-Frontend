@@ -15,7 +15,10 @@ const resources = {
            message:'Nachricht',
            time: 'Zeit',
            messageLocalAccessActivated: 'Die lokale Smarthome-Funktionalität wurde aktiviert. Sie können eine Verbindung herstellen, indem Sie in Ihrem Webbrowser die folgende URL aufrufen: http://{{ip}}/ aufrufen.',
-           messageSHCUpdateCompleted: 'Ihre Zentrale wurde erfolgreich aktualisiert.'
+           messageSHCUpdateCompleted: 'Ihre Zentrale wurde erfolgreich aktualisiert.',
+           temperature: "Temperatur",
+           humidity: "Luftfeuchtigkeit",
+           noSensors:"Keine Sensoren oder nicht eingeschrieben. Bitte ein GitHub Issue erstellen."
        }
     },
     en:{
@@ -30,7 +33,11 @@ const resources = {
             time:'Time',
 
             messageLocalAccessActivated: 'The local smarthome functionality has been activated. You can connect by going to the following URL in your web browser: http://{{ip}}/',
-            messageSHCUpdateCompleted: 'Your control panel has been successfully updated.'
+            messageSHCUpdateCompleted: 'Your control panel has been successfully updated.',
+
+            temperature: "Temperature",
+            humidity: "Humidity",
+            noSensors:"No sensors or not enlisted. Please create an issue."
         }
     }
 }

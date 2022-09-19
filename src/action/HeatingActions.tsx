@@ -2,6 +2,7 @@ import {FC, Fragment} from "react";
 import {Slider} from "./Slider";
 import {CapabilityState} from "../models/CapabilityState";
 import {Device} from "../models/Device";
+import {useTranslation} from "react-i18next";
 
 interface HeatingActionsProps {
     state: CapabilityState,
@@ -9,10 +10,12 @@ interface HeatingActionsProps {
 }
 
 export const HeatingActions: FC<HeatingActionsProps>=({state,device})=>{
+    const {t} = useTranslation()
+
     if(state.state.humidity!== undefined){
         return <Fragment key={state.id}>
         <div key={state.id+"humidity"}>
-            Luftfeuchtigkeit
+            {t("humidity")}
             </div>
             <div key={state.id+"humidity-val"}>
             {state.state.humidity.value}%
@@ -25,7 +28,7 @@ export const HeatingActions: FC<HeatingActionsProps>=({state,device})=>{
     else{
         return <Fragment key={"temperaturefrag"}>
         <div key="temperature">
-            Temperatur
+            {t("temperature")}
             </div>
             <div key="temperature-val">
             {state.state.temperature?.value}°C
