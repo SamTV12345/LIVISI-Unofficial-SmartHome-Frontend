@@ -15,6 +15,8 @@ import {Capability} from "./models/Capability";
 import {MessageView} from "./messages/MessageView";
 import "./language/i18n"
 import {CapabilityState} from "./models/CapabilityState";
+import {DeviceView} from "./devices/DeviceView";
+import {UserView} from "./user/UserView";
 
 function App() {
     const accessToken = useAppSelector(state => state.loginReducer.accesstoken)
@@ -116,6 +118,8 @@ function App() {
                             <Route path="/"/>
                             <Route path="/dashboard" element={<Dashboard/>}/>
                             <Route path="/messages" element={<MessageView/>}/>
+                            <Route path="/devices" element={<DeviceView/>}/>
+                            <Route path="/accounts" element={<UserView/>}/>
                         </Routes>
                 </div>
         </div>

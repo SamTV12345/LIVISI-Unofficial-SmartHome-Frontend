@@ -32,7 +32,7 @@ export const HeatingActions: FC<HeatingActionsProps>=({state,device})=>{
             </div>
             <div key="temperature-val">
             {state.state.temperature?.value}°C
-        </div>
+            </div>
         </Fragment>
     }
 }

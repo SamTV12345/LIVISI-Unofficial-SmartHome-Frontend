@@ -1,11 +1,13 @@
 import { createSlice } from '@reduxjs/toolkit'
+import {User} from "../user/User";
 
 // Define a type for the slice state
 interface LoginProps {
     username: string | null,
     accesstoken: string | null,
     refreshToken: string| null,
-    expires_in: number
+    expires_in: number,
+    user: User|undefined
 }
 
 // Define the initial state using that type
@@ -13,7 +15,8 @@ const initialState: LoginProps = {
     username: localStorage.getItem("username"),
     accesstoken: localStorage.getItem("access_token"),
     refreshToken: localStorage.getItem("refresh_token"),
-    expires_in: 0
+    expires_in: 0,
+    user: undefined
 }
 
 export const loginSlice = createSlice({
@@ -39,10 +42,13 @@ export const loginSlice = createSlice({
             const secondsSinceEpoch = new Date().getTime()/1000
             console.log(secondsSinceEpoch+action.payload)
             localStorage.setItem("expires_in", secondsSinceEpoch+action.payload)
+        },
+        setUser: (state, action)=>{
+            state.user = action.payload
         }
     }
 })
 
-export const { setExpiresIn,setAccessToken,setRefreshToken,setUsername } = loginSlice.actions
+export const { setExpiresIn,setAccessToken,setRefreshToken,setUser } = loginSlice.actions
 
 export default loginSlice.reducer

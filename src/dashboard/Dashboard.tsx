@@ -10,7 +10,7 @@ export const Dashboard = ()=>{
         <div className="grid grid-cols-1 p-6 gap-y-20 gap-x-2 h-full w-full">
             {locations.map(location=><div key={location.id}>
                 <h2 className="text-4xl mb-5">{location.config.name}</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2 gap-y-3">
                 {devices.filter(device=>device.location && device.location.includes(location.id) && device.config.protocolId!=='Virtual').map(deviceInLocation=>
                     <div key={deviceInLocation.id}
                         className={"block p-6 max-w-sm bg-white rounded-lg border border-gray-200 shadow-md hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700"}>
