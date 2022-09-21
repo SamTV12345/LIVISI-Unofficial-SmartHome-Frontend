@@ -36,7 +36,7 @@ export const MessageView = ()=>{
     }, [])
 
     return (
-        <div className="p-5 overflow-x-auto relative">
+        <div className="overflow-x-auto relative w-full p-6">
             <table className="w-full text-sm text-left text-gray-800">
                 <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:text-gray-400">
                 <tr key={"Head"}>

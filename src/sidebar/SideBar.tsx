@@ -15,14 +15,14 @@ export const SideBar  = ()=>{
     }
 
     return <aside className={`w-full h-full float-left ${sideBarCollapsed?'hidden': 'grid-cols-1'}`} aria-label="Sidebar">
-        <div className="py-4 px-3 bg-gray-50 dark:bg-gray-800 h-full w-full">
+        <div className="py-4 px-3 bg-gray-800 h-full w-full">
             <ul className="space-y-2">
                 <li>
                     <a onClick={()=>navigate("/dashboard")
                     }
                        className={`flex items-center p-2 text-base font-normal rounded-lg text-white hover:bg-gray-700 ${highlightIfSelected("/dashboard")}`}>
                         <svg aria-hidden="true"
-                             className="w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+                             className="w-6 h-6 transition duration-75 text-white group-hover:text-white"
                              fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                             <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z"></path>
                             <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z"></path>
@@ -44,7 +44,7 @@ export const SideBar  = ()=>{
                 </li>
                 <li>
                     <a href="#"
-                       className={`flex items-center p-2 text-base font-normal text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 ${highlightIfSelected("/locations")}`}>
+                       className={`flex items-center p-2 text-base font-normal text-white rounded-lg hover:bg-gray-700 ${highlightIfSelected("/locations")}`}>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5"
                              stroke="currentColor" className="w-6 h-6">
                             <path strokeLinecap="round" strokeLinejoin="round"
@@ -58,9 +58,9 @@ export const SideBar  = ()=>{
                 </li>
                 <li>
                     <a href="#"
-                       className="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">
+                       className="flex items-center p-2 text-base font-normal text-white rounded-lg hover:bg-gray-700">
                         <svg aria-hidden="true"
-                             className="flex-shrink-0 w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+                             className="flex-shrink-0 w-6 h-6 transition duration-75 text-white dark:group-hover:text-white"
                              fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                             <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
                                   clipRule="evenodd"></path>
@@ -70,7 +70,7 @@ export const SideBar  = ()=>{
                 </li>
                 <li>
                     <a href="#"
-                       className="flex items-center p-2 text-base font-normal text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700">
+                       className="flex items-center p-2 text-base font-normal  rounded-lg text-white hover:bg-gray-700">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5"
                              stroke="currentColor" className="w-6 h-6">
                             <path strokeLinecap="round" strokeLinejoin="round"
@@ -92,7 +92,7 @@ export const SideBar  = ()=>{
                 </li>
                 <li>
                     <a onClick={()=>navigate("/messages")}
-                       className={`flex items-center p-2 text-base font-normal text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 ${highlightIfSelected("/messages")}`}>
+                       className={`flex items-center p-2 text-base font-normal  rounded-lg text-white hover:bg-gray-700 ${highlightIfSelected("/messages")}`}>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.068.157 2.148.279 3.238.364.466.037.893.281 1.153.671L12 21l2.652-3.978c.26-.39.687-.634 1.153-.67 1.09-.086 2.17-.208 3.238-.365 1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
                         </svg>
