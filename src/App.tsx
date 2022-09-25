@@ -23,6 +23,7 @@ function App() {
     const expiresIn = localStorage.getItem("expires_in")
     const dispatch = useAppDispatch()
     const [requested, setRequested] = useState<boolean>(false)
+    const sideBarCollapsed = useAppSelector(state=>state.commonReducer.sideBarCollapsed)
 
     const loadDevices = async ()=>{
         const devicesInResponse: Device[] = await new Promise<Device[]>(resolve=>{
@@ -113,7 +114,7 @@ function App() {
         <div className="grid  grid-rows-[auto_1fr] h-full">
                 <Header/>
                 <SideBar/>
-                <div className="md:col-span-5 xs:col-span-6">
+                <div className={` ${sideBarCollapsed?'xs:col-span-5':'hidden'} md:block`}>
                         <Routes>
                             <Route path="/"/>
                             <Route path="/dashboard" element={<Dashboard/>}/>

@@ -14,7 +14,7 @@ export const SideBar  = ()=>{
         return ''
     }
 
-    return <aside className={`w-full h-full float-left ${sideBarCollapsed?'hidden': 'grid-cols-1'}`} aria-label="Sidebar">
+    return <aside className={`w-full h-full float-left ${sideBarCollapsed?'hidden': 'col-span-6 md:col-span-1'} z-10 flex`} aria-label="Sidebar">
         <div className="py-4 px-3 bg-gray-800 h-full w-full">
             <ul className="space-y-2">
                 <li>

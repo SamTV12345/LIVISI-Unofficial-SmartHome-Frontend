@@ -16,7 +16,7 @@ export const ActionDecider: FC<ActionDeciderProps> = ({device,capabiltyStates})=
     switch (device.type){
         case 'PSS':
             return <Switch key={capabiltyStates[0].id} capabilityState={capabiltyStates[0]} deviceIn={device}/>
-        case 'RST': return <div className="grid grid-cols-2">
+        case 'RST': return <div className="grid grid-cols-2 grid-flow-row	">
             {capabiltyStates.map(state=>
                 {
                        return <HeatingActions state={state} device={device}/>
