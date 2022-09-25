@@ -54,7 +54,10 @@ export const Slider:FC<SliderProps> = ({state, device})=>{
             <div className="col-span-2" key="slider-val">{state.state.pointTemperature?.value}°C</div>
             <input type="range" value={state.state.pointTemperature?.value} min="6" max="30" step={0.5} disabled={false} key="slider"
                    onChange={v => {
-                       const clonedState = structuredClone(state);
+                       const clonedState = structuredClone(state)
+                       if(clonedState.state.pointTemperature === undefined){
+                           return
+                       }
                        clonedState.state.pointTemperature.value = v.target.value;
                        setCurrentCapability(clonedState)
                        dispatch(replaceCapabilityState(clonedState));
