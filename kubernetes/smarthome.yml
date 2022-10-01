@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smarthome
+  labels:
+    app: smarthome
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: smarthome
+  template:
+    metadata:
+      labels:
+        app: smarthome
+    spec:
+      containers:
+        - name: smarthome
+          image: samuel19982/smarthome-frontend
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: smarthome-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: smarthome
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: smarthome-ingress
+spec:
+  ingressClassName: public
+  rules:
+    - host: smarthome.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: smarthome-service
+                port:
+                  number: 80

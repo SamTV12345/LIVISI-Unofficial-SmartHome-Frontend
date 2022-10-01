@@ -2,7 +2,7 @@ version: "3.3"
 
 services:
   client:
-    image: smarthome/frontend
+    image: samuel19982/smarthome-frontend
     ports:
       - "80:80"
     container_name: client
