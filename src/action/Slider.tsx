@@ -3,7 +3,6 @@ import {FC, useState} from "react";
 import {useAppDispatch, useAppSelector} from "../store/hooks";
 import {replaceCapabilityState} from "../sidebar/CommonSlice";
 import {Device} from "../models/Device";
-import {PostHeatingModel} from "../models/PostModels/PostHeatingModel";
 import {PostSwitchResponse} from "../models/PostModels/PostSwitchResponse";
 import axios from "axios";
 import {serverurl} from "../index";
