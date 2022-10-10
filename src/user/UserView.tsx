@@ -40,8 +40,8 @@ export const UserView = () => {
 
         </div>
     }
-    return <div className="w-11/12 flex justify-center">
-        <div className="flex justify-center grid grid-cols-2 gap-4">
+    return <div className="flex h-full">
+        <div className="m-auto grid grid-cols-2">
             <div>
                 Name
             </div>

@@ -40,7 +40,7 @@ export const DeviceView = ()=>{
         {devices.map(device=>
             <tr className="text-xs text-gray-700 even:bg-gray-100" key={device.id}>
                 <td>
-                    {device.id}
+                    {device.product}
                 </td>
                 <td>
                     {device.type}
