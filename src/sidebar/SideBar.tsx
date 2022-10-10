@@ -14,8 +14,8 @@ export const SideBar  = ()=>{
         return ''
     }
 
-    return <aside className={`w-full h-full float-left ${sideBarCollapsed?'hidden': 'col-span-6 md:col-span-1'} z-10 flex md:w-60`} aria-label="Sidebar">
-        <div className="py-4 px-3 bg-gray-800 h-full w-full">
+    return <aside className={`w-full h-full float-left ${sideBarCollapsed?'hidden': 'col-span-6 md:col-span-1'} z-10 flex md:w-60 sticky`} aria-label="Sidebar">
+        <div className="py-4 px-3 bg-gray-800 w-full">
             <ul className="space-y-2">
                 <li>
                     <a onClick={()=>navigate("/dashboard")

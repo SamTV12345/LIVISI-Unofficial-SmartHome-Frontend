@@ -114,7 +114,7 @@ function App() {
         <div className="grid  grid-rows-[auto_1fr] h-full">
                 <Header/>
                 <SideBar/>
-                <div className={`col-span-5 ${sideBarCollapsed?'xs:col-span-5':'hidden'} md:block`}>
+                <div className={`col-span-5 ${sideBarCollapsed?'xs:col-span-5':'hidden'} md:block overflow-y-scroll`}>
                         <Routes>
                             <Route path="/" element={<Navigate to={"/dashboard"}/>}/>
                             <Route path="/dashboard" element={<Dashboard/>}/>

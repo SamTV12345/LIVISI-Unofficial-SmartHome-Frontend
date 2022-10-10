@@ -7,7 +7,7 @@ export const Dashboard = ()=>{
     const capabilityStates = useAppSelector(state=>state.commonReducer.capabilityStates)
 
     return (
-        <div className="grid grid-cols-1 p-6 gap-y-20 gap-x-2 h-full w-full">
+        <div className="grid grid-cols-1 p-6 gap-y-20 gap-x-2 w-full">
             {locations.map(location=><div key={location.id}>
                 <h2 className="text-4xl mb-5">{location.config.name}</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-y-3 gap-x-3 text-white">
