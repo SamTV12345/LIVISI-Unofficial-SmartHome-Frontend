@@ -1,12 +1,11 @@
 import {Message} from "../messages/Message";
-import {TFunction} from "react-i18next";
 
 let options = {
     weekday: "long", year: "numeric", month: "short",
     day: "numeric", hour: "2-digit", minute: "2-digit"
 };
 
-export const formatMessage = (message: Message,t: TFunction)=>{
+export const formatMessage = (message: Message,t: any)=>{
 
     switch (message.type){
         case 'ShcUpdateCompleted': return t('messageSHCUpdateCompleted')
