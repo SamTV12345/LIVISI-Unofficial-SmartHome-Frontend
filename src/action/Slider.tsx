@@ -5,7 +5,7 @@ import {replaceCapabilityState} from "../sidebar/CommonSlice";
 import {Device} from "../models/Device";
 import {PostSwitchResponse} from "../models/PostModels/PostSwitchResponse";
 import axios from "axios";
-import {serverurl} from "../index";
+import {serverurl} from "../main";
 
 interface SliderProps {
     state: CapabilityState,

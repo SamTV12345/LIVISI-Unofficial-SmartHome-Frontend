@@ -1,7 +1,7 @@
 import {useAppDispatch, useAppSelector} from "../store/hooks";
 import {useEffect} from "react";
 import axios from "axios";
-import {serverurl} from "../index";
+import {serverurl} from "../main";
 import {setMessages} from "../sidebar/CommonSlice";
 import {Message} from "./Message";
 import {formatMessage, formatTime} from "../utils/FormatMessage";

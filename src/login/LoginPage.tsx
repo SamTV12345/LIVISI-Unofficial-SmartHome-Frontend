@@ -2,7 +2,7 @@ import "./login.css"
 import {LoginResponse} from "./LoginResponse";
 import axios from "axios";
 import {useAppDispatch} from "../store/hooks";
-import {serverurl} from "../index";
+import {serverurl} from "../main";
 import {useState} from "react";
 import {setAccessToken, setExpiresIn, setRefreshToken} from "./loginSlice";
 import logo from './LIVISI_MARK_10.png'

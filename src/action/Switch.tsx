@@ -4,7 +4,7 @@ import {replaceCapabilityState, setDevices} from "../sidebar/CommonSlice";
 import {useAppDispatch, useAppSelector} from "../store/hooks";
 import {Device} from "../models/Device";
 import axios from "axios";
-import {serverurl} from "../index";
+import {serverurl} from "../main";
 import {PostSwitchResponse} from "../models/PostModels/PostSwitchResponse";
 import {PostSwitchModel} from "../models/PostModels/PostSwitchModel";
 import uuid from "react-uuid";

@@ -51,4 +51,4 @@ export const loginSlice = createSlice({
 
 export const { setExpiresIn,setAccessToken,setRefreshToken,setUser } = loginSlice.actions
 
-export default loginSlice.reducer
+export const loginReducer = loginSlice.reducer

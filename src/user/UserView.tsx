@@ -1,5 +1,5 @@
 import axios from "axios";
-import {serverurl} from "../index";
+import {serverurl} from "../main";
 import {User} from "./User";
 import {useAppDispatch, useAppSelector} from "../store/hooks";
 import {setUser} from "../login/loginSlice";
