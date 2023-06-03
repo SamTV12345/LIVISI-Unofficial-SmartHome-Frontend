@@ -1,10 +1,10 @@
-use std::sync::Mutex;
-use actix_web::{get, HttpResponse, Responder, Scope};
+
+use actix_web::{get, HttpResponse, Responder};
 use actix_web::web::Data;
 use reqwest::Client;
 use crate::AppState;
 use crate::lib::status::Status;
-use crate::models::token::Token;
+
 
 #[get("/status")]
 pub async fn get_status(status_lib:Data<Status>, token: Data<AppState>) -> impl Responder{

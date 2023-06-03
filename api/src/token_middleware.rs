@@ -1,21 +1,21 @@
-use std::ops::Deref;
+
 use std::pin::Pin;
 use std::rc::Rc;
-use std::sync::Mutex;
+
 use std::time::{SystemTime, UNIX_EPOCH};
 use actix::ActorFutureExt;
 use actix::fut::{ok};
 use futures_util::{FutureExt, StreamExt};
 use actix_web::{dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform}, Error, HttpMessage, web};
 use actix_web::body::{EitherBody, MessageBody};
-use actix_web::error::{ErrorForbidden, ErrorUnauthorized};
-use base64::Engine;
+
+
 use futures_util::future::{LocalBoxFuture, Ready};
-use reqwest::header::{AUTHORIZATION, HeaderMap, HeaderValue};
+
 use crate::models::token::{CreatedAt, Token, TokenRequest};
-use crate::mutex::LockResultExt;
-use base64::engine::general_purpose;
-use diesel::row::NamedRow;
+
+
+
 use crate::AppState;
 use crate::utils::header_utils::HeaderUtils;
 
@@ -106,7 +106,7 @@ impl<S, B> AuthFilterMiddleware<S> where B: 'static + MessageBody, S: 'static + 
                 let response = result.unwrap();
 
 
-                let mut token = response.json::<Token>().await
+                let token = response.json::<Token>().await
                     .unwrap();
 
                 let current_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();

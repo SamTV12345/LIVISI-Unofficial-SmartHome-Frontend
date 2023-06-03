@@ -1,7 +1,7 @@
 use reqwest::Client;
 use serde_derive::Serialize;
 use serde_derive::Deserialize;
-use crate::token_middleware::AuthFilterMiddleware;
+
 use crate::utils::header_utils::HeaderUtils;
 
 #[derive(Clone)]
