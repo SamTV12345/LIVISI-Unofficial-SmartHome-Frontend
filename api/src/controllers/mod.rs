@@ -6,3 +6,5 @@ pub mod hash_controller;
 pub mod message_controller;
 pub mod location_controller;
 pub mod capabilty_controller;
+pub mod home_controller;
+pub mod action_controller;

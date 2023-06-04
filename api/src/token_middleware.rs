@@ -12,9 +12,6 @@ use actix_web::body::{EitherBody, MessageBody};
 use futures_util::future::{LocalBoxFuture, Ready};
 
 use crate::models::token::{CreatedAt, Token, TokenRequest};
-
-
-
 use crate::AppState;
 use crate::utils::header_utils::HeaderUtils;
 

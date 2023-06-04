@@ -10,9 +10,11 @@ use std::env;
 
 use std::sync::{Mutex};
 use actix_web::{App, HttpServer, web};
+use crate::controllers::action_controller::post_action;
 use crate::controllers::capabilty_controller::{get_capability_states, get_capabilties};
 use crate::controllers::device_controller::get_devices;
 use crate::controllers::hash_controller::get_hash;
+use crate::controllers::home_controller::get_home_setup;
 use crate::controllers::location_controller::get_locations;
 use crate::controllers::message_controller::get_messages;
 use crate::controllers::status_controller::get_status;
@@ -42,6 +44,8 @@ async fn main() -> std::io::Result<()>{
     let locations = lib::location::Location::new(base_url.clone());
     let token = web::Data::new(AppState{ token: Mutex::new(Token::default())});
     let capabilties = lib::capability::Capability::new(base_url.clone());
+    let home = lib::home::Home::new(base_url.clone());
+    let action = lib::action::Action::new(base_url.clone());
     HttpServer::new(move || {
 
         App::new()
@@ -55,6 +59,10 @@ async fn main() -> std::io::Result<()>{
             .service(get_capabilties)
             .service(get_user_storage)
             .service(get_capability_states)
+            .service(get_home_setup)
+            .service(post_action)
+            .app_data(web::Data::new(action.clone()))
+            .app_data(web::Data::new(home.clone()))
             .app_data(web::Data::new(status.clone()))
             .app_data(web::Data::new(users.clone()))
             .app_data(web::Data::new(devices.clone()))
