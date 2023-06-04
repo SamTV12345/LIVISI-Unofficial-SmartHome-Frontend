@@ -23,12 +23,14 @@ pub struct DevicePost{
     pub config: DeviceConfig,
     pub capabilities: Vec<String>,
     pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub location:Option<String>,
     pub manufacturer: String,
     pub product: String,
     pub serial_number: String,
     pub r#type: String,
     pub version: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub tags: Option<DeviceTags>
 }
 
@@ -42,23 +44,41 @@ pub struct DeviceState{
 #[derive(Default,Serialize,Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct DeviceInnerState{
+    #[serde(skip_serializing_if = "Option::is_none")]
     is_reachable: Option<DeviceStateBooleanIndicator>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     device_configuration_state: Option<DeviceStateIndicator>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     device_inclusion_state: Option<DeviceStateIndicator>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     update_state: Option<DeviceStateIndicator>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     firmware_version: Option<DeviceStateIndicator>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     update_available: Option<DeviceStateIndicator>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     last_reboot: Option<DeviceStateIndicator>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     _m_bus_dongle_attached: Option<DeviceStateBooleanIndicator>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     _lb_dongle_attached: Option<DeviceStateBooleanIndicator>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     config_version: Option<DeviceStateIndicator>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     discovery_active: Option<DeviceStateBooleanIndicator>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     ipaddress: Option<DeviceStateIndicator>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     current_utc_offset: Option<DeviceStateIndicator>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     products_hash: Option<DeviceStateIndicator>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     _o_s_state: Option<DeviceStateIndicator>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     memory_load: Option<DeviceStateNumberIndicator>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     _c_p_u_load: Option<DeviceStateNumberIndicator>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     disk_usage: Option<DeviceStateNumberIndicator>,
 }
 
