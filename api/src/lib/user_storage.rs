@@ -1,6 +1,6 @@
 use reqwest::Client;
-use serde_derive::Serialize;
-use serde_derive::Deserialize;
+
+
 use crate::utils::header_utils::HeaderUtils;
 
 #[derive(Clone)]

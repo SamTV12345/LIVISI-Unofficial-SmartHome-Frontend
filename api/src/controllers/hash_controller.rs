@@ -2,9 +2,9 @@ use actix_web::{get, HttpResponse, Responder};
 use actix_web::web::Data;
 use reqwest::Client;
 use crate::AppState;
-use crate::lib::device::Device;
+
 use crate::lib::hash::Hash;
-use crate::mutex::LockResultExt;
+
 
 #[get("/product/hash")]
 pub async fn get_hash(hash_lib: Data<Hash>, token: Data<AppState>) -> impl Responder{

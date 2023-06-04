@@ -3,10 +3,9 @@ use std::pin::Pin;
 use std::rc::Rc;
 
 use std::time::{SystemTime, UNIX_EPOCH};
-use actix::ActorFutureExt;
 use actix::fut::{ok};
-use futures_util::{FutureExt, StreamExt};
-use actix_web::{dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform}, Error, HttpMessage, web};
+use futures_util::{FutureExt};
+use actix_web::{dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform}, Error, web};
 use actix_web::body::{EitherBody, MessageBody};
 
 
