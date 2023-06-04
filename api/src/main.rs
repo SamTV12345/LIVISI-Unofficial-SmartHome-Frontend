@@ -12,7 +12,7 @@ use std::sync::{Mutex};
 use actix_web::{App, HttpServer, web};
 use crate::controllers::action_controller::post_action;
 use crate::controllers::capabilty_controller::{get_capability_states, get_capabilties};
-use crate::controllers::device_controller::get_devices;
+use crate::controllers::device_controller::{get_device_states, get_devices};
 use crate::controllers::hash_controller::get_hash;
 use crate::controllers::home_controller::get_home_setup;
 use crate::controllers::location_controller::get_locations;
@@ -66,6 +66,7 @@ async fn main() -> std::io::Result<()>{
             .service(get_home_setup)
             .service(post_action)
             .service(get_relationship)
+            .service(get_device_states)
             .app_data(web::Data::new(action.clone()))
             .app_data(web::Data::new(home.clone()))
             .app_data(web::Data::new(status.clone()))

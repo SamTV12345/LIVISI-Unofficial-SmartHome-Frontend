@@ -1,7 +1,9 @@
 use reqwest::Client;
 use serde_derive::Serialize;
 use serde_derive::Deserialize;
+use crate::lib::interaction::{FieldValue, ValueItem};
 use crate::utils::header_utils::HeaderUtils;
+use std::collections::HashMap;
 
 #[derive(Clone)]
 pub struct Capability{
@@ -27,41 +29,22 @@ pub struct CapabilityConfig{
 }
 
 #[derive(Default,Serialize,Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
 pub struct CapabilityStateResponse(Vec<CapabilityStateInner>);
 
 #[derive(Default,Serialize,Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct CapabilityStateInner{
     pub id: String,
-    pub state: CapabilityState
+    pub state: HashMap<String,CapValueItem>
 }
 
-#[derive(Default,Serialize,Deserialize, Debug)]
-#[serde(rename_all = "camelCase",)]
-pub struct CapabilityState{
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub remaining_quota: Option<IntegerCapabilityState>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub value: Option<BooleanCapabilityState>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub on_state: Option<BooleanCapabilityState>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub humidity: Option<FloatCapabilityState>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub mold_warning: Option<BooleanCapabilityState>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub point_temperature: Option<FloatCapabilityState>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub operation_mode: Option<StringCapabilityState>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub window_reduction_active: Option<BooleanCapabilityState>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub temperature: Option<FloatCapabilityState>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub frost_warning: Option<BooleanCapabilityState>,
-}
 
+#[derive(Serialize,Deserialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct CapValueItem{
+    pub value: FieldValue,
+    pub last_changed: String,
+}
 
 #[derive(Default,Serialize,Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]

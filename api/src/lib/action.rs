@@ -1,5 +1,4 @@
 use reqwest::Client;
-use crate::lib::capability::CapabilityState;
 use crate::utils::header_utils::HeaderUtils;
 use serde::Serialize;
 use serde::Deserialize;

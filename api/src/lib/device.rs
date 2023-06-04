@@ -1,6 +1,9 @@
+use std::collections::HashMap;
 use reqwest::Client;
 use serde_derive::Serialize;
 use serde_derive::Deserialize;
+use crate::lib::capability::CapValueItem;
+use crate::lib::interaction::{FieldValue, ValueItem};
 use crate::utils::header_utils::HeaderUtils;
 
 #[derive(Clone)]
@@ -20,16 +23,18 @@ pub struct DeviceStateResponse(Vec<DeviceState>);
 #[derive(Default,Serialize,Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct DevicePost{
-    pub config: DeviceConfig,
-    pub capabilities: Vec<String>,
-    pub id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub location:Option<String>,
     pub manufacturer: String,
-    pub product: String,
-    pub serial_number: String,
     pub r#type: String,
     pub version: String,
+    pub product: String,
+    pub serial_number: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub config: Option<DeviceConfig>,
+    pub capabilities: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub location:Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tags: Option<DeviceTags>
 }
@@ -38,70 +43,9 @@ pub struct DevicePost{
 #[serde(rename_all = "camelCase")]
 pub struct DeviceState{
     pub id: String,
-    pub state: DeviceInnerState,
+    pub state: HashMap<String,CapValueItem>
 }
 
-#[derive(Default,Serialize,Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct DeviceInnerState{
-    #[serde(skip_serializing_if = "Option::is_none")]
-    is_reachable: Option<DeviceStateBooleanIndicator>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    device_configuration_state: Option<DeviceStateIndicator>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    device_inclusion_state: Option<DeviceStateIndicator>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    update_state: Option<DeviceStateIndicator>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    firmware_version: Option<DeviceStateIndicator>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    update_available: Option<DeviceStateIndicator>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    last_reboot: Option<DeviceStateIndicator>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    _m_bus_dongle_attached: Option<DeviceStateBooleanIndicator>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    _lb_dongle_attached: Option<DeviceStateBooleanIndicator>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    config_version: Option<DeviceStateIndicator>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    discovery_active: Option<DeviceStateBooleanIndicator>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    ipaddress: Option<DeviceStateIndicator>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    current_utc_offset: Option<DeviceStateIndicator>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    products_hash: Option<DeviceStateIndicator>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    _o_s_state: Option<DeviceStateIndicator>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    memory_load: Option<DeviceStateNumberIndicator>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    _c_p_u_load: Option<DeviceStateNumberIndicator>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    disk_usage: Option<DeviceStateNumberIndicator>,
-}
-
-#[derive(Default,Serialize,Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct DeviceStateBooleanIndicator{
-    pub value: bool,
-    pub last_changed: String
-}
-
-#[derive(Default,Serialize,Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct DeviceStateNumberIndicator{
-    pub value: i32,
-    pub last_changed: String
-}
-
-#[derive(Default,Serialize,Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct DeviceStateIndicator{
-    pub value: String,
-    pub last_changed: String
-}
 
 #[derive(Default,Serialize,Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -141,13 +85,13 @@ impl Device {
     }
 
 
-    pub async fn get_all_device_states(&self, client: Client, access_token: String)  ->DeviceState{
+    pub async fn get_all_device_states(&self, client: Client, access_token: String) ->DeviceStateResponse{
         let response = client.get(self.base_url.clone()+"/states")
             .headers(HeaderUtils::get_auth_token_header(access_token))
             .send()
             .await
             .unwrap();
-        return  response.json::<DeviceState>()
+        return  response.json::<DeviceStateResponse>()
             .await
             .unwrap()
     }
