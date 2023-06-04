@@ -8,3 +8,4 @@ pub mod location_controller;
 pub mod capabilty_controller;
 pub mod home_controller;
 pub mod action_controller;
+pub mod relationship_controller;

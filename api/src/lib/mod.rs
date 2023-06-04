@@ -8,3 +8,5 @@ pub mod location;
 pub mod capability;
 pub mod home;
 pub mod action;
+pub mod relationship;
+pub mod interaction;
