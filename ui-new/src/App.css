@@ -1,0 +1,15 @@
+body{
+  @apply min-h-screen bg-background font-sans;
+}
+
+*{
+  font-family: ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji";
+}
+
+.header{
+  @apply pt-4;
+}
+
+.active{
+  @apply underline before:opacity-0;
+}

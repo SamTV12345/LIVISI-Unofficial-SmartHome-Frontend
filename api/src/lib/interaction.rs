@@ -115,17 +115,17 @@ pub struct Triggers{
 #[serde(rename_all = "camelCase")]
 pub struct InteractionCondition{
     r#type: InteractionType,
-    params: Value, // Fix me
+    params: RecursiveItem, // Fix me
     #[serde(skip_serializing_if = "Option::is_none")]
     tags: Option<HashMap<String, String>>
 }
 
 #[derive(Serialize,Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct ParamOption(Option<HashMap<String, ValueItem>>);
-
-pub struct RecursiveParamOption{
-    pub params: ParamOption
+#[serde(untagged)]
+pub enum RecursiveItem{
+    enum1(Box<RecursiveItem>),
+    enum2(ValueItem)
 }
 
 #[derive(Serialize,Deserialize, Debug, Clone)]
