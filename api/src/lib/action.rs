@@ -1,7 +1,9 @@
+use std::collections::HashMap;
 use reqwest::Client;
 use crate::utils::header_utils::HeaderUtils;
 use serde::Serialize;
 use serde::Deserialize;
+use crate::lib::interaction::ValueItem;
 
 #[derive(Clone)]
 pub struct Action{
@@ -14,7 +16,7 @@ pub struct ActionPost{
     pub r#type: String,
     pub namespace: String,
     pub target: String,
-    pub params: ActionState
+    pub params: HashMap<String, ValueItem>
 }
 
 #[derive(Default,Serialize,Deserialize, Debug)]
@@ -25,31 +27,6 @@ pub struct ActionPostResponse{
     pub target: String,
     pub namespace: String,
     pub properties: Vec<String>
-}
-
-#[derive(Default,Serialize,Deserialize, Debug)]
-#[serde(rename_all = "camelCase",)]
-pub struct ActionState{
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub remaining_quota: Option<IntegerCapabilityState>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub value: Option<BooleanCapabilityState>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub on_state: Option<BooleanCapabilityState>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub humidity: Option<FloatCapabilityState>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub mold_warning: Option<BooleanCapabilityState>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub point_temperature: Option<FloatCapabilityState>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub operation_mode: Option<StringCapabilityState>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub window_reduction_active: Option<BooleanCapabilityState>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub temperature: Option<FloatCapabilityState>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub frost_warning: Option<BooleanCapabilityState>,
 }
 
 

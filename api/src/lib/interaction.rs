@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 use reqwest::Client;
 use crate::utils::header_utils::HeaderUtils;
-use serde::Serialize;
+use serde::{Deserializer, Serialize};
 use serde::Deserialize;
+use serde_json::Value;
 use crate::lib::action::{IntegerCapabilityState, StringCapabilityState};
 use crate::lib::capability::BooleanCapabilityState;
 
@@ -13,18 +14,37 @@ pub struct Interaction{
 }
 
 #[derive(Serialize,Deserialize, Debug, Clone)]
+pub enum InteractionType {
+Add, Subtract, Multiply, Divide,Modulo, Equal, NotEqual, Smaller,Greater,
+SmallerOrEqual, GreaterOrEqual, And, Or, Min, Max,Pow, Exp,
+Log, Abs, Round,
+GetEntityStateProperty,
+GetEventProperty, BitwiseAnd, BitwiseOr, BitwiseXOR, BitwiseNot,
+BitwiseLeftShift, BitwiseRightShift, GetMinute, GetHour, GetDayOfWeek, GetDayOfMonth,
+GetWeekdayOfMonth, GetMonth, GetYear, GetDayOfCentury, GetWeekOfCentury, GetMonthOfCentury,
+GetCurrentDateTime, Average, InBetween, GetMinuteOfDay, GetMinutesSinceLastChange,
+MemberInArea, MemberNotInArea
+}
+
+#[derive(Serialize,Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct InteractionResponse{
     pub id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
     pub created: String,
     pub modified: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub valid_from: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub valid_to: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub freeze_time: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub is_internal: Option<bool>,
     pub rules: Vec<InteractionRule>,
-    pub tags: HashMap<String,String>
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tags: Option<HashMap<String,String>>
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -33,18 +53,23 @@ pub enum FieldValue {
     StringValue(String),
     BooleanValue(bool),
     IntegerValue(i32),
-    FloatValue(f32),
+    FloatValue(f32)
 }
 
 #[derive(Serialize,Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct InteractionRule{
     id: String,
-    conditions_evaluation_delay: Option<i32>,
-    constraints: Option<Vec<ValueItem>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    condition_evaluation_delay: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     triggers: Option<Vec<Triggers>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    constraints: Option<Vec<ValueItem>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     actions: Option<Vec<InteractionAction>>,
-    tags: Option<Vec<HashMap<String,String>>>
+    #[serde(skip_serializing_if = "Option::is_none")]
+    tags: Option<HashMap<String,String>>
 }
 
 #[derive(Serialize,Deserialize, Debug, Clone)]
@@ -57,45 +82,58 @@ pub struct ValueItem{
 #[derive(Serialize,Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct InteractionAction{
-    r#type: String,
-    params: Option<Vec<InteractionActionParam>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     id: Option<String>,
+    r#type: String,
     namespace: String,
     target: String,
-    tags: Vec<HashMap<String, String>>
+    params: Value,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    tags: Option<HashMap<String, String>>
 }
 
 #[derive(Serialize,Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Triggers{
     r#type: String,
-    event_type: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    event_type: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    subtype: Option<String>,
     source: String,
-    conditions: Vec<InteractionCondition>,
-    tags: HashMap<String, String>
+    #[serde(skip_serializing_if = "Option::is_none")]
+    namespace: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    properties: Option<HashMap<String,FieldValue>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    conditions: Option<Vec<InteractionCondition>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    tags: Option<HashMap<String, String>>
 }
 
 #[derive(Serialize,Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct InteractionCondition{
-    r#type: String,
-    params: Vec<InteractionConditionParam>
+    r#type: InteractionType,
+    params: Value, // Fix me
+    #[serde(skip_serializing_if = "Option::is_none")]
+    tags: Option<HashMap<String, String>>
 }
 
 #[derive(Serialize,Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct InteractionActionParam(HashMap<String, ValueItem>);
+pub struct ParamOption(Option<HashMap<String, ValueItem>>);
+
+pub struct RecursiveParamOption{
+    pub params: ParamOption
+}
 
 #[derive(Serialize,Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
+pub struct InteractionActionParam(HashMap<String, String>);
+
+#[derive(Serialize,Deserialize, Debug, Clone)]
 pub struct InteractionConditionParam(HashMap<String, ValueItem>);
-
-#[derive(Serialize,Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct InteractionParam {
-    r#type: String,
-    params: InteractionParamParam
-}
 
 #[derive(Serialize,Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]

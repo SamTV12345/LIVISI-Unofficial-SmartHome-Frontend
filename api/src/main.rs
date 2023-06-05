@@ -15,6 +15,7 @@ use crate::controllers::capabilty_controller::{get_capability_states, get_capabi
 use crate::controllers::device_controller::{get_device_states, get_devices};
 use crate::controllers::hash_controller::get_hash;
 use crate::controllers::home_controller::get_home_setup;
+use crate::controllers::interaction_controller::get_interactions;
 use crate::controllers::location_controller::get_locations;
 use crate::controllers::message_controller::get_messages;
 use crate::controllers::relationship_controller::get_relationship;
@@ -48,7 +49,7 @@ async fn main() -> std::io::Result<()>{
     let home = lib::home::Home::new(base_url.clone());
     let action = lib::action::Action::new(base_url.clone());
     let relationship = lib::relationship::Relationship::new(base_url.clone());
-
+    let interaction = lib::interaction::Interaction::new(base_url.clone());
 
     HttpServer::new(move || {
 
@@ -67,6 +68,7 @@ async fn main() -> std::io::Result<()>{
             .service(post_action)
             .service(get_relationship)
             .service(get_device_states)
+            .service(get_interactions)
             .app_data(web::Data::new(action.clone()))
             .app_data(web::Data::new(home.clone()))
             .app_data(web::Data::new(status.clone()))
@@ -78,6 +80,7 @@ async fn main() -> std::io::Result<()>{
             .app_data(web::Data::new(capabilties.clone()))
             .app_data(web::Data::new(locations.clone()))
             .app_data(web::Data::new(relationship.clone()))
+            .app_data(web::Data::new(interaction.clone()))
             .app_data(token.clone())
     }).workers(4)
         .bind(("0.0.0.0", 8000))?
