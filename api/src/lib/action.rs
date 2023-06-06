@@ -12,7 +12,7 @@ pub struct Action{
 
 #[derive(Default,Serialize,Deserialize, Debug)]
 pub struct ActionPost{
-    pub id: String,
+    pub id: Option<String>,
     pub r#type: String,
     pub namespace: String,
     pub target: String,

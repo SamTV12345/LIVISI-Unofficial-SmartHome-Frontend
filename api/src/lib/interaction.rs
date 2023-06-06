@@ -115,7 +115,7 @@ pub struct Triggers{
 #[serde(rename_all = "camelCase")]
 pub struct InteractionCondition{
     r#type: InteractionType,
-    params: RecursiveItem, // Fix me
+    params: Value, // Fix me
     #[serde(skip_serializing_if = "Option::is_none")]
     tags: Option<HashMap<String, String>>
 }

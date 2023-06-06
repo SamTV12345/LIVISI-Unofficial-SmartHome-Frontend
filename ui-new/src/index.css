@@ -79,3 +79,17 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
+
+
+.cyan{
+  background-color: #276e7c;
+}
+
+body{
+  background-color: #4158D0;
+  background-image: linear-gradient(43deg, #4158D0 0%, #C850C0 46%, #FFCC70 100%);
+}
+
+#content{
+ background-color: #e5eadc
+}
