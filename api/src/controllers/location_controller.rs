@@ -1,10 +1,10 @@
 use actix_web::{get, HttpResponse, Responder};
 use actix_web::web::Data;
-use reqwest::Client;
-use crate::AppState;
-use crate::lib::location::{Location, LocationResponse};
+
+
+use crate::api_lib::location::{LocationResponse};
 use crate::utils::connection::RedisConnection;
-use redis::{Client as RedisClient, Connection};
+use redis::{Client as RedisClient};
 use crate::constants::constants::LOCATIONS;
 
 #[get("/location")]

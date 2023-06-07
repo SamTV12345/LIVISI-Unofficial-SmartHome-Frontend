@@ -1,14 +1,14 @@
-use std::env;
+
 use std::env::var;
 use std::time::{SystemTime, UNIX_EPOCH};
-use redis::{Client, Commands, Connection};
+use redis::{Client, Connection};
 use crate::models::token::{Token, TokenRequest};
 use crate::utils::header_utils::HeaderUtils;
 use reqwest::Client as ReqwestClient;
 use crate::constants::constants::{CAPABILITIES, DEVICES, LOCATIONS, REDIS_ENV, SERVER_URL, TOKEN};
-use crate::lib::capability::Capability;
-use crate::lib::device::Device;
-use crate::lib::location::Location;
+use crate::api_lib::capability::Capability;
+use crate::api_lib::device::Device;
+use crate::api_lib::location::Location;
 
 #[derive(Clone)]
 pub struct RedisConnection{
@@ -33,7 +33,7 @@ impl RedisConnection{
         return res.unwrap();
     }
 
-    pub fn save_token(mut conn: Connection, token: Token){
+    pub fn save_token(conn: Connection, token: Token){
         let token_string = serde_json::to_string(&token).unwrap();
         RedisConnection::save_to_redis(conn, TOKEN, &token_string);
     }
@@ -61,7 +61,7 @@ impl RedisConnection{
 
     pub async fn do_db_initialization(){
         println!("Doing db initialization");
-        let mut conn = RedisConnection::get_connection();
+        let conn = RedisConnection::get_connection();
         let is_token_present = RedisConnection::is_token_present(conn.get_connection().unwrap());
         let mut token = Token::default();
         match is_token_present {

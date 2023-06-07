@@ -2,7 +2,7 @@ use actix_web::{get, HttpResponse, Responder};
 use actix_web::web::Data;
 use reqwest::Client;
 use crate::AppState;
-use crate::lib::message::Message;
+use crate::api_lib::message::Message;
 
 #[get("/message")]
 pub async fn get_messages(messages: Data<Message>, token: Data<AppState>) -> impl Responder{

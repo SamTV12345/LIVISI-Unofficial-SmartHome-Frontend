@@ -3,7 +3,7 @@ use actix_web::web::Data;
 use reqwest::Client;
 use crate::AppState;
 
-use crate::lib::user_storage::UserStorage;
+use crate::api_lib::user_storage::UserStorage;
 use actix_web::get;
 
 #[get("/userstorage")]

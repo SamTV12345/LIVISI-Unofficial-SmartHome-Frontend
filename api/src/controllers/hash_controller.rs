@@ -3,7 +3,7 @@ use actix_web::web::Data;
 use reqwest::Client;
 use crate::AppState;
 
-use crate::lib::hash::Hash;
+use crate::api_lib::hash::Hash;
 
 
 #[get("/product/hash")]

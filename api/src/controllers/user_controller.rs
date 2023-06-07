@@ -2,7 +2,7 @@ use actix_web::{get, HttpResponse, Responder};
 use actix_web::web::Data;
 use reqwest::Client;
 use crate::AppState;
-use crate::lib::user::User;
+use crate::api_lib::user::User;
 
 
 #[get("/users")]

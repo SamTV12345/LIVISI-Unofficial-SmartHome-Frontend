@@ -2,7 +2,7 @@ use actix_web::{HttpResponse, Responder, web};
 use actix_web::web::Data;
 use reqwest::Client;
 use crate::AppState;
-use crate::lib::action::{Action, ActionPost};
+use crate::api_lib::action::{Action, ActionPost};
 use actix_web::post;
 
 #[post("/action")]

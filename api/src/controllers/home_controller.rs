@@ -2,7 +2,7 @@ use actix_web::{HttpResponse, Responder};
 use actix_web::web::Data;
 use reqwest::Client;
 use crate::AppState;
-use crate::lib::home::Home;
+use crate::api_lib::home::Home;
 use actix_web::get;
 #[get("/home/setup")]
 pub async fn get_home_setup(home: Data<Home>, token: Data<AppState>) -> impl Responder {

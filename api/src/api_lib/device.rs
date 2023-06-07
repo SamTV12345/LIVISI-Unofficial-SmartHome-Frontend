@@ -2,8 +2,8 @@ use std::collections::HashMap;
 use reqwest::Client;
 use serde_derive::Serialize;
 use serde_derive::Deserialize;
-use crate::lib::capability::CapValueItem;
-use crate::lib::interaction::{FieldValue, ValueItem};
+use crate::api_lib::capability::CapValueItem;
+
 use crate::utils::header_utils::HeaderUtils;
 
 #[derive(Clone)]

@@ -1,7 +1,7 @@
 use reqwest::Client;
 use serde_derive::Serialize;
 use serde_derive::Deserialize;
-use crate::lib::interaction::{FieldValue, ValueItem};
+use crate::api_lib::interaction::{FieldValue};
 use crate::utils::header_utils::HeaderUtils;
 use std::collections::HashMap;
 

@@ -3,7 +3,7 @@ use reqwest::Client;
 use crate::utils::header_utils::HeaderUtils;
 use serde::Serialize;
 use serde::Deserialize;
-use crate::lib::interaction::ValueItem;
+use crate::api_lib::interaction::ValueItem;
 
 #[derive(Clone)]
 pub struct Action{

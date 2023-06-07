@@ -10,12 +10,12 @@ use actix_web::body::{EitherBody, MessageBody};
 
 
 use futures_util::future::{LocalBoxFuture, Ready};
-use redis::{Commands, Connection};
 
-use crate::models::token::{CreatedAt, Token, TokenRequest};
+
+use crate::models::token::{CreatedAt};
 use crate::AppState;
 use crate::utils::connection::RedisConnection;
-use crate::utils::header_utils::HeaderUtils;
+
 
 pub struct AuthFilter {
 }

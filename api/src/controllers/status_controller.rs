@@ -3,7 +3,7 @@ use actix_web::{get, HttpResponse, Responder};
 use actix_web::web::Data;
 use reqwest::Client;
 use crate::AppState;
-use crate::lib::status::Status;
+use crate::api_lib::status::Status;
 
 
 #[get("/status")]

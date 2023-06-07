@@ -1,17 +1,17 @@
-use std::thread;
+
 use actix_web::HttpResponse;
 use actix_web::web::Data;
 use crate::AppState;
-use crate::lib::device::{Device, DeviceResponse};
+use crate::api_lib::device::{Device, DeviceResponse};
 use actix_web::Responder;
 use actix_web::get;
-use redis::{Client as RedisClient, Commands, RedisResult};
+use redis::{Client as RedisClient};
 use reqwest::Client;
-use serde_json::json;
-use serde::Serialize;
+
+
 use crate::utils::connection::RedisConnection;
-use tokio::runtime::Runtime;
-use tokio::time::*;
+
+
 use crate::constants::constants::DEVICES;
 
 #[get("/device")]
@@ -19,7 +19,7 @@ pub async fn get_devices(redis_conn: Data<RedisClient>)
     -> impl
 Responder {
 
-    let mut conn = redis_conn.get_connection().unwrap();
+    let conn = redis_conn.get_connection().unwrap();
     let devices_string = RedisConnection::get_from_redis(conn, DEVICES);
     let devices = serde_json::from_str::<DeviceResponse>(&devices_string).unwrap();
     return HttpResponse::Ok().json(devices);

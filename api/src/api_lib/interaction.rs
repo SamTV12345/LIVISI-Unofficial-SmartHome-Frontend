@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 use reqwest::Client;
 use crate::utils::header_utils::HeaderUtils;
-use serde::{Deserializer, Serialize};
+use serde::{Serialize};
 use serde::Deserialize;
 use serde_json::Value;
-use crate::lib::action::{IntegerCapabilityState, StringCapabilityState};
-use crate::lib::capability::BooleanCapabilityState;
+
+
 
 #[derive(Serialize,Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -118,14 +118,6 @@ pub struct InteractionCondition{
     params: Value, // Fix me
     #[serde(skip_serializing_if = "Option::is_none")]
     tags: Option<HashMap<String, String>>
-}
-
-#[derive(Serialize,Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-#[serde(untagged)]
-pub enum RecursiveItem{
-    enum1(Box<RecursiveItem>),
-    enum2(ValueItem)
 }
 
 #[derive(Serialize,Deserialize, Debug, Clone)]

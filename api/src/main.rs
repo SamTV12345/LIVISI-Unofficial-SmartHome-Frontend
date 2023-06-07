@@ -1,7 +1,7 @@
 mod models;
 mod token_middleware;
 mod mutex;
-mod lib;
+mod api_lib;
 mod controllers;
 mod utils;
 mod constants;
@@ -13,7 +13,7 @@ use std::sync::{Mutex};
 use std::time::Duration;
 use actix_web::{App, HttpServer, web};
 use clokwerk::{Job, Scheduler, TimeUnits};
-use redis::Connection;
+
 use crate::controllers::action_controller::post_action;
 use crate::controllers::capabilty_controller::{get_capability_states, get_capabilties};
 use crate::controllers::device_controller::{get_device_states, get_devices};
@@ -26,11 +26,11 @@ use crate::controllers::relationship_controller::get_relationship;
 use crate::controllers::status_controller::get_status;
 use crate::controllers::user_controller::get_users;
 use crate::controllers::user_storage_controller::get_user_storage;
-use crate::lib::device::Device;
-use crate::lib::hash::Hash;
-use crate::lib::status::Status;
-use crate::lib::user::User;
-use crate::lib::user_storage::UserStorage;
+use crate::api_lib::device::Device;
+use crate::api_lib::hash::Hash;
+use crate::api_lib::status::Status;
+use crate::api_lib::user::User;
+use crate::api_lib::user_storage::UserStorage;
 use crate::models::token::Token;
 use crate::utils::connection::RedisConnection;
 
@@ -50,14 +50,14 @@ async fn main() -> std::io::Result<()>{
     let devices = Device::new(base_url.clone());
     let user_storage = UserStorage::new(base_url.clone());
     let hash = Hash::new(base_url.clone());
-    let message = lib::message::Message::new(base_url.clone());
-    let locations = lib::location::Location::new(base_url.clone());
+    let message = api_lib::message::Message::new(base_url.clone());
+    let locations = api_lib::location::Location::new(base_url.clone());
     let token = web::Data::new(AppState{ token: Mutex::new(Token::default())});
-    let capabilties = lib::capability::Capability::new(base_url.clone());
-    let home = lib::home::Home::new(base_url.clone());
-    let action = lib::action::Action::new(base_url.clone());
-    let relationship = lib::relationship::Relationship::new(base_url.clone());
-    let interaction = lib::interaction::Interaction::new(base_url.clone());
+    let capabilties = api_lib::capability::Capability::new(base_url.clone());
+    let home = api_lib::home::Home::new(base_url.clone());
+    let action = api_lib::action::Action::new(base_url.clone());
+    let relationship = api_lib::relationship::Relationship::new(base_url.clone());
+    let interaction = api_lib::interaction::Interaction::new(base_url.clone());
     let redis_conn = RedisConnection::get_connection();
 
     let data_redis_conn = web::Data::new(redis_conn);

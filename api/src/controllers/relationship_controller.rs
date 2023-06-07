@@ -2,7 +2,7 @@ use actix_web::{HttpResponse, Responder};
 use actix_web::web::Data;
 use reqwest::Client;
 use crate::AppState;
-use crate::lib::relationship::Relationship;
+use crate::api_lib::relationship::Relationship;
 use actix_web::get;
 
 #[get("/relationship")]
