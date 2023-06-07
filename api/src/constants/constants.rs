@@ -12,3 +12,7 @@ pub const LOCATIONS: &str = "locations";
 
 
 pub const REDIS_ENV: &str = "REDIS_URL";
+
+
+
+pub const LOCATION_URL: &str = "/location/";

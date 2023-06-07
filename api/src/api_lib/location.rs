@@ -2,20 +2,23 @@ use reqwest::Client;
 use crate::utils::header_utils::HeaderUtils;
 use serde_derive::Serialize;
 use serde_derive::Deserialize;
+use crate::api_lib::device::DevicePost;
 
 #[derive(Clone)]
 pub struct Location{
     pub base_url: String,
 }
 
-#[derive(Default,Serialize,Deserialize, Debug)]
+#[derive(Default,Serialize,Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct LocationResponse{
     pub config: LocationConfig,
-    pub id:String
+    pub id:String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub devices: Option<Vec<DevicePost>>
 }
 
-#[derive(Default,Serialize,Deserialize, Debug)]
+#[derive(Default,Serialize,Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct LocationConfig{
     name: String,

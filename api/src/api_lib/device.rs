@@ -3,6 +3,7 @@ use reqwest::Client;
 use serde_derive::Serialize;
 use serde_derive::Deserialize;
 use crate::api_lib::capability::CapValueItem;
+use crate::api_lib::location::{Location, LocationResponse};
 
 use crate::utils::header_utils::HeaderUtils;
 
@@ -11,16 +12,16 @@ pub struct Device{
     pub base_url: String,
 }
 
-#[derive(Default,Serialize,Deserialize, Debug)]
+#[derive(Default,Serialize,Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct DeviceResponse(Vec<DevicePost>);
+pub struct DeviceResponse(pub Vec<DevicePost>);
 
 #[derive(Default,Serialize,Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct DeviceStateResponse(Vec<DeviceState>);
 
 
-#[derive(Default,Serialize,Deserialize, Debug)]
+#[derive(Default,Serialize,Deserialize, Debug,Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct DevicePost{
     pub manufacturer: String,
@@ -36,7 +37,10 @@ pub struct DevicePost{
     #[serde(skip_serializing_if = "Option::is_none")]
     pub location:Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub tags: Option<DeviceTags>
+    pub tags: Option<DeviceTags>,
+    // Only required in the location
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub location_data: Option<LocationResponse>
 }
 
 #[derive(Default,Serialize,Deserialize, Debug)]
@@ -47,13 +51,13 @@ pub struct DeviceState{
 }
 
 
-#[derive(Default,Serialize,Deserialize, Debug)]
+#[derive(Default,Serialize,Deserialize, Debug,Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct DeviceTags{
     pub internal_state_id: Option<String>
 }
 
-#[derive(Default,Serialize,Deserialize, Debug)]
+#[derive(Default,Serialize,Deserialize, Debug,Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct DeviceConfig{
     #[serde(skip_serializing_if = "Option::is_none")]

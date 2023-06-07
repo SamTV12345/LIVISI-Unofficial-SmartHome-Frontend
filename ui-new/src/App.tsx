@@ -12,8 +12,6 @@ import {CAPABILITY_FULL_PATH, CAPABILITY_PREFIX} from "@/src/constants/FieldCons
 function App() {
     const devices = useContentModel(state => state.devices)
     const mapOfDevices = useContentModel(state => state.mapOfDevices)
-    const locations = useContentModel(state => state.locations)
-    const mapOfLocations = useContentModel(state => state.mapOfLocations)
     const capabilityStates = useContentModel(state => state.states)
     const mapOfStates = useContentModel(state => state.mapOfStates)
 
@@ -63,16 +61,6 @@ function App() {
             useContentModel.getState().loadingProgress+=1
         }
     },[devices])
-
-
-    useEffect(()=>{
-        if (locations.length>0){
-            locations.forEach(location=>{
-                mapOfLocations.set("/location/"+location.id,location)
-            })
-            useContentModel.getState().loadingProgress+=1
-        }
-    },[locations])
 
     return <div className="mx-auto w-3/4 shadow-2xl p-2" id='content'>
         <div className="flex header mb-5">

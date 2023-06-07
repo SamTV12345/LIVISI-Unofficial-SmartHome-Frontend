@@ -14,7 +14,8 @@ interface ContentModelState {
     states: CapabilityState[],
     setCapabilityStates(states: CapabilityState[]): void;
     loadingProgress: number,
-    setLoadingProgress(progress: number): void;
+    setLoadingProgress(progress: number): void
+    devicesByLocation: Map<string, Device[]>
 }
 
 
@@ -37,5 +38,6 @@ export const useContentModel = create<ContentModelState>((set)=>({
     loadingProgress: 0,
     setLoadingProgress(progress: number) {
         set(()=>({loadingProgress: progress}))
-    }
+    },
+    devicesByLocation: new Map<string, Device[]>()
 }))

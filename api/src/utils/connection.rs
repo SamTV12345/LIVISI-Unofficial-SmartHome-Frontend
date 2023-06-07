@@ -1,14 +1,15 @@
-
+use std::collections::HashMap;
 use std::env::var;
+use std::ops::Deref;
 use std::time::{SystemTime, UNIX_EPOCH};
 use redis::{Client, Connection};
 use crate::models::token::{Token, TokenRequest};
 use crate::utils::header_utils::HeaderUtils;
 use reqwest::Client as ReqwestClient;
-use crate::constants::constants::{CAPABILITIES, DEVICES, LOCATIONS, REDIS_ENV, SERVER_URL, TOKEN};
+use crate::constants::constants::{CAPABILITIES, DEVICES, LOCATION_URL, LOCATIONS, REDIS_ENV, SERVER_URL, TOKEN};
 use crate::api_lib::capability::Capability;
-use crate::api_lib::device::Device;
-use crate::api_lib::location::Location;
+use crate::api_lib::device::{Device, DevicePost, DeviceResponse};
+use crate::api_lib::location::{Location, LocationResponse};
 
 #[derive(Clone)]
 pub struct RedisConnection{
@@ -88,10 +89,7 @@ impl RedisConnection{
         let client = ReqwestClient::new();
         let client2 = ReqwestClient::new();
 
-        let found_devices = devices.get_devices(client2, token.access_token.clone()).await;
 
-        Self::save_to_redis(conn.get_connection().unwrap(),DEVICES, &serde_json::to_string
-            (&found_devices).unwrap());
 
         let capabilities = capabilities.get_capabilities(client.clone(), token.access_token.clone())
             .await;
@@ -100,9 +98,52 @@ impl RedisConnection{
             (&capabilities).unwrap());
 
         let client = ReqwestClient::new();
-        let locations = locations.get_locations(client, token.access_token).await;
+        let mut locations = locations.get_locations(client, token.access_token.clone()).await;
+
+        let mut found_devices = devices.get_devices(client2, token.access_token.clone()).await;
+
+        let mut map:HashMap<String, LocationResponse> = HashMap::new();
+        let mut map_of_location_to_device:HashMap<String, Vec<DevicePost>> = HashMap::new();
+
+        for location in locations.clone() {
+            map.insert(LOCATION_URL.to_owned()+&location.id.clone(), location);
+        }
+
+
+        found_devices.0.iter_mut().for_each(|mut device| {
+            if device.location.is_some(){
+                let opt_location = map.get(&device.location.clone().unwrap());
+                if opt_location.is_some(){
+                    let wrapped = opt_location.unwrap();
+                    match map_of_location_to_device.get(&wrapped.id).is_some(){
+                        true=>{
+                            map_of_location_to_device.get_mut(&wrapped.id).unwrap().push(device.clone());
+                        },
+                        false=>{
+                            map_of_location_to_device.insert(wrapped.id.clone(), vec![device.clone()]);
+                        }
+                    }
+
+                    // Prevent recursion
+                    device.location_data = Some(LocationResponse{
+                        id: wrapped.id.clone(),
+                        config: wrapped.config.clone(),
+                        devices: None
+                    });
+                }
+            }
+        });
+
+        locations.iter_mut().for_each(|location| {
+            if map_of_location_to_device.get(&location.id).is_some(){
+                location.devices = Some(map_of_location_to_device.get(&location.id).unwrap().clone());
+            }
+        });
+
         Self::save_to_redis(conn.get_connection().unwrap(),LOCATIONS, &serde_json::to_string
             (&locations).unwrap());
+        Self::save_to_redis(conn.get_connection().unwrap(),DEVICES, &serde_json::to_string
+            (&found_devices.clone()).unwrap());
 
     }
 }
