@@ -28,6 +28,7 @@ use crate::lib::status::Status;
 use crate::lib::user::User;
 use crate::lib::user_storage::UserStorage;
 use crate::models::token::Token;
+use crate::utils::connection::RedisConnection;
 
 pub struct AppState{
     token: Mutex<Token>
@@ -50,6 +51,9 @@ async fn main() -> std::io::Result<()>{
     let action = lib::action::Action::new(base_url.clone());
     let relationship = lib::relationship::Relationship::new(base_url.clone());
     let interaction = lib::interaction::Interaction::new(base_url.clone());
+    let redis_conn = RedisConnection::get_connection();
+
+    let data_redis_conn = web::Data::new(redis_conn);
 
     HttpServer::new(move || {
 
@@ -81,6 +85,7 @@ async fn main() -> std::io::Result<()>{
             .app_data(web::Data::new(locations.clone()))
             .app_data(web::Data::new(relationship.clone()))
             .app_data(web::Data::new(interaction.clone()))
+            .app_data(data_redis_conn.clone())
             .app_data(token.clone())
     }).workers(4)
         .bind(("0.0.0.0", 8000))?
