@@ -21,4 +21,5 @@ actix-cors="0.6.4"
 diesel = { version = "2.0.3", features = ["sqlite", "returning_clauses_for_sqlite_3_35"] }
 libsqlite3-sys = {version = "0.25.2", features = ["bundled"]}
 futures-util = "0.3.28"
+clokwerk = "0.4.0"
 base64 = "0.21.2"

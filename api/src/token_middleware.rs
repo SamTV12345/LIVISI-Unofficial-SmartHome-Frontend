@@ -10,9 +10,11 @@ use actix_web::body::{EitherBody, MessageBody};
 
 
 use futures_util::future::{LocalBoxFuture, Ready};
+use redis::{Commands, Connection};
 
 use crate::models::token::{CreatedAt, Token, TokenRequest};
 use crate::AppState;
+use crate::utils::connection::RedisConnection;
 use crate::utils::header_utils::HeaderUtils;
 
 pub struct AuthFilter {
@@ -91,19 +93,9 @@ impl<S, B> AuthFilterMiddleware<S> where B: 'static + MessageBody, S: 'static + 
         if now > expires_in {
             let service = Rc::clone(&self.service);
             return async move {
-                let client = reqwest::Client::new();
-                let auth_url = std::env::var("BASE_URL").unwrap() + "/auth/token";
-                let result = client.post(auth_url)
-                    .headers(HeaderUtils::get_headers())
-                    .json::<TokenRequest>(&TokenRequest::default())
-                    .send()
-                    .await;
-
-                let response = result.unwrap();
-
-
-                let token = response.json::<Token>().await
-                    .unwrap();
+                let token = RedisConnection::get_token().await;
+                let conn = RedisConnection::get_connection();
+                RedisConnection::save_token(conn.get_connection().unwrap(), token.clone());
 
                 let current_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
                 {

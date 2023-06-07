@@ -15,6 +15,7 @@ function App() {
     const locations = useContentModel(state => state.locations)
     const mapOfLocations = useContentModel(state => state.mapOfLocations)
     const capabilityStates = useContentModel(state => state.states)
+    const mapOfStates = useContentModel(state => state.mapOfStates)
 
     useEffect(()=>{
         axios.get("/device")
@@ -41,7 +42,7 @@ function App() {
     },[])
 
     useEffect(()=>{
-        if(capabilityStates.length>0){
+        if(capabilityStates.length>0 && mapOfStates.size==0){
             capabilityStates.forEach(capState=>{
                 useContentModel.getState().mapOfStates.set(CAPABILITY_PREFIX+capState.id,capState)
             })
@@ -50,7 +51,7 @@ function App() {
     },[capabilityStates])
 
     useEffect(()=>{
-        if (devices.length>0){
+        if (devices.length>0 && mapOfDevices.size==0){
             devices.forEach(device=>{
                 if(device.type&&mapOfDevices.has(device.type)){
                     mapOfDevices.get(device.type)?.push(device)

@@ -1,7 +1,6 @@
-
-
 use serde_derive::Serialize;
 use serde_derive::Deserialize;
+
 #[derive(Default,Serialize,Deserialize, Debug, Clone)]
 pub struct Token {
     pub access_token: String,

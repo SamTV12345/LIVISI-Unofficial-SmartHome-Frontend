@@ -5,7 +5,7 @@ import {Card, CardDescription, CardHeader, CardTitle} from "@/src/components/lay
 import {useDebounce} from "@/src/utils/useDebounce.ts";
 import {CapabilityState} from "@/src/models/CapabilityState.ts";
 import axios from "axios";
-import {ACTION_ENDPOINT} from "@/src/constants/FieldConstants.ts";
+import {ACTION_ENDPOINT, CAPABILITY_PREFIX} from "@/src/constants/FieldConstants.ts";
 type HeatingdeviceProps = {
     device: Device
 }
@@ -49,7 +49,7 @@ export const OnOffDevce:FC<HeatingdeviceProps> = ({device}) => {
                 .then(()=>{
                     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                     // @ts-ignore
-                    mapOfStates.get(state.id).state.onState.value = turnedOn
+                    mapOfStates.get(CAPABILITY_PREFIX+state.id).state.onState.value = turnedOn
                 })
         }
     },2000,[turnedOn])

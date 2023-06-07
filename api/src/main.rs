@@ -4,12 +4,16 @@ mod mutex;
 mod lib;
 mod controllers;
 mod utils;
+mod constants;
 
 
-use std::env;
+use std::{env, thread};
 
 use std::sync::{Mutex};
+use std::time::Duration;
 use actix_web::{App, HttpServer, web};
+use clokwerk::{Job, Scheduler, TimeUnits};
+use redis::Connection;
 use crate::controllers::action_controller::post_action;
 use crate::controllers::capabilty_controller::{get_capability_states, get_capabilties};
 use crate::controllers::device_controller::{get_device_states, get_devices};
@@ -36,6 +40,9 @@ pub struct AppState{
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()>{
+
+    //Initialize db at startup
+    RedisConnection::do_db_initialization().await;
     let base_url = env::var("BASE_URL").unwrap();
     // Init
     let status = Status::new(base_url.clone());
@@ -55,8 +62,23 @@ async fn main() -> std::io::Result<()>{
 
     let data_redis_conn = web::Data::new(redis_conn);
 
-    HttpServer::new(move || {
+    thread::spawn(||{
+        println!("Starting scheduler");
+        let mut scheduler = Scheduler::new();
+        scheduler.every(1.day()).plus(10.minutes())
+            .run(||{
+                println!("Fetching data");
+                tokio::spawn(async move {
+                    RedisConnection::do_db_initialization().await;
+                });
 
+        });
+        loop {
+            scheduler.run_pending();
+            thread::sleep(Duration::from_secs(10));
+        }
+    });
+    HttpServer::new(move || {
         App::new()
             .wrap(token_middleware::AuthFilter::new())
             .service(get_status)

@@ -56,13 +56,18 @@ pub struct DeviceTags{
 #[derive(Default,Serialize,Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct DeviceConfig{
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub activity_log_active: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub friendly_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub model_id: Option<String>,
     pub name: String,
     pub protocol_id: String,
     pub time_of_acceptance: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub time_of_discovery: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub underlying_device_ids: Option<String>
 }
 

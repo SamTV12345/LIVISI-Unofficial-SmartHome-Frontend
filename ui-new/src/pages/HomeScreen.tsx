@@ -40,7 +40,7 @@ export const HomeScreen = ()=>{
                 <AccordionTrigger className="ml-2">Klima</AccordionTrigger>
                 <AccordionContent>
                     <div className="grid grid-cols-2 gap-4 p-2">
-                    {mapOfDevices.get(ZWISCHENSTECKER)?.map((device: Device)=><Heatingdevice device={device}/>)}
+                    {mapOfDevices.get(ZWISCHENSTECKER)?.map((device: Device)=><Heatingdevice key={device.id} device={device}/>)}
                     </div>
                 </AccordionContent>
             </AccordionItem>
@@ -73,7 +73,7 @@ export const HomeScreen = ()=>{
                 <AccordionContent>
                     <AccordionContent>
                         <div className="grid grid-cols-2 gap-4 p-2">
-                            {mapOfDevices.get("PSS")?.map((device: Device)=><OnOffDevce device={device}/>)}
+                            {mapOfDevices.get("PSS")?.map((device: Device)=><OnOffDevce key={device.id} device={device}/>)}
                         </div>
                     </AccordionContent>
                 </AccordionContent>

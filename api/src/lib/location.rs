@@ -36,7 +36,8 @@ impl Location {
             .await
             .unwrap();
 
-            response.json::<Vec<LocationResponse>>()
+            response
+                .json::<Vec<LocationResponse>>()
             .await
             .unwrap()
     }

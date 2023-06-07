@@ -2,15 +2,16 @@ use actix_web::{get, HttpResponse, Responder};
 use actix_web::web::Data;
 use reqwest::Client;
 use crate::AppState;
-use crate::lib::location::Location;
+use crate::lib::location::{Location, LocationResponse};
+use crate::utils::connection::RedisConnection;
+use redis::{Client as RedisClient, Connection};
+use crate::constants::constants::LOCATIONS;
 
 #[get("/location")]
-pub async fn get_locations(locations: Data<Location>, token: Data<AppState>) -> impl Responder{
-    let client = Client::new();
-    let access_token = token.token.lock().unwrap().access_token.clone();
+pub async fn get_locations(redis: Data<RedisClient>) -> impl Responder{
+    let conn = redis.get_connection().unwrap();
+    let locations = RedisConnection::get_from_redis(conn, LOCATIONS);
+    let locations = serde_json::from_str::<Vec<LocationResponse>>(&locations).unwrap();
 
-    let found_locations = locations.get_locations(client, access_token).await;
-
-    return HttpResponse::Ok()
-        .json(found_locations)
+    return HttpResponse::Ok().json(locations)
 }

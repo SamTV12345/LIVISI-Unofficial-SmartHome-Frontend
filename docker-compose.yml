@@ -1,0 +1,16 @@
+version: '3'
+services:
+  gateway:
+    image: samuel19982/gateway:latest
+    ports:
+      - "80:8000"
+    depends_on:
+      - cache
+  cache:
+    image: redis:7.0.11
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning
+    volumes:
+      - cache:/data
