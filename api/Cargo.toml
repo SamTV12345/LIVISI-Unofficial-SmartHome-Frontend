@@ -6,7 +6,6 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-diesel_migrations = "2.0.0"
 reqwest = {version="0.11.14", features = ["blocking", "json", "async-compression", "rustls"]}
 serde = {version="1.0.152"}
 redis = "0.23.0"
@@ -18,8 +17,6 @@ actix-web = "4.3.0"
 actix = "0.13.0"
 actix-web-actors = "4.2.0"
 actix-cors="0.6.4"
-diesel = { version = "2.0.3", features = ["sqlite", "returning_clauses_for_sqlite_3_35"] }
-libsqlite3-sys = {version = "0.25.2", features = ["bundled"]}
 futures-util = "0.3.28"
 clokwerk = "0.4.0"
 base64 = "0.21.2"
