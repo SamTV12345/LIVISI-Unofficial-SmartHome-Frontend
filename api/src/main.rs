@@ -103,7 +103,7 @@ async fn main() -> std::io::Result<()>{
     });
     HttpServer::new(move || {
         App::new()
-            .service(get_ui_config)
+            .service(get_ui_config())
             .service(login)
             .service(get_api_config)
             .service(get_secured_scope())
@@ -158,13 +158,10 @@ pub fn get_ui_config() -> Scope {
             let (req, _) = req.into_parts();
             let path = req.path();
 
-            let test = Regex::new(r"/ui/(.*)").unwrap();
-            let rs =  test.captures(path).unwrap().get(1).unwrap().as_str();
-            let file = NamedFile::open_async(format!("{}/{}",
-                                                     "./static", rs)).await?;
+            let file = NamedFile::open_async(path).await?;
             let mut content = String::new();
-
             let type_of = file.content_type().to_string();
+
             let res = file.file().read_to_string(&mut content);
 
             match res {
@@ -172,12 +169,6 @@ pub fn get_ui_config() -> Scope {
                 Err(_) => {
                     return Ok(ServiceResponse::new(req.clone(), file.into_response(&req)))
                 }
-            }
-            if type_of.contains("css"){
-                content  = fix_links(&content)
-            }
-            else if type_of.contains("javascript"){
-                content = fix_links(&content)
             }
             let res = HttpResponse::Ok()
                 .content_type(type_of)
