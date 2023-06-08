@@ -35,7 +35,7 @@ export const AuthWrapper = ()=>{
             if (item === null) {
                 item = sessionStorage.getItem("auth")
                 if (item === undefined) {
-                    return navigate("/logincom")
+                    navigate("/logincom")
                 }
                 else{
                     axios.defaults.headers.common['Authorization'] = "Basic "+item
