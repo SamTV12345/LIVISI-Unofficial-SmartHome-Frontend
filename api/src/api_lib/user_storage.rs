@@ -1,4 +1,5 @@
 use reqwest::Client;
+use serde_json::Value;
 
 
 use crate::utils::header_utils::HeaderUtils;
@@ -16,14 +17,14 @@ impl UserStorage {
         }
     }
 
-    pub async fn get_user_storage(&self, client: Client, token: String) -> Vec<String> {
+    pub async fn get_user_storage(&self, client: Client, token: String) -> Vec<Value> {
         let response = client.get(self.base_url.clone())
             .headers(HeaderUtils::get_auth_token_header(token))
             .send()
             .await
             .unwrap();
 
-            response.json::<Vec<String>>()
+            response.json::<Vec<Value>>()
             .await
             .unwrap()
     }

@@ -5,14 +5,20 @@ mod api_lib;
 mod controllers;
 mod utils;
 mod constants;
+mod auth_middleware;
 
 
 use std::{env, thread};
+use std::env::var;
 
 use std::sync::{Mutex};
 use std::time::Duration;
-use actix_web::{App, HttpServer, web};
+use actix::dev::Condition;
+use actix_web::{App, HttpResponse, HttpServer, Responder, Scope, web};
+use actix_web::body::{BoxBody, EitherBody};
+use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
 use clokwerk::{Job, Scheduler, TimeUnits};
+use redis::Value::Data;
 
 use crate::controllers::action_controller::post_action;
 use crate::controllers::capabilty_controller::{get_capability_states, get_capabilties};
@@ -31,11 +37,24 @@ use crate::api_lib::hash::Hash;
 use crate::api_lib::status::Status;
 use crate::api_lib::user::User;
 use crate::api_lib::user_storage::UserStorage;
+use crate::controllers::api_config_controller::{get_api_config, login};
 use crate::models::token::Token;
 use crate::utils::connection::RedisConnection;
 
 pub struct AppState{
     token: Mutex<Token>
+}
+
+async fn index() -> impl Responder {
+    let index_html = include_str!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/static/index.html"
+    ));
+
+
+    HttpResponse::Ok()
+        .content_type("text/html")
+        .body(index_html)
 }
 
 #[actix_web::main]
@@ -59,6 +78,7 @@ async fn main() -> std::io::Result<()>{
     let relationship = api_lib::relationship::Relationship::new(base_url.clone());
     let interaction = api_lib::interaction::Interaction::new(base_url.clone());
     let redis_conn = RedisConnection::get_connection();
+    let jwk_service = web::Data::new(Mutex::new(models::jwkservice::JWKService::new()));
 
     let data_redis_conn = web::Data::new(redis_conn);
 
@@ -80,6 +100,35 @@ async fn main() -> std::io::Result<()>{
     });
     HttpServer::new(move || {
         App::new()
+            .route("/ui/index.html", web::get().to(index))
+            .route("/ui/{path:[^.]*}", web::get().to(index))
+            .service(get_api_config)
+            .service(login)
+            .service(get_secured_scope())
+            .app_data(web::Data::new(action.clone()))
+            .app_data(web::Data::new(home.clone()))
+            .app_data(web::Data::new(status.clone()))
+            .app_data(web::Data::new(users.clone()))
+            .app_data(web::Data::new(devices.clone()))
+            .app_data(web::Data::new(hash.clone()))
+            .app_data(web::Data::new(user_storage.clone()))
+            .app_data(web::Data::new(message.clone()))
+            .app_data(web::Data::new(capabilties.clone()))
+            .app_data(web::Data::new(locations.clone()))
+            .app_data(web::Data::new(relationship.clone()))
+            .app_data(web::Data::new(jwk_service.clone()))
+            .app_data(web::Data::new(interaction.clone()))
+            .app_data(data_redis_conn.clone())
+            .app_data(token.clone())
+    }).workers(4)
+        .bind(("0.0.0.0", 8000))?
+        .run()
+        .await
+}
+
+pub fn get_secured_scope()->Scope<impl ServiceFactory<ServiceRequest, Config = (), Response = ServiceResponse<EitherBody<EitherBody<BoxBody>>>, Error = actix_web::Error, InitError = ()>>{
+        Scope::new("")
+            .wrap(auth_middleware::AuthFilter::new())
             .wrap(token_middleware::AuthFilter::new())
             .service(get_status)
             .service(get_users)
@@ -95,22 +144,6 @@ async fn main() -> std::io::Result<()>{
             .service(get_relationship)
             .service(get_device_states)
             .service(get_interactions)
-            .app_data(web::Data::new(action.clone()))
-            .app_data(web::Data::new(home.clone()))
-            .app_data(web::Data::new(status.clone()))
-            .app_data(web::Data::new(users.clone()))
-            .app_data(web::Data::new(devices.clone()))
-            .app_data(web::Data::new(hash.clone()))
-            .app_data(web::Data::new(user_storage.clone()))
-            .app_data(web::Data::new(message.clone()))
-            .app_data(web::Data::new(capabilties.clone()))
-            .app_data(web::Data::new(locations.clone()))
-            .app_data(web::Data::new(relationship.clone()))
-            .app_data(web::Data::new(interaction.clone()))
-            .app_data(data_redis_conn.clone())
-            .app_data(token.clone())
-    }).workers(4)
-        .bind(("0.0.0.0", 8000))?
-        .run()
-        .await
 }
+
+

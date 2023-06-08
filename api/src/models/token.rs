@@ -1,5 +1,6 @@
 use serde_derive::Serialize;
 use serde_derive::Deserialize;
+use crate::constants::constants::{PASSWORD, USERNAME};
 
 #[derive(Default,Serialize,Deserialize, Debug, Clone)]
 pub struct Token {
@@ -31,8 +32,8 @@ impl Default for TokenRequest {
     fn default() -> Self {
         Self {
             grant_type: "password".to_string(),
-            password: std::env::var("PASSWORD").unwrap(),
-            username: std::env::var("USERNAME").unwrap()
+            password: std::env::var(PASSWORD).unwrap(),
+            username: std::env::var(USERNAME).unwrap()
         }
     }
 }

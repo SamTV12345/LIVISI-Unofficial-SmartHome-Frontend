@@ -6,10 +6,11 @@ use redis::{Client, Connection};
 use crate::models::token::{Token, TokenRequest};
 use crate::utils::header_utils::HeaderUtils;
 use reqwest::Client as ReqwestClient;
-use crate::constants::constants::{CAPABILITIES, DEVICES, LOCATION_URL, LOCATIONS, REDIS_ENV, SERVER_URL, TOKEN};
+use crate::constants::constants::{CAPABILITIES, DEVICES, LOCATION_URL, LOCATIONS, REDIS_ENV, SERVER_URL, TOKEN, USER_STORAGE};
 use crate::api_lib::capability::Capability;
 use crate::api_lib::device::{Device, DevicePost, DeviceResponse};
 use crate::api_lib::location::{Location, LocationResponse};
+use crate::api_lib::user_storage::UserStorage;
 
 #[derive(Clone)]
 pub struct RedisConnection{
@@ -85,7 +86,7 @@ impl RedisConnection{
         let devices = Device::new(var(SERVER_URL).unwrap());
         let capabilities = Capability::new(var(SERVER_URL).unwrap());
         let locations = Location::new(var(SERVER_URL).unwrap());
-
+        let user_storage = UserStorage::new(var(SERVER_URL).unwrap());
         let client = ReqwestClient::new();
         let client2 = ReqwestClient::new();
 
@@ -144,6 +145,10 @@ impl RedisConnection{
             (&locations).unwrap());
         Self::save_to_redis(conn.get_connection().unwrap(),DEVICES, &serde_json::to_string
             (&found_devices.clone()).unwrap());
-
+        let client = ReqwestClient::new();
+        let user_storage_data = user_storage.get_user_storage(client, token.access_token.clone())
+            .await;
+        Self::save_to_redis(conn.get_connection().unwrap(),USER_STORAGE, &serde_json::to_string
+            (&user_storage_data).unwrap());
     }
 }

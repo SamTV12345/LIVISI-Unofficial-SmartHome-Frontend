@@ -1,0 +1,13 @@
+{
+  "lightingid": "Beleuchtung",
+  "climateid": "Klima",
+  "securityid": "Sicherheit",
+  "doorsid": "Türen",
+  "outsideid": "Außen",
+  "energyid": "Energie",
+  "householdid": "Haushalt",
+  "healthid": "Gesundheit",
+  "entertainmentid": "Unterhaltung",
+  "statesid": "Zustände",
+  "sign-in": "Login"
+}

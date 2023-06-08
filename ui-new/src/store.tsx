@@ -2,6 +2,8 @@ import {create} from "zustand";
 import {Device} from "@/src/models/Device.ts";
 import {LocationResponse} from "@/src/models/Location.ts";
 import {CapabilityState} from "@/src/models/CapabilityState.ts";
+import {UserStorage} from "@/src/models/UserStorage.ts";
+import {ConfigModel} from "@/src/models/ConfigModel.ts";
 
 interface ContentModelState {
     mapOfStates: Map<string, CapabilityState>
@@ -16,12 +18,21 @@ interface ContentModelState {
     loadingProgress: number,
     setLoadingProgress(progress: number): void
     devicesByLocation: Map<string, Device[]>
+    setUserStorage(data: UserStorage[]): void;
+    userStorage: Map<string,UserStorage>;
+    deviceIdMap: Map<string, Device>,
+    loginConfig: ConfigModel|undefined
+    setLoginConfig(config: ConfigModel): void
 }
 
 
 export const useContentModel = create<ContentModelState>((set)=>({
+    deviceIdMap: new Map<string, Device>(),
+    userStorage: new Map<string, UserStorage>(),
     setDevices: (devices: Device[]) => {
-        set(()=>({devices: devices}))
+        set(()=>({
+            devices: devices
+        }))
     },
     devices: [],
     mapOfDevices: new Map<string, Device[]>,
@@ -39,5 +50,14 @@ export const useContentModel = create<ContentModelState>((set)=>({
     setLoadingProgress(progress: number) {
         set(()=>({loadingProgress: progress}))
     },
-    devicesByLocation: new Map<string, Device[]>()
+    devicesByLocation: new Map<string, Device[]>(),
+    setUserStorage(data: UserStorage[]) {
+        data.forEach(d=>{
+            this.userStorage.set(d.key,d)
+        })
+    },
+    loginConfig: undefined,
+    setLoginConfig(config: ConfigModel) {
+        set(()=>({loginConfig: config}))
+    }
 }))

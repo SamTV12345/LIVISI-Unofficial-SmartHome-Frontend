@@ -1,15 +1,11 @@
-import {
-    Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger,
-} from "@/src/components/actionComponents/Accordion.tsx"
+import {Accordion} from "@/src/components/actionComponents/Accordion.tsx"
 import {useContentModel} from "@/src/store.tsx";
-import {Device} from "@/src/models/Device.ts";
-import {Heatingdevice} from "@/src/components/actionComponents/Heatingdevice.tsx";
+import {CATEGORY, TYPES} from "@/src/constants/FieldConstants.ts";
+import {useMemo} from "react";
+import {UserStorage} from "@/src/models/UserStorage.ts";
+import {UserStorageValueShow} from "@/src/models/UserStorageHomepage.ts";
+import {Category} from "@/src/components/actionComponents/Categories.tsx";
 import {LoadingScreen} from "@/src/components/actionComponents/LoadingScreen.tsx";
-import {TOTAL_THINGS_TO_LOAD, ZWISCHENSTECKER} from "@/src/constants/FieldConstants.ts";
-import {OnOffDevce} from "@/src/components/actionComponents/OnOffDevice.tsx";
 
 
 /*
@@ -21,63 +17,42 @@ Wall Switches (ISS, ISS2)
 Window-Door Sensor (WDS)
  */
 export const HomeScreen = ()=>{
-    const mapOfDevices = useContentModel(state => state.mapOfDevices)
-    const totalProgress = useContentModel(state=>state.loadingProgress)
+    const userStorage = useContentModel(state=>state.userStorage)
+    const mapOfDeviceIds = useContentModel(state=>state.deviceIdMap)
 
-    if (totalProgress < TOTAL_THINGS_TO_LOAD){
+    const res = useMemo(()=>{
+        const category = userStorage.get(CATEGORY)
+        if (!category){
+            return []
+        }
+        const json = JSON.parse(category.value  as unknown as string)
+
+        const userStorageWithValues:UserStorage[] = []
+        Object.keys(json).forEach(key=> {
+            // get actual home display
+            const result = userStorage.get(key)
+            if (result && typeof result.value === "string") {
+                const showingDevicesId: UserStorageValueShow = JSON.parse(result.value)
+                showingDevicesId.Show.map(c=> mapOfDeviceIds.get(c))
+                    .filter(c=>{return c!==undefined &&TYPES.includes(c.type)})
+                    .forEach(deviceId=>{
+                        if (result.devices===undefined){
+                            result.devices = []
+                        }
+                        result.devices.push(deviceId!)
+                    })
+                userStorageWithValues.push(result)
+            }
+        })
+        return userStorageWithValues
+    }, [])
+
+    if (res.length===0){
         return <LoadingScreen/>
     }
 
-    return <>
-        <Accordion type="single" collapsible className="rounded-3xl">
-        <AccordionItem value="beleuchtung" className="bg-blue-600 text-white rounded">
-            <AccordionTrigger className="text-center ml-2">Beleuchtung</AccordionTrigger>
-            <AccordionContent>
-                Yes. It adheres to the WAI-ARIA design pattern.
-            </AccordionContent>
-        </AccordionItem>
-            <AccordionItem value="klima" className="cyan text-white rounded">
-                <AccordionTrigger className="ml-2">Klima</AccordionTrigger>
-                <AccordionContent>
-                    <div className="grid grid-cols-2 gap-4 p-2">
-                    {mapOfDevices.get(ZWISCHENSTECKER)?.map((device: Device)=><Heatingdevice key={device.id} device={device}/>)}
-                    </div>
-                </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="sicherheit">
-                <AccordionTrigger>Sicherheit</AccordionTrigger>
-                <AccordionContent>
-                    Yes. It adheres to the WAI-ARIA design pattern.
-                </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="door&window">
-                <AccordionTrigger>Türen & Fenster</AccordionTrigger>
-                <AccordionContent>
-                    Yes. It adheres to the WAI-ARIA design pattern.
-                </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="outdoor">
-                <AccordionTrigger>Draussen</AccordionTrigger>
-                <AccordionContent>
-                    Yes. It adheres to the WAI-ARIA design pattern.
-                </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="energy">
-                <AccordionTrigger>Energie</AccordionTrigger>
-                <AccordionContent>
-                    Yes. It adheres to the WAI-ARIA design pattern.
-                </AccordionContent>
-            </AccordionItem>
-            <AccordionItem value="states">
-                <AccordionTrigger>Zustand</AccordionTrigger>
-                <AccordionContent>
-                    <AccordionContent>
-                        <div className="grid grid-cols-2 gap-4 p-2">
-                            {mapOfDevices.get("PSS")?.map((device: Device)=><OnOffDevce key={device.id} device={device}/>)}
-                        </div>
-                    </AccordionContent>
-                </AccordionContent>
-            </AccordionItem>
+    return <Accordion type="single" collapsible className="rounded-3xl">
+        {res.map((userStorage: UserStorage)=><Category key={userStorage.key} userStorage={userStorage}/>)}
     </Accordion>
-    </>
+
 }

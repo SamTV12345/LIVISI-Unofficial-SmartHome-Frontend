@@ -9,6 +9,16 @@ export default defineConfig({
   base: '/ui/',
   server:{
     proxy:{
+      '/login':{
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/config':{
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        secure: false,
+      },
       '/status':{
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,
@@ -50,6 +60,11 @@ export default defineConfig({
         secure: false,
       },
       '/action':{
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/userstorage':{
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,
         secure: false,

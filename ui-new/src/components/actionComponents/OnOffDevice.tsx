@@ -34,7 +34,6 @@ export const OnOffDevce:FC<HeatingdeviceProps> = ({device}) => {
         device.capabilities.forEach(c=>{
             const currentState = mapOfStates.get(c)
             if(currentState&&currentState.state.onState &&currentState.state.onState.value){
-                console.log("found")
                 setState(currentState)
                 setTurnedOn(currentState.state.onState.value as boolean)
             }

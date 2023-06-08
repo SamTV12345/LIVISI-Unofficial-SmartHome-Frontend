@@ -10,6 +10,10 @@ body{
   @apply pt-4;
 }
 
+.underline-offset-10{
+  text-underline-offset: 12px;
+}
+
 .active{
-  @apply underline before:opacity-0;
+  @apply underline underline-offset-10 before:opacity-0;
 }

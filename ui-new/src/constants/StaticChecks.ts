@@ -1,6 +1,6 @@
 import {Device} from "@/src/models/Device.ts";
-import {ZWISCHENSTECKER} from "@/src/constants/FieldConstants.ts";
+import {HEATING} from "@/src/constants/FieldConstants.ts";
 
-export const isZwischenstecker = (thing: Device): boolean => {
-    return thing.type ===  ZWISCHENSTECKER
+export const isHEATING = (thing: Device): boolean => {
+    return thing.type ===  HEATING
 }

@@ -4,8 +4,6 @@ import * as React from "react"
 import * as AccordionPrimitive from "@radix-ui/react-accordion"
 import { ChevronDown } from "lucide-react"
 
-import { cn } from "@/lib/utils"
-
 const Accordion = AccordionPrimitive.Root
 
 const AccordionItem = React.forwardRef<
@@ -58,3 +56,7 @@ const AccordionContent = React.forwardRef<
 AccordionContent.displayName = AccordionPrimitive.Content.displayName
 
 export { Accordion, AccordionItem, AccordionTrigger, AccordionContent }
+function cn(arg0: string, className: any) {
+    throw new Error("Function not implemented.")
+}
+

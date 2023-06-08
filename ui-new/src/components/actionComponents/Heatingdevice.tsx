@@ -8,13 +8,12 @@ import {useDebounce} from "@/src/utils/useDebounce.ts";
 import axios from "axios";
 import {CapabilityState} from "@/src/models/CapabilityState.ts";
 import {ACTION_ENDPOINT, CAPABILITY_PREFIX} from '@/src/constants/FieldConstants.ts';
-import {isZwischenstecker} from "@/src/constants/StaticChecks.ts";
+import {isHEATING} from "@/src/constants/StaticChecks.ts";
 type HeatingdeviceProps = {
     device: Device
 }
 
 export const Heatingdevice:FC<HeatingdeviceProps> = ({device}) => {
-    const mapOfLocations = useContentModel(state => state.mapOfLocations)
     const mapOfStates = useContentModel(state => state.mapOfStates)
     const [currentTemperature, setTemperature] = useState<number>()
     const [state, setState] = useState<CapabilityState>()
@@ -54,12 +53,12 @@ export const Heatingdevice:FC<HeatingdeviceProps> = ({device}) => {
     return <Card key={device.id} className="">
         <CardHeader>
             <CardTitle className="text-xl">{device.config.name}</CardTitle>
-            <CardDescription>{mapOfLocations.get(device.location)?.config.name}</CardDescription>
+            {device.locationData&&<CardDescription>{device.locationData?.config.name}</CardDescription>}
         </CardHeader>
             <CardContent>
                 <div className="grid grid-cols-[auto_1fr] mb-2">
                 <div className="w-10 p-2">
-                    {isZwischenstecker(device)&&<Thermometer/>}
+                    {isHEATING(device)&&<Thermometer/>}
                 </div>
                 <div>
                     <div className="grid grid-cols-[auto_1fr]">

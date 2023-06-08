@@ -1,3 +1,5 @@
+import {LocationResponse} from "@/src/models/Location.ts";
+
 export interface Device {
     manufacturer: string;
     type: string;
@@ -8,7 +10,8 @@ export interface Device {
     capabilities: string[],
     id: string,
     location: string,
-    tags: DeviceTags
+    tags: DeviceTags,
+    locationData?: LocationResponse
 }
 
 
