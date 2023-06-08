@@ -22,6 +22,7 @@ use actix_web::dev::{fn_service, ServiceFactory, ServiceRequest, ServiceResponse
 use actix_web::web::redirect;
 use clokwerk::{Job, Scheduler, TimeUnits};
 use redis::Value::Data;
+use regex::Regex;
 
 use crate::controllers::action_controller::post_action;
 use crate::controllers::capabilty_controller::{get_capability_states, get_capabilties};
@@ -158,10 +159,13 @@ pub fn get_ui_config() -> Scope {
             let (req, _) = req.into_parts();
             let path = req.path();
 
-            let file = NamedFile::open_async(path).await?;
+            let test = Regex::new(r"/ui/(.*)").unwrap();
+            let rs =  test.captures(path).unwrap().get(1).unwrap().as_str();
+            let file = NamedFile::open_async(format!("{}/{}",
+                                                     "./static", rs)).await?;
             let mut content = String::new();
-            let type_of = file.content_type().to_string();
 
+            let type_of = file.content_type().to_string();
             let res = file.file().read_to_string(&mut content);
 
             match res {
@@ -174,5 +178,4 @@ pub fn get_ui_config() -> Scope {
                 .content_type(type_of)
                 .body(content);
             Ok(ServiceResponse::new(req, res))}))
-
-}
+        }
