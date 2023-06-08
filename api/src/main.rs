@@ -10,13 +10,16 @@ mod auth_middleware;
 
 use std::{env, thread};
 use std::env::var;
+use std::io::Read;
 
 use std::sync::{Mutex};
 use std::time::Duration;
 use actix::dev::Condition;
+use actix_files::NamedFile;
 use actix_web::{App, HttpResponse, HttpServer, Responder, Scope, web};
 use actix_web::body::{BoxBody, EitherBody};
-use actix_web::dev::{ServiceFactory, ServiceRequest, ServiceResponse};
+use actix_web::dev::{fn_service, ServiceFactory, ServiceRequest, ServiceResponse};
+use actix_web::web::redirect;
 use clokwerk::{Job, Scheduler, TimeUnits};
 use redis::Value::Data;
 
@@ -100,10 +103,9 @@ async fn main() -> std::io::Result<()>{
     });
     HttpServer::new(move || {
         App::new()
-            .route("/ui/index.html", web::get().to(index))
-            .route("/ui/{path:[^.]*}", web::get().to(index))
-            .service(get_api_config)
+            .service(get_ui_config)
             .service(login)
+            .service(get_api_config)
             .service(get_secured_scope())
             .app_data(web::Data::new(action.clone()))
             .app_data(web::Data::new(home.clone()))
@@ -147,3 +149,39 @@ pub fn get_secured_scope()->Scope<impl ServiceFactory<ServiceRequest, Config = (
 }
 
 
+pub fn get_ui_config() -> Scope {
+    web::scope("/ui")
+        .service(redirect("", "./"))
+        .route("/index.html", web::get().to(index))
+        .route("/{path:[^.]*}", web::get().to(index))
+        .default_service(fn_service(|req: ServiceRequest| async {
+            let (req, _) = req.into_parts();
+            let path = req.path();
+
+            let test = Regex::new(r"/ui/(.*)").unwrap();
+            let rs =  test.captures(path).unwrap().get(1).unwrap().as_str();
+            let file = NamedFile::open_async(format!("{}/{}",
+                                                     "./static", rs)).await?;
+            let mut content = String::new();
+
+            let type_of = file.content_type().to_string();
+            let res = file.file().read_to_string(&mut content);
+
+            match res {
+                Ok(_) => {},
+                Err(_) => {
+                    return Ok(ServiceResponse::new(req.clone(), file.into_response(&req)))
+                }
+            }
+            if type_of.contains("css"){
+                content  = fix_links(&content)
+            }
+            else if type_of.contains("javascript"){
+                content = fix_links(&content)
+            }
+            let res = HttpResponse::Ok()
+                .content_type(type_of)
+                .body(content);
+            Ok(ServiceResponse::new(req, res))}))
+
+}
