@@ -145,7 +145,7 @@ async fn main() -> std::io::Result<()>{
 pub fn get_secured_scope() ->Scope<impl ServiceFactory<ServiceRequest, Config = (), Response = ServiceResponse<EitherBody<EitherBody<EitherBody<EitherBody<EitherBody<BoxBody>>>, EitherBody<EitherBody<BoxBody>>>>>, Error = actix_web::Error, InitError = ()>>{
         let middleware = auth_middleware::AuthFilter::new();
     let biscuit_validator = OidcBiscuitValidator { options: ValidationOptions {
-        issuer: Validation::Validate(var(OIDC_AUTHORITY).unwrap()),
+        issuer: Validation::Validate(var(OIDC_AUTHORITY).unwrap_or("No authority present".to_string())),
         ..ValidationOptions::default()
     }
     };
