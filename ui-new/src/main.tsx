@@ -10,6 +10,7 @@ import {i18next} from "@/src/language/i18n.ts";
 import {LoginComponent} from "@/src/components/layout/Login.tsx";
 import {Toaster} from "@/src/components/actionComponents/Toaster.tsx";
 import {AuthWrapper} from "@/src/components/navigation/AuthWrapper.tsx";
+import {Page404} from "@/src/pages/404Page.tsx";
 
 const router = createBrowserRouter(createRoutesFromElements(
     <Route path="/">
@@ -21,6 +22,7 @@ const router = createBrowserRouter(createRoutesFromElements(
         </Route>
         </Route>
         <Route path="logincom" element={<LoginComponent/>}/>
+        <Route path="*" element={<Page404/>}/>
     </Route>
 ), {
     basename: import.meta.env.BASE_URL

@@ -46,7 +46,7 @@ impl Message {
         }
     }
 
-    pub async fn get_message(&self, client: Client, token: String) -> Vec<MessageResponse> {
+    pub async fn get_messages(&self, client: Client, token: String) -> Vec<MessageResponse> {
         let response = client.get(self.base_url.clone())
             .headers(HeaderUtils::get_auth_token_header(token))
             .send()

@@ -9,7 +9,7 @@ pub async fn get_messages(messages: Data<Message>, token: Data<AppState>) -> imp
     let client = Client::new();
     let access_token = token.token.lock().unwrap().access_token.clone();
 
-    let found_messages = messages.get_message(client, access_token).await;
+    let found_messages = messages.get_messages(client, access_token).await;
 
     return HttpResponse::Ok()
         .json(found_messages)

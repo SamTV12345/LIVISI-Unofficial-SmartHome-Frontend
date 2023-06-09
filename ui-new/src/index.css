@@ -93,3 +93,9 @@ body{
 #content{
  background-color: #e5eadc
 }
+
+
+.text-8xl {
+  font-size: 6rem;
+  line-height: 1;
+}

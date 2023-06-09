@@ -34,7 +34,7 @@ export const AuthWrapper = ()=>{
             let item = localStorage.getItem("auth")
             if (item === null) {
                 item = sessionStorage.getItem("auth")
-                if (item === undefined) {
+                if (item === null) {
                     navigate("/logincom")
                 }
                 else{
