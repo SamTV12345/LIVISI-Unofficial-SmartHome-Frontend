@@ -1,19 +1,18 @@
-import {useEffect} from 'react'
+import {FC, PropsWithChildren, useEffect} from 'react'
 import {useContentModel} from "@/src/store.tsx";
 import {AuthProvider} from "react-oidc-context";
 import {OIDCRefresher} from "@/src/components/navigation/OIDCRefresher.tsx";
 import {ConfigModel} from "@/src/models/ConfigModel.ts";
 import axios, {AxiosResponse} from "axios";
-import {Outlet} from "react-router";
 import {LoadingScreen} from "@/src/components/actionComponents/LoadingScreen.tsx";
-import {useNavigate} from "react-router-dom";
+import {LoginComponent} from "@/src/components/layout/Login.tsx";
 
-export const AuthWrapper = ()=>{
+export const AuthWrapper:FC<PropsWithChildren> = ({children})=>{
     const configModel = useContentModel(state=>state.loginConfig)
     const setLoginData = useContentModel(state=>state.setLoginConfig)
-    const navigate = useNavigate()
+
     useEffect(()=>{
-        axios.get("/config")
+        axios.get("/api/server")
             .then((c:AxiosResponse<ConfigModel>)=>{
                 setLoginData(c.data)
             })
@@ -27,7 +26,7 @@ export const AuthWrapper = ()=>{
         return <AuthProvider client_id={configModel.oidcConfig.clientId} authority={configModel.oidcConfig.authority} scope={configModel.oidcConfig.scope}
                              redirect_uri={configModel.oidcConfig.redirectUri}>
             <OIDCRefresher>
-                <Outlet/>
+                {children}
             </OIDCRefresher>
         </AuthProvider>
     } else if (configModel.basicAuth) {
@@ -35,7 +34,7 @@ export const AuthWrapper = ()=>{
             if (item === null) {
                 item = sessionStorage.getItem("auth")
                 if (item === null) {
-                    navigate("/logincom")
+                    return <LoginComponent/>
                 }
                 else{
                     axios.defaults.headers.common['Authorization'] = "Basic "+item
@@ -46,5 +45,5 @@ export const AuthWrapper = ()=>{
             }
     }
 
-    return <Outlet/>
+    return children
 }

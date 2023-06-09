@@ -17,5 +17,7 @@ export const OIDCLogin = () => {
 
     return  <button  className="bg-blue-600 rounded pt-2 pb-2 w-full hover:bg-blue-500 active:scale-95" onClick={()=>{
         auth.signinRedirect()
+            .then(()=>{
+            })
     }}>{t('oidc-login')}</button>
 }

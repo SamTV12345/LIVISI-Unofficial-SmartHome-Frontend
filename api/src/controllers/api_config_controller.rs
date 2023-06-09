@@ -1,6 +1,6 @@
 use std::env::var;
 use actix_web::{HttpResponse, Responder, web};
-use crate::constants::constants::{BASIC_AUTH, OIDC_AUTH, PASSWORD, PASSWORD_BASIC, USERNAME, USERNAME_BASIC};
+use crate::constants::constants::{BASIC_AUTH, OIDC_AUTH, OIDC_AUTHORITY, OIDC_CLIENT_ID, OIDC_REDIRECT_URI, OIDC_SCOPE, PASSWORD, PASSWORD_BASIC, USERNAME, USERNAME_BASIC};
 use serde::{Serialize, Deserialize};
 use actix_web::get;
 use actix_web::post;
@@ -22,7 +22,7 @@ pub struct OidcConfig{
     scope: String
 }
 
-#[get("/config")]
+#[get("/api/server")]
 pub async fn get_api_config() ->impl Responder{
     let basic_auth = var(BASIC_AUTH).is_ok();
     let oidc_configured = var(OIDC_AUTH).is_ok();
@@ -34,10 +34,11 @@ pub async fn get_api_config() ->impl Responder{
     };
     if oidc_configured{
         config.oidc_config = Some(OidcConfig{
-            redirect_uri: var("OIDC_REDIRECT_URI").expect("OIDC redirect uri not configured"),
-            authority: var("OIDC_AUTHORITY").expect("OIDC authority not configured"),
-            client_id: var("OIDC_CLIENT_ID").expect("OIDC client id not configured"),
-            scope: var("OIDC_SCOPE").unwrap_or("openid profile email".to_string())
+            redirect_uri: var(OIDC_REDIRECT_URI).expect("OIDC redirect uri not \
+            configured"),
+            authority: var(OIDC_AUTHORITY).expect("OIDC authority not configured"),
+            client_id: var(OIDC_CLIENT_ID).expect("OIDC client id not configured"),
+            scope: var(OIDC_SCOPE).unwrap_or("openid profile email".to_string())
         });
     }
     return HttpResponse::Ok().json(config);

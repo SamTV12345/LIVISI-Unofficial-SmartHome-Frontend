@@ -4,22 +4,20 @@ import './index.css'
 import {createBrowserRouter, createRoutesFromElements, Route, RouterProvider} from "react-router-dom";
 import {DeviceScreen} from "@/src/pages/DeviceScreen.tsx";
 import {I18nextProvider} from "react-i18next";
-import App from "@/src/App.tsx";
 import {HomeScreen} from "@/src/pages/HomeScreen.tsx";
 import {i18next} from "@/src/language/i18n.ts";
 import {LoginComponent} from "@/src/components/layout/Login.tsx";
 import {Toaster} from "@/src/components/actionComponents/Toaster.tsx";
-import {AuthWrapper} from "@/src/components/navigation/AuthWrapper.tsx";
 import {Page404} from "@/src/pages/404Page.tsx";
+import {AuthWrapper} from "@/src/components/navigation/AuthWrapper.tsx";
+import {Root} from "@/src/components/actionComponents/Root.tsx";
 
 const router = createBrowserRouter(createRoutesFromElements(
     <Route path="/">
-        <Route element={<AuthWrapper/>}>
-        <Route path="" element={<App/>}>
-            <Route index element={<HomeScreen/>}/>
-            <Route path="home" element={<HomeScreen/>}/>
-            <Route path="devices" element={<DeviceScreen/>}/>
-        </Route>
+            <Route path="" element={<Root/>}>
+                <Route index element={<HomeScreen/>}/>
+                <Route path="home" element={<HomeScreen/>}/>
+                <Route path="devices" element={<DeviceScreen/>}/>
         </Route>
         <Route path="logincom" element={<LoginComponent/>}/>
         <Route path="*" element={<Page404/>}/>
@@ -32,8 +30,10 @@ const router = createBrowserRouter(createRoutesFromElements(
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     <React.StrictMode>
         <I18nextProvider i18n={i18next}>
-            <RouterProvider router={router}/>
-            <Toaster/>
+            <AuthWrapper>
+                <RouterProvider router={router}/>
+                <Toaster/>
+            </AuthWrapper>
         </I18nextProvider>
     </React.StrictMode>,
 )

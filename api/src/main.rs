@@ -14,7 +14,9 @@ use std::io::Read;
 
 use std::sync::{Mutex};
 use std::time::Duration;
-use actix::dev::Condition;
+use actix_web::middleware::{Condition, NormalizePath};
+use actix_4_jwt_auth::{Oidc, OidcBiscuitValidator, OidcConfig};
+use actix_4_jwt_auth::biscuit::{Validation, ValidationOptions};
 use actix_files::NamedFile;
 use actix_web::{App, HttpResponse, HttpServer, Responder, Scope, web};
 use actix_web::body::{BoxBody, EitherBody};
@@ -41,6 +43,7 @@ use crate::api_lib::hash::Hash;
 use crate::api_lib::status::Status;
 use crate::api_lib::user::User;
 use crate::api_lib::user_storage::UserStorage;
+use crate::constants::constants::{BASIC_AUTH, OIDC_AUTH, OIDC_AUTHORITY};
 use crate::controllers::api_config_controller::{get_api_config, login};
 use crate::models::token::Token;
 use crate::utils::connection::RedisConnection;
@@ -63,10 +66,11 @@ async fn index() -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()>{
+    let oidc = Oidc::new(OidcConfig::Issuer(var(OIDC_AUTHORITY).unwrap().into())).await.unwrap();
 
     //Initialize db at startup
     RedisConnection::do_db_initialization().await;
-    let base_url = env::var("BASE_URL").unwrap();
+    let base_url = var("BASE_URL").unwrap();
     // Init
     let status = Status::new(base_url.clone());
     let users = User::new(base_url.clone());
@@ -108,6 +112,7 @@ async fn main() -> std::io::Result<()>{
             .service(login)
             .service(get_api_config)
             .service(get_secured_scope())
+            .app_data(oidc.clone())
             .app_data(web::Data::new(action.clone()))
             .app_data(web::Data::new(home.clone()))
             .app_data(web::Data::new(status.clone()))
@@ -119,7 +124,7 @@ async fn main() -> std::io::Result<()>{
             .app_data(web::Data::new(capabilties.clone()))
             .app_data(web::Data::new(locations.clone()))
             .app_data(web::Data::new(relationship.clone()))
-            .app_data(web::Data::new(jwk_service.clone()))
+            .app_data(jwk_service.clone())
             .app_data(web::Data::new(interaction.clone()))
             .app_data(data_redis_conn.clone())
             .app_data(token.clone())
@@ -129,9 +134,16 @@ async fn main() -> std::io::Result<()>{
         .await
 }
 
-pub fn get_secured_scope()->Scope<impl ServiceFactory<ServiceRequest, Config = (), Response = ServiceResponse<EitherBody<EitherBody<BoxBody>>>, Error = actix_web::Error, InitError = ()>>{
+pub fn get_secured_scope() ->Scope<impl ServiceFactory<ServiceRequest, Config = (), Response = ServiceResponse<EitherBody<EitherBody<EitherBody<EitherBody<EitherBody<BoxBody>>>, EitherBody<EitherBody<BoxBody>>>>>, Error = actix_web::Error, InitError = ()>>{
+        let middleware = auth_middleware::AuthFilter::new();
+    let biscuit_validator = OidcBiscuitValidator { options: ValidationOptions {
+        issuer: Validation::Validate(var(OIDC_AUTHORITY).unwrap()),
+        ..ValidationOptions::default()
+    }
+    };
         Scope::new("")
-            .wrap(auth_middleware::AuthFilter::new())
+            .wrap(Condition::new(var(OIDC_AUTH).is_ok(),biscuit_validator))
+            .wrap(Condition::new(var(BASIC_AUTH).is_ok(),middleware))
             .wrap(token_middleware::AuthFilter::new())
             .service(get_status)
             .service(get_users)
@@ -148,7 +160,6 @@ pub fn get_secured_scope()->Scope<impl ServiceFactory<ServiceRequest, Config = (
             .service(get_device_states)
             .service(get_interactions)
 }
-
 
 pub fn get_ui_config() -> Scope {
     web::scope("/ui")
