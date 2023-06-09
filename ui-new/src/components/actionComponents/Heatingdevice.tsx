@@ -49,7 +49,6 @@ export const Heatingdevice:FC<HeatingdeviceProps> = ({device}) => {
 
     }, 2000,[currentTemperature])
 
-    console.log(device.id)
     return <Card key={device.id} className="">
         <CardHeader>
             <CardTitle className="text-xl">{device.config.name}</CardTitle>
@@ -68,7 +67,6 @@ export const Heatingdevice:FC<HeatingdeviceProps> = ({device}) => {
                         {
                             device.capabilities.map(capability=> {
                                 const state = mapOfStates.get(capability)
-                                console.log(state)
                                 if (state==null){
                                     return <><div></div><div></div></>
                                 }

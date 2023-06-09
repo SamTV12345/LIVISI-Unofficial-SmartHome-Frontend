@@ -9,5 +9,8 @@
   "healthid": "Gesundheit",
   "entertainmentid": "Unterhaltung",
   "statesid": "Zustände",
-  "sign-in": "Login"
+  "sign-in": "Login",
+  "PSS": "Zwischenstecker",
+  "WSC2": "Wandsender",
+  "VRCC": "Heizkörperthermostat"
 }

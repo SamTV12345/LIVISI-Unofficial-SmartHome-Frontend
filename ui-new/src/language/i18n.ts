@@ -19,6 +19,7 @@ const resources = {
 i18n
     .use(LanguageDetector)
     .init({
-            resources
+            resources,
+        fallbackLng: 'de'
         })
 export {i18n as i18next}

@@ -53,7 +53,6 @@ export const LoginComponent = () => {
 
     const onSubmit: SubmitHandler<z.infer<typeof formSchema>> = (data, p) => {
         p?.preventDefault()
-        console.log(data)
         axios.post("/login", data)
             .then(() => {
                 const basicAuthString = btoa(data.username + ":" + data.password)
@@ -63,7 +62,6 @@ export const LoginComponent = () => {
                 else{
                     sessionStorage.setItem("auth", basicAuthString)
                 }
-                console.log("test")
                 axios.defaults.headers.common['Authorization'] = 'Basic ' + basicAuthString;
                 setTimeout(()=>navigate('/'), 1000)
 
