@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::env::var;
-use std::ops::Deref;
+
 use std::time::{SystemTime, UNIX_EPOCH};
 use redis::{Client, Connection};
 use crate::models::token::{Token, TokenRequest};
@@ -8,7 +8,7 @@ use crate::utils::header_utils::HeaderUtils;
 use reqwest::Client as ReqwestClient;
 use crate::constants::constants::{CAPABILITIES, DEVICES, LOCATION_URL, LOCATIONS, REDIS_ENV, SERVER_URL, TOKEN, USER_STORAGE};
 use crate::api_lib::capability::Capability;
-use crate::api_lib::device::{Device, DevicePost, DeviceResponse};
+use crate::api_lib::device::{Device, DevicePost};
 use crate::api_lib::location::{Location, LocationResponse};
 use crate::api_lib::user_storage::UserStorage;
 

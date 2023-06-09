@@ -1,9 +1,9 @@
 use actix_web::{HttpResponse, Responder};
 use actix_web::web::Data;
-use reqwest::Client;
-use crate::AppState;
 
-use crate::api_lib::user_storage::UserStorage;
+
+
+
 use actix_web::get;
 use serde_json::Value;
 use crate::constants::constants::USER_STORAGE;

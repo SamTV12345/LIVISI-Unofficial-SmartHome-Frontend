@@ -3,7 +3,7 @@ use reqwest::Client;
 use serde_derive::Serialize;
 use serde_derive::Deserialize;
 use crate::api_lib::capability::CapValueItem;
-use crate::api_lib::location::{Location, LocationResponse};
+use crate::api_lib::location::{LocationResponse};
 
 use crate::utils::header_utils::HeaderUtils;
 

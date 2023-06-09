@@ -14,7 +14,7 @@ use std::io::Read;
 
 use std::sync::{Mutex};
 use std::time::Duration;
-use actix_web::middleware::{Condition, NormalizePath};
+use actix_web::middleware::{Condition};
 use actix_4_jwt_auth::{Oidc, OidcBiscuitValidator, OidcConfig};
 use actix_4_jwt_auth::biscuit::{Validation, ValidationOptions};
 use actix_files::NamedFile;
@@ -23,7 +23,7 @@ use actix_web::body::{BoxBody, EitherBody};
 use actix_web::dev::{fn_service, ServiceFactory, ServiceRequest, ServiceResponse};
 use actix_web::web::redirect;
 use clokwerk::{Job, Scheduler, TimeUnits};
-use redis::Value::Data;
+
 use regex::Regex;
 
 use crate::controllers::action_controller::post_action;

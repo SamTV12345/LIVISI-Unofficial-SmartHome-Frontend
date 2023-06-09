@@ -12,6 +12,8 @@
         # BASIC_AUTH=true
         # BASIC_USERNAME=<your-basic-auth-username>
         # BASIC_PASSWORD=<your-basic-auth-password>
+        # OIDC_CLIENT_ID=<your-oidc-client-id>
+
       depends_on:
         - cache
     cache:

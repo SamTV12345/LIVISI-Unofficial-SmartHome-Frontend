@@ -2,26 +2,23 @@ use std::env;
 use std::env::var;
 use std::pin::Pin;
 use std::rc::Rc;
-use std::sync::Mutex;
-use std::time::{SystemTime, UNIX_EPOCH};
+
+
 use actix::ActorFutureExt;
 use actix::fut::{ok};
-use futures_util::{FutureExt, SinkExt};
-use actix_web::{dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform}, Error, HttpMessage, web};
+use futures_util::{FutureExt};
+use actix_web::{dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform}, Error, HttpMessage};
 use actix_web::body::{EitherBody, MessageBody};
-use actix_web::error::{ErrorForbidden, ErrorUnauthorized};
-use actix_web::web::Data;
+use actix_web::error::{ErrorUnauthorized};
+
 use base64::Engine;
 use base64::engine::general_purpose;
 use futures_util::future::{LocalBoxFuture, Ready};
-use jsonwebtoken::{Algorithm, decode, DecodingKey, Validation};
-use jsonwebtoken::jwk::Jwk;
-use serde_json::{from_str, Value};
-use tokio::net::windows::named_pipe::PipeEnd::Client;
-use crate::constants::constants::{BASIC_AUTH, OIDC_AUTH, PASSWORD, PASSWORD_BASIC, USERNAME, USERNAME_BASIC};
-use crate::models::jwkservice::JWKService;
-use crate::models::oidc_model::{CustomJwk, CustomJwkSet};
-use crate::mutex::LockResultExt;
+
+use crate::constants::constants::{BASIC_AUTH, PASSWORD_BASIC, USERNAME_BASIC};
+
+
+
 
 
 pub struct AuthFilter {
@@ -98,8 +95,8 @@ impl<S, B> AuthFilterMiddleware<S> where B: 'static + MessageBody, S: 'static + 
             Ok(auth) => {
                 let (username, password) = AuthFilter::extract_basic_auth(auth);
 
-                if username.clone() == env::var(USERNAME_BASIC).unwrap(){
-                    return match password == env::var(PASSWORD_BASIC).unwrap() {
+                if username.clone() == var(USERNAME_BASIC).unwrap(){
+                    return match password == var(PASSWORD_BASIC).unwrap() {
                         true => {
                             let service = Rc::clone(&self.service);
                             async move {
@@ -150,18 +147,5 @@ impl AuthFilter{
         let username = auth[0];
         let password = auth[1];
         (username.to_string(), password.to_string())
-    }
-
-    pub fn get_jwk() -> CustomJwkSet {
-        let jwk_uri = var("OIDC_JWKS").expect("OIDC_JWKS must be set");
-        let response = reqwest::blocking::get(jwk_uri).unwrap()
-            .json::<CustomJwkSet>().unwrap();
-        response
-    }
-
-    pub fn basic_auth_login(rq: String) -> (String, String) {
-        let (u,p) = Self::extract_basic_auth(rq.as_str());
-
-        return (u.to_string(),p.to_string())
     }
 }
