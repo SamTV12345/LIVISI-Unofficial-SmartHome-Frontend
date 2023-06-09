@@ -66,8 +66,12 @@ async fn index() -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()>{
-    let oidc = Oidc::new(OidcConfig::Issuer(var(OIDC_AUTHORITY).unwrap().into())).await.unwrap();
+    let mut oidc_opt: Option<Oidc> = Option::None;
+    if var(OIDC_AUTH).is_ok() {
+        oidc_opt = Some(Oidc::new(OidcConfig::Issuer(var(OIDC_AUTHORITY).unwrap().into())).await
+            .unwrap());
 
+    }
     //Initialize db at startup
     RedisConnection::do_db_initialization().await;
     let base_url = var("BASE_URL").unwrap();
@@ -112,7 +116,6 @@ async fn main() -> std::io::Result<()>{
             .service(login)
             .service(get_api_config)
             .service(get_secured_scope())
-            .app_data(oidc.clone())
             .app_data(web::Data::new(action.clone()))
             .app_data(web::Data::new(home.clone()))
             .app_data(web::Data::new(status.clone()))
@@ -128,6 +131,11 @@ async fn main() -> std::io::Result<()>{
             .app_data(web::Data::new(interaction.clone()))
             .app_data(data_redis_conn.clone())
             .app_data(token.clone())
+            .configure(|cfg|{
+                if oidc_opt.clone().is_some() {
+                    cfg.app_data(oidc_opt.clone().unwrap().clone());
+                }
+            })
     }).workers(4)
         .bind(("0.0.0.0", 8000))?
         .run()
