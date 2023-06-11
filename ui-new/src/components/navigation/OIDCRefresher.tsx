@@ -21,9 +21,11 @@ export const OIDCRefresher:FC<PropsWithChildren> = ({children})=>{
     })
 
     if (axios.defaults.headers.common['Authorization'] == undefined && auth.user?.access_token){
-        axios.defaults.headers.common['Authorization'] = 'Bearer ' + auth.user.access_token;
+        axios.defaults.headers.common['Authorization'] = 'Bearer ' + auth.user.access_token
+        console.log("Set auth header")
         return <LoadingScreen/>
     }
+
     return <>
             {children}
         </>
