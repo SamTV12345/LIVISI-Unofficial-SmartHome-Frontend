@@ -11,6 +11,7 @@ import {Toaster} from "@/src/components/actionComponents/Toaster.tsx";
 import {Page404} from "@/src/pages/404Page.tsx";
 import {AuthWrapper} from "@/src/components/navigation/AuthWrapper.tsx";
 import {Root} from "@/src/components/actionComponents/Root.tsx";
+import {NewsScreen} from "@/src/pages/NewsScreen.tsx";
 
 const router = createBrowserRouter(createRoutesFromElements(
     <Route path="/">
@@ -18,6 +19,7 @@ const router = createBrowserRouter(createRoutesFromElements(
                 <Route index element={<HomeScreen/>}/>
                 <Route path="home" element={<HomeScreen/>}/>
                 <Route path="devices" element={<DeviceScreen/>}/>
+                <Route path="news" element={<NewsScreen/>}/>
         </Route>
         <Route path="logincom" element={<LoginComponent/>}/>
         <Route path="*" element={<Page404/>}/>

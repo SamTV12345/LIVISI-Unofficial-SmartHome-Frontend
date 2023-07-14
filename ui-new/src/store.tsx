@@ -4,6 +4,7 @@ import {LocationResponse} from "@/src/models/Location.ts";
 import {CapabilityState} from "@/src/models/CapabilityState.ts";
 import {UserStorage} from "@/src/models/UserStorage.ts";
 import {ConfigModel} from "@/src/models/ConfigModel.ts";
+import {Message} from "@/src/models/Messages.ts";
 
 export type LoginData = {
     username: string,
@@ -30,7 +31,9 @@ interface ContentModelState {
     loginConfig: ConfigModel|undefined
     setLoginConfig(config: ConfigModel): void,
     loginData: LoginData|undefined,
-    setLoginData(data: LoginData): void
+    setLoginData(data: LoginData): void,
+    messages: Message[],
+    setMessages(data: Message[]): void
 }
 
 
@@ -71,5 +74,9 @@ export const useContentModel = create<ContentModelState>((set)=>({
     loginData: undefined,
     setLoginData(data: LoginData) {
         set(()=>({loginData: data}))
+    },
+    messages: [],
+    setMessages(data: Message[]) {
+        set(()=>({messages: data}))
     }
 }))

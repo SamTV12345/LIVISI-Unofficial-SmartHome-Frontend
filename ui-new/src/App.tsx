@@ -88,9 +88,9 @@ function App() {
         return <LoadingScreen/>
     }
 
-    return <div className="mx-auto w-3/4 shadow-2xl p-2" id='content'>
+    return <div className="w-3/4 shadow-2xl p-2" id='content'>
         <div className="flex header mb-5">
-        <div><img src="livisi-logo.png" className="w-10" alt="LIVISI Smarthome logo"/></div>
+        <div><img src="/livisi-logo.png" className="w-10" alt="LIVISI Smarthome logo"/></div>
         <div className="ml-20 flex gap-10 text-2xl">
             <LinkNav to={'/home'}>Home</LinkNav>
             <LinkNav to={'/devices'}>Geräte</LinkNav>

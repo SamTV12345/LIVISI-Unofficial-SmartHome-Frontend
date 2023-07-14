@@ -149,4 +149,30 @@ impl Interaction{
             .await
             .unwrap()
     }
+
+    pub async fn get_interaction_by_id(&self, client: Client, token: String, id:String) ->
+                                                                        InteractionResponse {
+        let response = client.get(self.base_url.clone()+"/"+&id)
+            .headers(HeaderUtils::get_auth_token_header(token))
+            .send()
+            .await
+            .unwrap();
+
+        response.json::<InteractionResponse>()
+            .await
+            .unwrap()
+    }
+
+    pub async fn delete_interaction_by_id(&self, client: Client, token: String, id:String) ->
+    InteractionResponse {
+        let response = client.delete(self.base_url.clone()+"/"+&id)
+            .headers(HeaderUtils::get_auth_token_header(token))
+            .send()
+            .await
+            .unwrap();
+
+        response.json::<InteractionResponse>()
+            .await
+            .unwrap()
+    }
 }

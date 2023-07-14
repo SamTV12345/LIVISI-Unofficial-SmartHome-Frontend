@@ -44,4 +44,17 @@ impl Location {
             .await
             .unwrap()
     }
+
+    pub async fn get_location_by_id(&self, client: Client, token: String, location_id: String) -> LocationResponse {
+        let response = client.get(self.base_url.clone()+"/"+&location_id)
+            .headers(HeaderUtils::get_auth_token_header(token))
+            .send()
+            .await
+            .unwrap();
+
+            response
+                .json::<LocationResponse>()
+            .await
+            .unwrap()
+    }
 }

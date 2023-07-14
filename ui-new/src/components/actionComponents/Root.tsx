@@ -46,5 +46,5 @@ export const Root = () => {
         return <LoadingScreen/>
     }
 
-    return <App/>
+    return <div className="grid place-items-center h-full rounded-3xl"><App/></div>
 }

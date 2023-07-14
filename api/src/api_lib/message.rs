@@ -1,5 +1,6 @@
 use std::collections::HashMap;
-use reqwest::Client;
+use actix_web::web::Path;
+use reqwest::{Client, Response};
 use serde_derive::Serialize;
 use serde_derive::Deserialize;
 use crate::utils::header_utils::HeaderUtils;
@@ -54,6 +55,37 @@ impl Message {
             .unwrap();
 
             response.json::<Vec<MessageResponse>>()
+            .await
+            .unwrap()
+    }
+
+    pub async fn get_message_by_id(&self, client: Client, token: String, message_id: String) -> MessageResponse {
+        let response = client.get(self.base_url.clone()+ &format!("/{}", message_id))
+            .headers(HeaderUtils::get_auth_token_header(token))
+            .send()
+            .await
+            .unwrap();
+
+            response.json::<MessageResponse>()
+            .await
+            .unwrap()
+    }
+
+    pub async fn delete_message_by_id(&self, client: Client, token: String, message_id: String)
+        -> Response {
+        client.delete(self.base_url.clone()+&format!("/{}",message_id))
+            .headers(HeaderUtils::get_auth_token_header(token))
+            .send()
+            .await
+            .unwrap()
+    }
+
+    pub async fn update_mesage_read(&self, client: Client, token: String, message_id: String)
+        -> Response {
+        client.put(self.base_url.clone()+&format!("/{}",message_id))
+            .body("{\"read\":true}")
+            .headers(HeaderUtils::get_auth_token_header(token))
+            .send()
             .await
             .unwrap()
     }

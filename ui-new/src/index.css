@@ -94,6 +94,10 @@ body{
  background-color: #e5eadc
 }
 
+#root{
+  height: 100vh;
+}
+
 
 .text-8xl {
   font-size: 6rem;
