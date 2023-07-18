@@ -9,6 +9,11 @@ export default defineConfig({
   base: '/ui/',
   server:{
     proxy:{
+      '/websocket':{
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        secure: false,
+      },
       '/login':{
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,

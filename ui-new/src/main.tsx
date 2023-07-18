@@ -28,6 +28,23 @@ const router = createBrowserRouter(createRoutesFromElements(
     basename: import.meta.env.BASE_URL
 })
 
+const ws = new WebSocket("ws://localhost:8000/websocket")
+
+ws.onerror = (e)=>{
+    console.log(e)
+}
+ws.onopen = ()=>{
+    console.log("connected")
+}
+
+ws.onmessage = (e)=>{
+    console.log(e.data)
+}
+
+ws.onclose = ()=>{
+    console.log("disconnected")
+}
+
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     <React.StrictMode>
