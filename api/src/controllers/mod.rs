@@ -11,3 +11,4 @@ pub mod action_controller;
 pub mod relationship_controller;
 pub mod interaction_controller;
 pub mod api_config_controller;
+pub mod websocket_controller;

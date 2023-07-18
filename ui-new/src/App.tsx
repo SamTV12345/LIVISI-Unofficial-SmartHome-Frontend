@@ -24,6 +24,9 @@ function App() {
     const deviceIdMap = useContentModel(state => state.deviceIdMap)
     const totalProgress = useContentModel(state=>state.loadingProgress)
 
+
+
+
     useEffect(()=>{
         axios.get("/device")
             .then((v:AxiosResponse<Device[]>)=>{
@@ -100,6 +103,7 @@ function App() {
             <LinkNav to={'/news'}>Nachrichten</LinkNav>
         </div>
     </div>
+
             <Outlet />
     </div>
 }

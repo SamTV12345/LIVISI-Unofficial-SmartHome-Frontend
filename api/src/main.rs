@@ -6,13 +6,14 @@ mod controllers;
 mod utils;
 mod constants;
 mod auth_middleware;
+mod ws;
 
 
 use std::{env, thread};
 use std::env::var;
 use std::io::Read;
 
-use std::sync::{Mutex};
+use std::sync::{Mutex, OnceLock};
 use std::time::Duration;
 use actix_web::middleware::{Condition};
 use actix_4_jwt_auth::{Oidc, OidcBiscuitValidator, OidcConfig};
@@ -25,6 +26,7 @@ use actix_web::web::redirect;
 use clokwerk::{Job, Scheduler, TimeUnits};
 
 use regex::Regex;
+use reqwest::Url;
 
 use crate::controllers::action_controller::post_action;
 use crate::controllers::capabilty_controller::{get_capability_states, get_capabilties};
@@ -48,6 +50,10 @@ use crate::controllers::api_config_controller::{get_api_config, login};
 use crate::models::token::Token;
 use crate::utils::connection::RedisConnection;
 
+
+static WINNER: OnceLock<Addr<Lobby>> = OnceLock::new();
+use tungstenite::connect;
+
 pub struct AppState{
     token: Mutex<Token>
 }
@@ -66,15 +72,22 @@ async fn index() -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()>{
-    let mut oidc_opt: Option<Oidc> = Option::None;
+    let base_url = var("BASE_URL").unwrap();
+    WINNER.get_or_init(|| Lobby::default().start());
+    let mut oidc_opt: Option<Oidc> = None;
     if var(OIDC_AUTH).is_ok() {
         oidc_opt = Some(Oidc::new(OidcConfig::Issuer(var(OIDC_AUTHORITY).unwrap().into())).await
             .unwrap());
-
     }
+
+    let token = RedisConnection::get_token().await.access_token;
+
+    init_socket(base_url.clone(), token).await;
+
+
+
     //Initialize db at startup
     RedisConnection::do_db_initialization().await;
-    let base_url = var("BASE_URL").unwrap();
     // Init
     let status = Status::new(base_url.clone());
     let users = User::new(base_url.clone());
@@ -112,6 +125,7 @@ async fn main() -> std::io::Result<()>{
     });
     HttpServer::new(move || {
         App::new()
+            .service(start_connection)
             .service(get_ui_config())
             .service(login)
             .service(get_api_config)
@@ -198,3 +212,28 @@ pub fn get_ui_config() -> Scope {
                 .body(content);
             Ok(ServiceResponse::new(req, res))}))
         }
+
+use std::thread::spawn;
+use actix::{Actor, Addr};
+use crate::controllers::websocket_controller::start_connection;
+use crate::ws::broadcast_message::BroadcastMessage;
+use crate::ws::web_socket_message::Lobby;
+
+pub async fn init_socket(base_url:String, token: String){
+
+    spawn(move ||{
+        let (mut socket, _response) = connect(
+            Url::parse(&*(base_url.replace("http://","ws://") + "/events?token=" + &token)).unwrap()
+        ).expect("Can't connect");
+        loop {
+            let msg = socket.read_message().unwrap();
+
+            println!("Received: {}", msg);
+            let lobby = WINNER.get().unwrap();
+            lobby.do_send(BroadcastMessage{
+                message: msg.to_string()
+            });
+
+        }
+    });
+}
