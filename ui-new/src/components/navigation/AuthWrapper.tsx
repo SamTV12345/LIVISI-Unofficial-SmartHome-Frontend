@@ -23,8 +23,8 @@ export const AuthWrapper:FC<PropsWithChildren> = ({children})=>{
     }
 
     if(configModel.oidcConfigured && configModel.oidcConfig){
-        return <AuthProvider client_id={configModel.oidcConfig.clientId} authority={configModel.oidcConfig.authority} scope={configModel.oidcConfig.scope}
-                             redirect_uri={configModel.oidcConfig.redirectUri}>
+        return <AuthProvider client_id={configModel.oidcConfig.clientId as string} authority={configModel.oidcConfig.authority as string} scope={configModel.oidcConfig.scope as string}
+                             redirect_uri={configModel.oidcConfig.redirectUri as string}>
             <OIDCRefresher>
                 {children}
             </OIDCRefresher>
