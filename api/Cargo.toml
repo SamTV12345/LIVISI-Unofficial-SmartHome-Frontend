@@ -28,4 +28,4 @@ base64 = "0.21.2"
 jsonwebtoken = "8.3.0"
 
 [target.'cfg(not(windows))'.dependencies]
-openssl = {version="0.10.55", features = ["vendored"]}
+openssl = {version="0.10.60", features = ["vendored"]}
