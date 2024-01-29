@@ -45,7 +45,7 @@ impl RedisConnection{
         return res.is_ok();
     }
 
-    pub async fn get_token() -> Token{
+    pub async fn get_token() -> Result<Token, ()>{
         let client = reqwest::Client::new();
         let auth_url = var("BASE_URL").unwrap() + "/auth/token";
         let result = client.post(auth_url)
@@ -54,11 +54,16 @@ impl RedisConnection{
             .send()
             .await;
 
-        let response = result.unwrap();
-
-
-       return  response.json::<Token>().await
-            .unwrap();
+        let response = result;
+        match response {
+            Ok(e)=>{
+                return  Ok(e.json::<Token>().await.unwrap());
+            }
+            Err(e)=>{
+                println!("Error: {}", e);
+            }
+        }
+        return Err(());
     }
 
     pub async fn do_db_initialization(){
@@ -73,13 +78,13 @@ impl RedisConnection{
                 serde_json::from_str(&token_string).map(|t| token = t).unwrap();
                 if (token.created_at.0+token.expires_in as u64)<SystemTime::now().duration_since
                 (UNIX_EPOCH).unwrap().as_secs(){
-                    token = RedisConnection::get_token().await;
+                    token = Self::get_token().await.unwrap();
                     RedisConnection::save_token(conn.get_connection().unwrap(), token.clone());
                 }
             },
             false => {
                 println!("Token is not present");
-                token = RedisConnection::get_token().await;
+                token = RedisConnection::get_token().await.unwrap();
                 RedisConnection::save_token(conn.get_connection().unwrap(), token.clone());
             }
         }

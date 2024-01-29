@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use actix_web::web::Path;
 use reqwest::{Client, Response};
 use serde_derive::Serialize;
 use serde_derive::Deserialize;

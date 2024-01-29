@@ -93,7 +93,7 @@ impl<S, B> AuthFilterMiddleware<S> where B: 'static + MessageBody, S: 'static + 
         if now > expires_in {
             let service = Rc::clone(&self.service);
             return async move {
-                let token = RedisConnection::get_token().await;
+                let token = RedisConnection::get_token().await.unwrap();
                 let conn = RedisConnection::get_connection();
                 RedisConnection::save_token(conn.get_connection().unwrap(), token.clone());
 

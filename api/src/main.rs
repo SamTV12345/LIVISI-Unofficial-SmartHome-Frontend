@@ -11,6 +11,7 @@ mod ws;
 
 use std::{env, thread};
 use std::env::var;
+use std::fs::File;
 use std::io::Read;
 
 use std::sync::{Mutex, OnceLock};
@@ -72,6 +73,14 @@ async fn index() -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()>{
+    /*
+        let mut read: String = "".to_string();
+        let mut resp = File::open("../response.json").unwrap();
+        resp.read_to_string(&mut read).expect("TODO: panic message");
+        println!("Result is {}", read[10700..10720].to_string());
+    */
+
+
     let base_url = var("BASE_URL").unwrap();
     WINNER.get_or_init(|| Lobby::default().start());
     let mut oidc_opt: Option<Oidc> = None;
@@ -80,7 +89,7 @@ async fn main() -> std::io::Result<()>{
             .unwrap());
     }
 
-    let token = RedisConnection::get_token().await.access_token;
+    let token = RedisConnection::get_token().await.unwrap().access_token;
 
     init_socket(base_url.clone(), token).await;
 
@@ -221,12 +230,13 @@ use crate::ws::web_socket_message::Lobby;
 
 pub async fn init_socket(base_url:String, token: String){
 
+    let token_encoded = urlencoding::encode(token.as_str()).into_owned();
     spawn(move ||{
-        let (mut socket, _response) = connect(
-            Url::parse(&*(base_url.replace("http://","ws://") + "/events?token=" + &token)).unwrap()
-        ).expect("Can't connect");
+        let url = Url::parse(&*(base_url.replace("http://","ws://") + "/events?token=" + &token_encoded)).unwrap();
+        println!("Connecting to {}", url);
+        let (mut socket, _response) = connect(url).expect("Can't connect");
         loop {
-            let msg = socket.read_message().unwrap();
+            let msg = socket.read().unwrap();
 
             println!("Received: {}", msg);
             let lobby = WINNER.get().unwrap();

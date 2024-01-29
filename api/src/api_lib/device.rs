@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use reqwest::Client;
 use serde_derive::Serialize;
 use serde_derive::Deserialize;
+use serde_json::Value;
 use crate::api_lib::capability::CapValueItem;
 use crate::api_lib::location::{LocationResponse};
 
@@ -30,14 +31,16 @@ pub struct DevicePost{
     pub product: String,
     pub serial_number: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub config: Option<DeviceConfig>,
-    pub capabilities: Vec<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub location:Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub tags: Option<DeviceTags>,
+    pub config: Option<DeviceConfig>,
+    pub volatile: Option<Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub capabilities: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tags: Option<Value>,
     // Only required in the location
     #[serde(skip_serializing_if = "Option::is_none")]
     pub location_data: Option<LocationResponse>
@@ -66,13 +69,16 @@ pub struct DeviceConfig{
     pub friendly_name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub model_id: Option<String>,
-    pub name: String,
-    pub protocol_id: String,
-    pub time_of_acceptance: String,
+    pub name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub protocol_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub time_of_acceptance: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub time_of_discovery: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub underlying_device_ids: Option<String>
+    pub underlying_device_ids: Option<String>,
+    pub paired_since: Option<String>,
 }
 
 
