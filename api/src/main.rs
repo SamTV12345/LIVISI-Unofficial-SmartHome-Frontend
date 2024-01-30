@@ -232,8 +232,8 @@ pub async fn init_socket(base_url:String, token: String){
 
     let token_encoded = urlencoding::encode(token.as_str()).into_owned();
     spawn(move ||{
-        let url = Url::parse(&*(base_url.replace("http://","ws://") + "/events?token=" + &token_encoded)).unwrap();
-        println!("Connecting to {}", url);
+        let mut url = Url::parse(&*(base_url.replace("http://","ws://") + "/events?token=" + &token_encoded)).unwrap();
+        url.set_port(Some(9090)).unwrap();
         let (mut socket, _response) = connect(url).expect("Can't connect");
         loop {
             let msg = socket.read().unwrap();
