@@ -5,7 +5,6 @@ import {useMemo} from "react";
 import {UserStorage} from "@/src/models/UserStorage.ts";
 import {UserStorageValueShow} from "@/src/models/UserStorageHomepage.ts";
 import {Category} from "@/src/components/actionComponents/Categories.tsx";
-import {LoadingScreen} from "@/src/components/actionComponents/LoadingScreen.tsx";
 
 
 /*
@@ -47,9 +46,6 @@ export const HomeScreen = ()=>{
         return userStorageWithValues
     }, [])
 
-    if (res.length===0){
-        return <LoadingScreen/>
-    }
 
     return <Accordion type="single" collapsible className="rounded-3xl">
         {res.map((userStorage: UserStorage)=><Category key={userStorage.key} userStorage={userStorage}/>)}

@@ -88,10 +88,11 @@ function App() {
 
 
     if (totalProgress < TOTAL_THINGS_TO_LOAD){
+        console.log("Loading total things")
         return <LoadingScreen/>
     }
 
-    return <div className="w-3/4 shadow-2xl p-2" id='content'>
+    return <div className="shadow-2xl p-2" id='content'>
         <div className="flex header mb-5">
         <div><img src="/livisi-logo.png" className="w-10" alt="LIVISI Smarthome logo"/></div>
         <div className="ml-20 flex gap-10 text-2xl">

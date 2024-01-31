@@ -43,8 +43,9 @@ export const Root = () => {
     },[loginConfig])
 
     if(!loginConfig || (loginConfig.basicAuth && !axios.defaults.headers.common["Authorization"]||(loginConfig.oidcConfigured&& !axios.defaults.headers.common["Authorization"]))){
+        console.log("loading root")
         return <LoadingScreen/>
     }
 
-    return <div className="grid place-items-center h-full rounded-3xl"><App/></div>
+    return <div className="h-full rounded-3xl"><App/></div>
 }

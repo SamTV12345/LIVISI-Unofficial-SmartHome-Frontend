@@ -1,6 +1,6 @@
 export type CapabilityState = {
     id: string,
-    state: LooseObject
+    state?: LooseObject
 }
 
 

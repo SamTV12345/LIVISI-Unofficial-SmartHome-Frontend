@@ -35,7 +35,7 @@ pub struct CapabilityStateResponse(Vec<CapabilityStateInner>);
 #[serde(rename_all = "camelCase")]
 pub struct CapabilityStateInner{
     pub id: String,
-    pub state: HashMap<String,CapValueItem>
+    pub state: Option<HashMap<String,CapValueItem>>
 }
 
 

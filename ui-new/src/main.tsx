@@ -15,7 +15,9 @@ import {NewsScreen} from "@/src/pages/NewsScreen.tsx";
 
 const router = createBrowserRouter(createRoutesFromElements(
     <Route path="/">
-            <Route path="" element={<Root/>}>
+        <Route path="" element={<AuthWrapper>
+            <Root/>
+        </AuthWrapper>}>
                 <Route index element={<HomeScreen/>}/>
                 <Route path="home" element={<HomeScreen/>}/>
                 <Route path="devices" element={<DeviceScreen/>}/>
@@ -49,10 +51,8 @@ ws.onclose = ()=>{
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     <React.StrictMode>
         <I18nextProvider i18n={i18next}>
-            <AuthWrapper>
                 <RouterProvider router={router}/>
                 <Toaster/>
-            </AuthWrapper>
         </I18nextProvider>
     </React.StrictMode>,
 )

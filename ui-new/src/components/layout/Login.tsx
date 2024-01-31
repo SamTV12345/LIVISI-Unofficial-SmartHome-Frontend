@@ -20,6 +20,7 @@ import {OIDCLogin} from "@/src/components/navigation/OIDCButton.tsx";
 import {useToast} from "@/src/hooks/useToast.ts";
 import {SubmitHandler, useForm} from "react-hook-form";
 import {Checkbox} from "@/src/components/actionComponents/CheckBox.tsx";
+import {FC} from "react";
 
 const formSchema = z.object({
     username: z.string().min(2, {
@@ -32,8 +33,11 @@ const formSchema = z.object({
 })
 
 
+type LoginComponentProps = {
 
-export const LoginComponent = () => {
+}
+
+export const LoginComponent:FC<LoginComponentProps> = () => {
     const {t} = useTranslation()
     const navigate = useNavigate()
     const configModel = useContentModel(state=>state.loginConfig)
@@ -47,9 +51,6 @@ export const LoginComponent = () => {
             rememberMe: false
         },
     })
-
-
-
 
     const onSubmit: SubmitHandler<z.infer<typeof formSchema>> = (data, p) => {
         p?.preventDefault()
@@ -75,6 +76,7 @@ export const LoginComponent = () => {
     }
 
     if (!configModel){
+        console.log("loading login")
         return <LoadingScreen/>
     }
 
