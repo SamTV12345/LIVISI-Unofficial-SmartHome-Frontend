@@ -135,6 +135,7 @@ async fn main() -> std::io::Result<()>{
     HttpServer::new(move || {
         App::new()
             .service(start_connection)
+            .service(redirect("/", "/ui/"))
             .service(get_ui_config())
             .service(login)
             .service(get_api_config)
@@ -194,7 +195,7 @@ pub fn get_secured_scope() ->Scope<impl ServiceFactory<ServiceRequest, Config = 
 
 pub fn get_ui_config() -> Scope {
     web::scope("/ui")
-        .service(redirect("", "./"))
+        .service(redirect("", "/ui/"))
         .route("/index.html", web::get().to(index))
         .route("/{path:[^.]*}", web::get().to(index))
         .default_service(fn_service(|req: ServiceRequest| async {
