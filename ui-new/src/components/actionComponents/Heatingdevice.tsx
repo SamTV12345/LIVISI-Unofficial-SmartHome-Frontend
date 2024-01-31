@@ -71,17 +71,17 @@ export const Heatingdevice:FC<HeatingdeviceProps> = ({device}) => {
                                     return <><div></div><div></div></>
                                 }
 
-                                if (state.state.pointTemperature) {
+                                if (state.state&&state.state.pointTemperature) {
                                     if (!currentTemperature){
                                         setTemperature(state.state.pointTemperature.value as number)
                                         setState(state)
                                     }
                                     return <><div>Zieltemperatur:</div><div>{currentTemperature}°C</div></>
                                 }
-                                else if (state.state.humidity) {
+                                else if (state.state&&state.state.humidity) {
                                     return <><div>Feuchtigkeit:</div><div>{state.state.humidity && state.state.humidity.value}%</div></>
                                 }
-                                else if (state.state.temperature){
+                                else if (state.state&&state.state.temperature){
 
                                     return <><div>Temperatur:</div><div>{state.state.temperature && state.state.temperature.value}°C</div></>
                                 }
