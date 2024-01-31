@@ -5,13 +5,13 @@ services:
       ports:
         - "80:8000"
       environment:
-        - REDIS_URL=redis://192.168.2.50:6379
-        - BASE_URL=http://192.168.1.120:8080
+        - REDIS_URL=redis://cache:6379
+        - BASE_URL=<your-base-url>
         - BASIC_AUTH=true
-        - PASSWORD=AVAQKHqq#e4vssCFLW6FSTG*cm57%!
-        - USERNAME=admin
-        - BASIC_USERNAME=test
-        - BASIC_PASSWORD=test
+        - PASSWORD=<livisi-password>
+        - USERNAME=<livisi-username>
+        - BASIC_USERNAME=<login-username>
+        - BASIC_PASSWORD=<login-password>
         # BASIC_AUTH=true
         # BASIC_USERNAME=<your-basic-auth-username>
         # BASIC_PASSWORD=<your-basic-auth-password>
