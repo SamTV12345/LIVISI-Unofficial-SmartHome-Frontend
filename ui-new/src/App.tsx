@@ -1,7 +1,7 @@
 import './App.css'
 import {LinkNav} from "./components/navigation/Link.tsx";
 import {Outlet} from "react-router";
-import {useEffect} from "react";
+import {useEffect, useMemo} from "react";
 import axios, {AxiosResponse} from "axios";
 import {Device} from "@/src/models/Device.ts";
 import {useContentModel} from "@/src/store.tsx";
@@ -10,7 +10,6 @@ import {CapabilityState} from "@/src/models/CapabilityState.ts";
 import {
     CAPABILITY_FULL_PATH,
     CAPABILITY_PREFIX,
-    TOTAL_THINGS_TO_LOAD,
     USER_STORAGE_FULL_PATH
 } from "@/src/constants/FieldConstants.ts";
 import {UserStorage} from "@/src/models/UserStorage.ts";
@@ -22,19 +21,19 @@ function App() {
     const capabilityStates = useContentModel(state => state.states)
     const mapOfStates = useContentModel(state => state.mapOfStates)
     const deviceIdMap = useContentModel(state => state.deviceIdMap)
-    const totalProgress = useContentModel(state=>state.loadingProgress)
+    const loadingComplete = useMemo(()=>{
 
+        return devices.length > 0 && capabilityStates.length>0 && mapOfStates.size>0 && mapOfDevices.size>0
 
-
+    },[devices, capabilityStates])
 
     useEffect(()=>{
         axios.get("/device")
             .then((v:AxiosResponse<Device[]>)=>{
                 useContentModel.getState().setDevices(v.data)
                 v.data.forEach(device=>{
-                    deviceIdMap.set(device.id,device)
+                    deviceIdMap.set(device.id, device)
                 })
-                useContentModel.getState().loadingProgress+=1
             })
     },[])
 
@@ -42,7 +41,6 @@ function App() {
         axios.get("/location")
             .then((v:AxiosResponse<LocationResponse[]>)=>{
                 useContentModel.getState().setLocations(v.data)
-                useContentModel.getState().loadingProgress+=1
             })
     },[])
 
@@ -50,7 +48,6 @@ function App() {
         axios.get(CAPABILITY_FULL_PATH)
             .then((v:AxiosResponse<CapabilityState[]>)=>{
                 useContentModel.getState().setCapabilityStates(v.data)
-                useContentModel.getState().loadingProgress+=1
             })
     },[])
 
@@ -58,16 +55,14 @@ function App() {
         axios.get(USER_STORAGE_FULL_PATH)
             .then((v:AxiosResponse<UserStorage[]>)=>{
                 useContentModel.getState().setUserStorage(v.data)
-                useContentModel.getState().loadingProgress+=1
             })
-    })
+    }, [])
 
     useEffect(()=>{
         if(capabilityStates.length>0 && mapOfStates.size==0){
             capabilityStates.forEach(capState=>{
                 useContentModel.getState().mapOfStates.set(CAPABILITY_PREFIX+capState.id,capState)
             })
-            useContentModel.getState().loadingProgress+=1
         }
     },[capabilityStates])
 
@@ -81,14 +76,12 @@ function App() {
                     mapOfDevices.set(device.type, [device])
                 }
             })
-            useContentModel.getState().loadingProgress+=1
         }
     },[devices])
 
 
 
-    if (totalProgress < TOTAL_THINGS_TO_LOAD){
-        console.log("Loading total things")
+    if (!loadingComplete){
         return <LoadingScreen/>
     }
 

@@ -18,6 +18,7 @@ export const OnOffDevce:FC<HeatingdeviceProps> = ({device}) => {
 
     const constructSwitchPostModel = (newStatus: CapabilityState)=>{
         return {
+            id: newStatus.id,
             target:"/capability/"+newStatus.id,
             namespace: device.product,
             type: "SetState",

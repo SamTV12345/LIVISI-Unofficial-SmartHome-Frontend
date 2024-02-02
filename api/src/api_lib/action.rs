@@ -3,6 +3,7 @@ use reqwest::Client;
 use crate::utils::header_utils::HeaderUtils;
 use serde::Serialize;
 use serde::Deserialize;
+use serde_json::Value;
 use crate::api_lib::interaction::ValueItem;
 
 #[derive(Clone)]
@@ -23,10 +24,11 @@ pub struct ActionPost{
 #[serde(rename_all = "camelCase")]
 pub struct ActionPostResponse{
     pub r#type: String,
-    pub result_code: String,
-    pub target: String,
     pub namespace: String,
-    pub properties: Vec<String>
+    pub desc: String,
+    pub target: String,
+    pub properties: Value,
+    pub result_code: String,
 }
 
 

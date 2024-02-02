@@ -35,14 +35,25 @@ pub struct CapabilityStateResponse(Vec<CapabilityStateInner>);
 #[serde(rename_all = "camelCase")]
 pub struct CapabilityStateInner{
     pub id: String,
-    pub state: Option<HashMap<String,CapValueItem>>
+    pub state: Option<HashMap<String,CapValueType>>
 }
 
+#[derive(Serialize,Deserialize, Debug, Clone)]
+pub struct CapabilityInnerVal {
+    pub value: CapValueItem,
+}
+
+#[derive(Serialize,Deserialize, Debug, Clone)]
+#[serde(untagged)]
+pub enum CapValueType {
+    CapabilityInnerVal(CapabilityInnerVal),
+    CapValueItem(CapValueItem),
+}
 
 #[derive(Serialize,Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct CapValueItem{
-    pub value: FieldValue,
+    pub value: Option<FieldValue>,
     pub last_changed: String,
 }
 

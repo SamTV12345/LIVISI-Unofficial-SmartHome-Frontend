@@ -3,7 +3,7 @@ use reqwest::Client;
 use serde_derive::Serialize;
 use serde_derive::Deserialize;
 use serde_json::Value;
-use crate::api_lib::capability::CapValueItem;
+use crate::api_lib::capability::{CapValueItem, CapValueType};
 use crate::api_lib::location::{LocationResponse};
 
 use crate::utils::header_utils::HeaderUtils;
@@ -50,7 +50,7 @@ pub struct DevicePost{
 #[serde(rename_all = "camelCase")]
 pub struct DeviceState{
     pub id: String,
-    pub state: HashMap<String,CapValueItem>
+    pub state: HashMap<String,CapValueType>
 }
 
 

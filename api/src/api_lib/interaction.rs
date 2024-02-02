@@ -53,7 +53,7 @@ pub enum FieldValue {
     StringValue(String),
     BooleanValue(bool),
     IntegerValue(i32),
-    FloatValue(f32)
+    FloatValue(f32),
 }
 
 #[derive(Serialize,Deserialize, Debug, Clone)]
