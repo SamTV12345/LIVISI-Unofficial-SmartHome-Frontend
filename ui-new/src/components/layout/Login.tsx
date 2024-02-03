@@ -76,7 +76,6 @@ export const LoginComponent:FC<LoginComponentProps> = () => {
     }
 
     if (!configModel){
-        console.log("loading login")
         return <LoadingScreen/>
     }
 

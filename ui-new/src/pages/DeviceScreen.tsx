@@ -11,14 +11,13 @@ export const DeviceScreen = ()=>{
     const locations = useContentModel(state => state.locations)
     const mapOfDevices = useContentModel(state => state.mapOfDevices)
     const {t} = useTranslation()
-    console.log(mapOfDevices)
     return <div className="grid grid-cols-2">
         <div className={`${selectedTab===0&&'border-b-8 border-cyan-600'} text-center `} onClick={()=>setSelectedTab(0)}>Ort</div>
         <div className={`${selectedTab===1&&'border-b-8 border-cyan-600'} text-center  border-b border-black`} onClick={()=>setSelectedTab(1)}>Gerätetyp</div>
         {selectedTab===0&&<div className="col-span-2">
         {
-            locations.map(location=>{
-                return        <Accordion type="single" collapsible className="rounded-3xl">
+            locations!.map(location=>{
+                return        <Accordion type="single" collapsible className="rounded-3xl" key={location.id}>
                     <AccordionItem value="beleuchtung" className="text-black rounded">
                         <AccordionTrigger className="text-center ml-2">{location.config.name}</AccordionTrigger>
                         <AccordionContent>
@@ -36,7 +35,7 @@ export const DeviceScreen = ()=>{
             {
                                 <div className="">
                                     {[...mapOfDevices.keys()].filter(device=>TYPES.includes(device))
-                                        .map(key=><Accordion type="single" collapsible className="rounded-3xl">
+                                        .map(key=><Accordion type="single" collapsible className="rounded-3xl" key={key}>
                                             <AccordionItem value="beleuchtung" className="text-black rounded">
                                                 <AccordionTrigger className="text-center ml-2">{t(key)}</AccordionTrigger>
                                                 <AccordionContent>

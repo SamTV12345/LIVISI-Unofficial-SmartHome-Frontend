@@ -1,5 +1,5 @@
 import {Heatingdevice} from "@/src/components/actionComponents/Heatingdevice.tsx";
-import {OnOffDevce} from "@/src/components/actionComponents/OnOffDevice.tsx";
+import {OnOffDevice} from "@/src/components/actionComponents/OnOffDevice.tsx";
 import {HEATING, ZWISCHENSTECKER} from "@/src/constants/FieldConstants.ts";
 import {Device} from "@/src/models/Device.ts";
 import {FC} from "react";
@@ -10,10 +10,10 @@ type DeviceDeciderProps = {
 }
 export const DeviceDecider:FC<DeviceDeciderProps> = ({ device }) => {
     if (device.type === ZWISCHENSTECKER) {
-        return <OnOffDevce device={device} key={device.id}/>;
+        return <OnOffDevice device={device} key={device.id}/>;
     }
     if (device.type === HEATING) {
-        return <Heatingdevice device={device}/>;
+        return <Heatingdevice device={device} key={device.id}/>;
     }
-    return <WandSender device={device}/>;
+    return <WandSender device={device} key={device.id}/>;
 }

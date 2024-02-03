@@ -14,13 +14,13 @@ export type LoginData = {
 
 interface ContentModelState {
     mapOfStates: Map<string, CapabilityState>
-    devices: Device[],
+    devices: Device[]|undefined,
     setDevices: (devices: Device[]) => void,
     mapOfDevices: Map<string, Device[]>
     setLocations(data: LocationResponse[]): void;
-    locations: LocationResponse[],
+    locations: LocationResponse[]|undefined,
     mapOfLocations: Map<string, LocationResponse>
-    states: CapabilityState[],
+    states: CapabilityState[]|undefined,
     setCapabilityStates(states: CapabilityState[]): void;
     loadingProgress: number,
     setLoadingProgress(progress: number): void
@@ -45,14 +45,14 @@ export const useContentModel = create<ContentModelState>((set)=>({
             devices: devices
         }))
     },
-    devices: [],
+    devices: undefined,
     mapOfDevices: new Map<string, Device[]>,
     setLocations(data: LocationResponse[]) {
         set(()=>({locations: data}))
     },
-    locations: [],
+    locations: undefined,
     mapOfLocations: new Map<string, LocationResponse>(),
-    states: [],
+    states: undefined,
     setCapabilityStates(states: CapabilityState[]) {
         set(()=>({states: states}))
     },

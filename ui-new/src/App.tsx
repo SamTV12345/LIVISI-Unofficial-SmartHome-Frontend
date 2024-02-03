@@ -22,8 +22,7 @@ function App() {
     const mapOfStates = useContentModel(state => state.mapOfStates)
     const deviceIdMap = useContentModel(state => state.deviceIdMap)
     const loadingComplete = useMemo(()=>{
-
-        return devices.length > 0 && capabilityStates.length>0 && mapOfStates.size>0 && mapOfDevices.size>0
+        return devices && capabilityStates && mapOfStates.size>0 && mapOfDevices.size>0
 
     },[devices, capabilityStates])
 
@@ -59,7 +58,7 @@ function App() {
     }, [])
 
     useEffect(()=>{
-        if(capabilityStates.length>0 && mapOfStates.size==0){
+        if(capabilityStates && mapOfStates.size==0){
             capabilityStates.forEach(capState=>{
                 useContentModel.getState().mapOfStates.set(CAPABILITY_PREFIX+capState.id,capState)
             })
@@ -67,7 +66,7 @@ function App() {
     },[capabilityStates])
 
     useEffect(()=>{
-        if (devices.length>0 && mapOfDevices.size==0){
+        if (devices && mapOfDevices.size==0){
             devices.forEach(device=>{
                 if(device.type&&mapOfDevices.has(device.type)){
                     mapOfDevices.get(device.type)?.push(device)
@@ -77,7 +76,7 @@ function App() {
                 }
             })
         }
-    },[devices])
+    },[devices, mapOfDevices])
 
 
 

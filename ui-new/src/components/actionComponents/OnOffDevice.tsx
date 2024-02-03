@@ -10,7 +10,7 @@ type HeatingdeviceProps = {
     device: Device
 }
 
-export const OnOffDevce:FC<HeatingdeviceProps> = ({device}) => {
+export const OnOffDevice:FC<HeatingdeviceProps> = ({device}) => {
     const mapOfLocations = useContentModel(state => state.mapOfLocations)
     const mapOfStates = useContentModel(state => state.mapOfStates)
     const [turnedOn, setTurnedOn] = useState<boolean>()
@@ -34,13 +34,12 @@ export const OnOffDevce:FC<HeatingdeviceProps> = ({device}) => {
     useEffect(()=>{
         device.capabilities.forEach(c=>{
             const currentState = mapOfStates.get(c)
-            console.log(currentState)
-            if(currentState && currentState.state &&currentState.state.onState &&currentState.state.onState.value){
+            if(currentState && currentState.state &&currentState.state.onState){
                 setState(currentState)
                 setTurnedOn(currentState.state.onState.value as boolean)
             }
         })
-    },[])
+    },[device])
 
 
     useDebounce(()=>{
