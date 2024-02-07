@@ -12,16 +12,24 @@ import {Page404} from "@/src/pages/404Page.tsx";
 import {AuthWrapper} from "@/src/components/navigation/AuthWrapper.tsx";
 import {Root} from "@/src/components/actionComponents/Root.tsx";
 import {NewsScreen} from "@/src/pages/NewsScreen.tsx";
+import {HelpPage} from "@/src/pages/SettingsPage.tsx";
+import {AboutPage} from "@/src/pages/AboutPage.tsx";
 
 const router = createBrowserRouter(createRoutesFromElements(
     <Route path="/">
         <Route path="" element={<AuthWrapper>
             <Root/>
         </AuthWrapper>}>
-                <Route index element={<HomeScreen/>}/>
-                <Route path="home" element={<HomeScreen/>}/>
-                <Route path="devices" element={<DeviceScreen/>}/>
-                <Route path="news" element={<NewsScreen/>}/>
+            <Route index element={<HomeScreen/>}/>
+            <Route path="home" element={<HomeScreen/>}/>
+            <Route path="devices" element={<DeviceScreen/>}/>
+            <Route path="news" element={<NewsScreen/>}/>
+            <Route path="settings" element={<div></div>}/>
+            <Route path="help">
+                <Route index element={<HelpPage/>}/>
+                <Route path="about" element={<AboutPage/>}/>
+            </Route>
+
         </Route>
         <Route path="logincom" element={<LoginComponent/>}/>
         <Route path="*" element={<Page404/>}/>
@@ -33,20 +41,20 @@ const router = createBrowserRouter(createRoutesFromElements(
 
 const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws"
 
-const ws = new WebSocket(wsProtocol+"://"+window.location.host+"/websocket")
+const ws = new WebSocket(wsProtocol + "://" + window.location.host + "/websocket")
 
-ws.onerror = (e)=>{
+ws.onerror = (e) => {
     console.log(e)
 }
-ws.onopen = ()=>{
+ws.onopen = () => {
     console.log("connected")
 }
 
-ws.onmessage = (e)=>{
+ws.onmessage = (e) => {
     console.log(e.data)
 }
 
-ws.onclose = ()=>{
+ws.onclose = () => {
     console.log("disconnected")
 }
 
@@ -54,8 +62,8 @@ ws.onclose = ()=>{
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     <React.StrictMode>
         <I18nextProvider i18n={i18next}>
-                <RouterProvider router={router}/>
-                <Toaster/>
+            <RouterProvider router={router}/>
+            <Toaster/>
         </I18nextProvider>
     </React.StrictMode>,
 )
