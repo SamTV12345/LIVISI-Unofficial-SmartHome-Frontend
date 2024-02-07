@@ -15,7 +15,7 @@ pub struct MessageResponse{
     r#type: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     class: Option<String>,
-    namespace: String,
+    namespace: Option<String>,
     timestamp: String,
     read: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -33,10 +33,13 @@ pub struct MessageResponse{
 #[derive(Default,Serialize,Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct MessageProperties{
-    pub device_location:String,
-    pub device_name:String,
-    pub device_serial:String,
-    pub namespace:String,
+    pub device_location: Option<String>,
+    pub device_name: Option<String>,
+    pub device_serial: Option<String>,
+    pub namespace: Option<String>,
+    pub requester_info: Option<String>,
+    pub shc_remote_reboot_reason: Option<String>,
+    pub read: Option<bool>,
 }
 
 impl Message {

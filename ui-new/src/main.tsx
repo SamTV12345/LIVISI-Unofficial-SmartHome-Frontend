@@ -12,7 +12,7 @@ import {Page404} from "@/src/pages/404Page.tsx";
 import {AuthWrapper} from "@/src/components/navigation/AuthWrapper.tsx";
 import {Root} from "@/src/components/actionComponents/Root.tsx";
 import {NewsScreen} from "@/src/pages/NewsScreen.tsx";
-import {HelpPage} from "@/src/pages/SettingsPage.tsx";
+import {HelpPage} from "@/src/pages/HelpPage.tsx";
 import {AboutPage} from "@/src/pages/AboutPage.tsx";
 import {ErrorPage} from "@/src/pages/ErrorPage.tsx";
 import {SocketMessage} from "@/src/models/SocketMessage.ts";

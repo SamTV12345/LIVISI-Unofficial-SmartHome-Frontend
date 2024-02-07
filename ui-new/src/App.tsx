@@ -1,6 +1,6 @@
 import './App.css'
 import {LinkNav} from "./components/navigation/Link.tsx";
-import {Outlet} from "react-router";
+import {Outlet, useLocation} from "react-router";
 import {useEffect, useMemo} from "react";
 import axios, {AxiosResponse} from "axios";
 import {Device} from "@/src/models/Device.ts";
@@ -15,7 +15,7 @@ import {
 import {UserStorage} from "@/src/models/UserStorage.ts";
 import {LoadingScreen} from "@/src/components/actionComponents/LoadingScreen.tsx";
 import {useNavigate} from "react-router-dom";
-
+import logo from './assets/livisi-logo.png'
 function App() {
     const devices = useContentModel(state => state.devices)
     const mapOfDevices = useContentModel(state => state.mapOfDevices)
@@ -26,6 +26,8 @@ function App() {
         return devices && capabilityStates && mapOfStates !==undefined && mapOfDevices !==undefined
 
     }, [devices, capabilityStates,mapOfStates, mapOfDevices])
+    const location = useLocation()
+    const locations = useContentModel(state => state.locations)
 
     const navigate = useNavigate()
 
@@ -45,6 +47,15 @@ function App() {
                 useContentModel.getState().setLocations(v.data)
             })
     }, [])
+
+    useEffect(() => {
+        useContentModel.getState().mapOfLocations.clear()
+        if (locations) {
+            locations.forEach(location => {
+                useContentModel.getState().mapOfLocations.set(location.id, location)
+            })
+        }
+    }, [locations]);
 
     useEffect(() => {
         axios.get(CAPABILITY_FULL_PATH)
@@ -91,12 +102,12 @@ function App() {
                 <button onClick={()=>{
                     navigate('/settings')
                 }}>Einstellungen</button>
-                <button onClick={()=>{
+                <button className={location.pathname.includes('help')?'text-blue-500':''} onClick={()=>{
                     navigate('/help')
                 }}>Hilfe</button>
             </div>
             <div className="flex header mb-5">
-                <div><img src="/livisi-logo.png" className="w-10" alt="LIVISI Smarthome logo"/></div>
+                <div><img src={logo} className="w-10" alt="LIVISI Smarthome logo"/></div>
                 <div className="ml-20 flex gap-10 text-2xl">
                     <LinkNav to={'/home'}>Home</LinkNav>
                     <LinkNav to={'/devices'}>Geräte</LinkNav>

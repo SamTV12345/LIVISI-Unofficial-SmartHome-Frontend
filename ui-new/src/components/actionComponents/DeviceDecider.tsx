@@ -10,7 +10,7 @@ type DeviceDeciderProps = {
 }
 export const DeviceDecider:FC<DeviceDeciderProps> = ({ device }) => {
     if (device.type === ZWISCHENSTECKER) {
-        return <OnOffDevice device={device} key={device.id}/>;
+        return <OnOffDevice device={device} key={device.id} showRoom={false}/>;
     }
     if (device.type === HEATING) {
         return <Heatingdevice device={device} key={device.id}/>;

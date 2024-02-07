@@ -6,11 +6,15 @@ import {useDebounce} from "@/src/utils/useDebounce.ts";
 import {CapabilityState} from "@/src/models/CapabilityState.ts";
 import axios from "axios";
 import {ACTION_ENDPOINT, CAPABILITY_PREFIX} from "@/src/constants/FieldConstants.ts";
+import {Power} from 'lucide-react'
+
+
 type HeatingdeviceProps = {
-    device: Device
+    device: Device,
+    showRoom: boolean
 }
 
-export const OnOffDevice:FC<HeatingdeviceProps> = ({device}) => {
+export const OnOffDevice:FC<HeatingdeviceProps> = ({device, showRoom=false}) => {
     const mapOfLocations = useContentModel(state => state.mapOfLocations)
     const mapOfStates = useContentModel(state => state.mapOfStates)
     const [turnedOn, setTurnedOn] = useState<boolean>()
@@ -54,10 +58,12 @@ export const OnOffDevice:FC<HeatingdeviceProps> = ({device}) => {
         }
     },2000,[turnedOn])
 
-    return <Card key={device.id} className={`cursor-pointer ${turnedOn?'bg-amber-300':''}`} onClick={()=>{setTurnedOn(!turnedOn)}}>
-        <CardHeader className="grid place-items-center">
-            <CardTitle className="text-xl">{device.config.name}</CardTitle>
-            <CardDescription>{mapOfLocations.get(device.location)?.config.name}</CardDescription>
+    return <Card key={device.id} onClick={()=>{setTurnedOn(!turnedOn)}}>
+        <CardHeader className="flex flex-row">
+            <CardTitle className="text-xl mt-3">{device.config.name}</CardTitle>
+            {showRoom&&<CardDescription>{mapOfLocations.get(device.location.replace('/location/',''))?.config.name}</CardDescription>}
+            <span className="flex-1"></span>
+                <Power className={`rounded-full border-gray-500 border-2 h-12 w-12 p-2 ${turnedOn?'glowing-white':''}`}/>
         </CardHeader>
     </Card>
 }
