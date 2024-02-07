@@ -21,9 +21,9 @@ export const Heatingdevice: FC<HeatingdeviceProps> = ({device}) => {
 
     const constructHeatingModel = (newState: CapabilityState) => {
         return {
-            target: CAPABILITY_PREFIX + newState.id,
+            target: CAPABILITY_PREFIX+newState.id,
             type: "SetState",
-            namespace: device.product,
+            namespace: "core."+device.manufacturer,
             params: {
                 setpointTemperature: {
                     type: "Constant",
@@ -39,10 +39,11 @@ export const Heatingdevice: FC<HeatingdeviceProps> = ({device}) => {
             return
         }
         const heatingModel = constructHeatingModel(state)
+        console.log("HeatingModel", heatingModel)
         axios.post(ACTION_ENDPOINT, heatingModel)
             .then(() => {
                 // @ts-ignore
-                mapOfStates.get(CAPABILITY_PREFIX + state.id).state.pointTemperature.value = currentTemperature
+                mapOfStates.get(CAPABILITY_PREFIX + state.id).state.setpointTemperature.value = currentTemperature
             })
     }
 
@@ -68,9 +69,8 @@ export const Heatingdevice: FC<HeatingdeviceProps> = ({device}) => {
                             <div className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-1">
                                 {
                                     device.capabilities.map(capability => {
-                                        console.log(capability)
-                                        console.log(mapOfStates)
                                         const state = mapOfStates.get(capability)
+                                        console.log("My state is",state)
                                         if (state == null) {
                                             console.log("State is null")
                                             return <>
@@ -79,9 +79,9 @@ export const Heatingdevice: FC<HeatingdeviceProps> = ({device}) => {
                                             </>
                                         }
 
-                                        if (state.state && state.state.pointTemperature) {
+                                        if (state.state && state.state.setpointTemperature) {
                                             if (!currentTemperature) {
-                                                setTemperature(state.state.pointTemperature.value as number)
+                                                setTemperature(state.state.setpointTemperature.value as number)
                                                 setState(state)
                                             }
                                             return <>
