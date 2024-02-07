@@ -1,9 +1,10 @@
-use reqwest::Client;
+
 use serde_derive::Serialize;
 use serde_derive::Deserialize;
 use crate::api_lib::interaction::{FieldValue};
-use crate::utils::header_utils::HeaderUtils;
+
 use std::collections::HashMap;
+use crate::CLIENT_DATA;
 
 #[derive(Clone)]
 pub struct Capability{
@@ -92,9 +93,10 @@ impl Capability{
         }
     }
 
-    pub async fn get_capabilities(&self, client: Client, token: String) -> CapabilityResponse {
-        let response = client.get(self.base_url.clone())
-            .headers(HeaderUtils::get_auth_token_header(token))
+    pub async fn get_capabilities(&self) -> CapabilityResponse {
+        let locked_client = CLIENT_DATA.get().unwrap().lock();
+
+        let response = locked_client.unwrap().client.get(self.base_url.clone())
             .send()
             .await
             .unwrap();
@@ -108,9 +110,9 @@ impl Capability{
 
 
 
-    pub async fn get_all_capability_states(&self, client: Client, token: String) -> CapabilityStateResponse {
-        let response = client.get(self.base_url.clone()+"/states")
-            .headers(HeaderUtils::get_auth_token_header(token))
+    pub async fn get_all_capability_states(&self, _token: String) -> CapabilityStateResponse {
+        let locked_client = CLIENT_DATA.get().unwrap().lock();
+        let response = locked_client.unwrap().client.get(self.base_url.clone()+"/states")
             .send()
             .await
             .unwrap();

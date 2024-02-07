@@ -1,8 +1,9 @@
 use std::collections::HashMap;
-use reqwest::{Client, Response};
+use reqwest::{Response};
 use serde_derive::Serialize;
 use serde_derive::Deserialize;
-use crate::utils::header_utils::HeaderUtils;
+use crate::CLIENT_DATA;
+
 
 #[derive(Clone)]
 pub struct Message{
@@ -49,9 +50,9 @@ impl Message {
         }
     }
 
-    pub async fn get_messages(&self, client: Client, token: String) -> Vec<MessageResponse> {
-        let response = client.get(self.base_url.clone())
-            .headers(HeaderUtils::get_auth_token_header(token))
+    pub async fn get_messages(&self) -> Vec<MessageResponse> {
+        let locked_client = CLIENT_DATA.get().unwrap().lock();
+        let response = locked_client.unwrap().client.get(self.base_url.clone())
             .send()
             .await
             .unwrap();
@@ -61,9 +62,9 @@ impl Message {
             .unwrap()
     }
 
-    pub async fn get_message_by_id(&self, client: Client, token: String, message_id: String) -> MessageResponse {
-        let response = client.get(self.base_url.clone()+ &format!("/{}", message_id))
-            .headers(HeaderUtils::get_auth_token_header(token))
+    pub async fn get_message_by_id(&self, message_id: String) -> MessageResponse {
+        let locked_client = CLIENT_DATA.get().unwrap().lock();
+        let response = locked_client.unwrap().client.get(self.base_url.clone()+ &format!("/{}", message_id))
             .send()
             .await
             .unwrap();
@@ -73,20 +74,21 @@ impl Message {
             .unwrap()
     }
 
-    pub async fn delete_message_by_id(&self, client: Client, token: String, message_id: String)
+    pub async fn delete_message_by_id(&self, message_id: String)
         -> Response {
-        client.delete(self.base_url.clone()+&format!("/{}",message_id))
-            .headers(HeaderUtils::get_auth_token_header(token))
+        let locked_client = CLIENT_DATA.get().unwrap().lock();
+        locked_client.unwrap().client.delete(self.base_url.clone()+&format!("/{}",message_id))
             .send()
             .await
             .unwrap()
     }
 
-    pub async fn update_mesage_read(&self, client: Client, token: String, message_id: String)
+    pub async fn update_mesage_read(&self, message_id: String)
         -> Response {
-        client.put(self.base_url.clone()+&format!("/{}",message_id))
+        let locked_client = CLIENT_DATA.get().unwrap().lock();
+
+        locked_client.unwrap().client.put(self.base_url.clone()+&format!("/{}",message_id))
             .body("{\"read\":true}")
-            .headers(HeaderUtils::get_auth_token_header(token))
             .send()
             .await
             .unwrap()

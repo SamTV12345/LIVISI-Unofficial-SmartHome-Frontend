@@ -15,7 +15,6 @@ export const NewsScreen = ()=>{
     const messages = useContentModel(state => state.messages)
 
     const determineTitleAndDescription = (message: Message):MessageReturnType=>{
-        console.log(message)
         switch (message.type){
             case "DeviceUnreachable": return  {description: "Das Gerät "+message.properties.deviceName+" im Raum "+ message.properties.deviceLocation+" ist nicht erreichbar", title: "Gerät nicht erreichbar"}
             case "ShcRemoteRebooted": return {description: "Die Zentrale wurde neu gestartet", title: "Zentrale neu gestartet"}

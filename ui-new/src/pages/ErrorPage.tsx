@@ -19,7 +19,6 @@ export const ErrorPage = () => {
             Bei Problemen mit Ihrem SmartHome haben Sie hier die Möglichkeit, Ihre Zentrale neu zu starten.
         </p>
         <Button className="w-full h-14 mt-10" onClick={() => {
-            console.log(shc)
             axios.post("/action", {
                     id: shc.id,
                     type: "Restart",

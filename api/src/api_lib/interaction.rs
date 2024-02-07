@@ -1,10 +1,10 @@
 use std::collections::HashMap;
-use reqwest::Client;
-use crate::utils::header_utils::HeaderUtils;
+
+
 use serde::{Serialize};
 use serde::Deserialize;
 use serde_json::Value;
-
+use crate::CLIENT_DATA;
 
 
 #[derive(Serialize,Deserialize, Debug, Clone)]
@@ -141,9 +141,10 @@ impl Interaction{
         }
     }
 
-    pub async fn get_interaction(&self, client: Client, token: String) -> Vec<InteractionResponse> {
-        let response = client.get(self.base_url.clone())
-            .headers(HeaderUtils::get_auth_token_header(token))
+    pub async fn get_interaction(&self) -> Vec<InteractionResponse> {
+        let locked_client = CLIENT_DATA.get().unwrap().lock();
+
+        let response = locked_client.unwrap().client.get(self.base_url.clone())
             .send()
             .await
             .unwrap();
@@ -153,10 +154,11 @@ impl Interaction{
             .unwrap()
     }
 
-    pub async fn get_interaction_by_id(&self, client: Client, token: String, id:String) ->
+    pub async fn get_interaction_by_id(&self, id:String) ->
                                                                         InteractionResponse {
-        let response = client.get(self.base_url.clone()+"/"+&id)
-            .headers(HeaderUtils::get_auth_token_header(token))
+        let locked_client = CLIENT_DATA.get().unwrap().lock();
+
+        let response = locked_client.unwrap().client.get(self.base_url.clone()+"/"+&id)
             .send()
             .await
             .unwrap();
@@ -166,10 +168,11 @@ impl Interaction{
             .unwrap()
     }
 
-    pub async fn delete_interaction_by_id(&self, client: Client, token: String, id:String) ->
+    pub async fn delete_interaction_by_id(&self, id:String) ->
     InteractionResponse {
-        let response = client.delete(self.base_url.clone()+"/"+&id)
-            .headers(HeaderUtils::get_auth_token_header(token))
+        let locked_client = CLIENT_DATA.get().unwrap().lock();
+
+        let response = locked_client.unwrap().client.delete(self.base_url.clone()+"/"+&id)
             .send()
             .await
             .unwrap();

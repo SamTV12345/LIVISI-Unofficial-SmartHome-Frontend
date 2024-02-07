@@ -39,7 +39,6 @@ export const Heatingdevice: FC<HeatingdeviceProps> = ({device}) => {
             return
         }
         const heatingModel = constructHeatingModel(state)
-        console.log("HeatingModel", heatingModel)
         axios.post(ACTION_ENDPOINT, heatingModel)
             .then(() => {
                 // @ts-ignore

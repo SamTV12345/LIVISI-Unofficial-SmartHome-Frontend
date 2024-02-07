@@ -1,11 +1,12 @@
 use std::collections::HashMap;
-use reqwest::Client;
-use crate::utils::header_utils::HeaderUtils;
+
+
 use serde::Serialize;
 use serde::Deserialize;
 use serde_json::Value;
 use crate::api_lib::interaction::ValueItem;
-use crate::api_lib::livisi_response_type::{ErrorConstruct, LivisResponseType};
+use crate::api_lib::livisi_response_type::{LivisResponseType};
+use crate::CLIENT_DATA;
 
 #[derive(Clone)]
 pub struct Action{
@@ -67,10 +68,10 @@ impl Action {
             base_url: server_url + "/action"
         }
     }
-    pub async fn post_action(&self, action: ActionPost, access_token: String, client: Client) -> LivisResponseType<ActionPostResponse>
+    pub async fn post_action(&self, action: ActionPost) -> LivisResponseType<ActionPostResponse>
     {
-        let response = client.post(self.base_url.clone())
-            .headers(HeaderUtils::get_auth_token_header(access_token))
+        let locked_client = CLIENT_DATA.get().unwrap().lock();
+        let response = locked_client.unwrap().client.post(self.base_url.clone())
             .json(&action)
             .send()
             .await

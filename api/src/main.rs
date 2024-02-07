@@ -11,7 +11,7 @@ mod ws;
 
 use std::{env, thread};
 use std::env::var;
-use std::fs::File;
+
 use std::io::Read;
 
 use std::sync::{Mutex, OnceLock};
@@ -27,7 +27,7 @@ use actix_web::web::redirect;
 use clokwerk::{Job, Scheduler, TimeUnits};
 
 use regex::Regex;
-use reqwest::Url;
+use reqwest::{Url};
 
 use crate::controllers::action_controller::post_action;
 use crate::controllers::capabilty_controller::{get_capability_states, get_capabilties};
@@ -59,6 +59,9 @@ pub struct AppState{
     token: Mutex<Token>
 }
 
+pub static CLIENT_DATA: OnceLock<Mutex<ClientData>> = OnceLock::new();
+
+
 async fn index() -> impl Responder {
     let index_html = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
@@ -81,7 +84,10 @@ async fn main() -> std::io::Result<()>{
     */
 
 
+
     let base_url = var("BASE_URL").unwrap();
+    CLIENT_DATA.get_or_init(|| Mutex::new(ClientData::new("".to_string())));
+
     WINNER.get_or_init(|| Lobby::default().start());
     let mut oidc_opt: Option<Oidc> = None;
     if var(OIDC_AUTH).is_ok() {
@@ -113,18 +119,19 @@ async fn main() -> std::io::Result<()>{
     let interaction = api_lib::interaction::Interaction::new(base_url.clone());
     let redis_conn = RedisConnection::get_connection();
     let jwk_service = web::Data::new(Mutex::new(models::jwkservice::JWKService::new()));
+    let unmount_service = api_lib::unmount_service::USBService::new(base_url.clone());
 
     let data_redis_conn = web::Data::new(redis_conn);
 
-    thread::spawn(||{
+    spawn(||{
         println!("Starting scheduler");
         let mut scheduler = Scheduler::new();
         scheduler.every(1.day()).plus(10.minutes())
             .run(||{
                 println!("Fetching data");
-                tokio::spawn(async move {
+                async move {
                     RedisConnection::do_db_initialization().await;
-                });
+                };
 
         });
         loop {
@@ -141,6 +148,7 @@ async fn main() -> std::io::Result<()>{
             .service(get_api_config)
             .service(get_secured_scope())
             .app_data(web::Data::new(action.clone()))
+            .app_data(web::Data::new(unmount_service.clone()))
             .app_data(web::Data::new(home.clone()))
             .app_data(web::Data::new(status.clone()))
             .app_data(web::Data::new(users.clone()))
@@ -191,6 +199,8 @@ pub fn get_secured_scope() ->Scope<impl ServiceFactory<ServiceRequest, Config = 
             .service(get_relationship)
             .service(get_device_states)
             .service(get_interactions)
+            .service(unmount_usb_storage)
+            .service(get_usb_status)
 }
 
 pub fn get_ui_config() -> Scope {
@@ -225,7 +235,9 @@ pub fn get_ui_config() -> Scope {
 
 use std::thread::spawn;
 use actix::{Actor, Addr};
+use crate::controllers::unmount_controller::{get_usb_status, unmount_usb_storage};
 use crate::controllers::websocket_controller::start_connection;
+use crate::models::client_data::ClientData;
 use crate::models::socket_event::SocketEvent;
 use crate::ws::broadcast_message::BroadcastMessage;
 use crate::ws::web_socket_message::Lobby;
@@ -234,19 +246,29 @@ pub async fn init_socket(base_url:String, token: String){
 
     let token_encoded = urlencoding::encode(token.as_str()).into_owned();
     spawn(move ||{
-        let mut url = Url::parse(&*(base_url.replace("http://","ws://") + "/events?token=" + &token_encoded)).unwrap();
+        let mut url = Url::parse(&(base_url.replace("http://","ws://") + "/events?token=" + &token_encoded)).unwrap();
         url.set_port(Some(9090)).unwrap();
         let (mut socket, _response) = connect(url).expect("Can't connect");
-        loop {
-            let msg = socket.read().unwrap();
-            println!("Received: {}", msg);
-            let parsed_message = serde_json::from_str::<SocketEvent>(&msg.to_string()).unwrap();
-            println!("Received: {}", msg);
-            let lobby = WINNER.get().unwrap();
-            lobby.do_send(BroadcastMessage{
-                message: parsed_message
-            });
+        let mut retries =0;
 
+        while retries < 5 {
+            loop {
+                match socket.read() {
+                    Ok(msg) => {
+                        let parsed_message = serde_json::from_str::<SocketEvent>(&msg.to_string()).unwrap();
+                        let lobby = WINNER.get().unwrap();
+                        lobby.do_send(BroadcastMessage{
+                            message: parsed_message
+                        });
+                    }
+                    Err(_)=>{
+                        break
+                    }
+                }
+            }
+            retries += 1;
+            thread::sleep(Duration::from_secs(5));
         }
+        println!("Socket connection failed");
     });
 }

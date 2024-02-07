@@ -1,16 +1,14 @@
 use actix_web::{get, HttpResponse, Responder};
 use actix_web::web::Data;
-use reqwest::Client;
-use crate::AppState;
+
+
 use crate::api_lib::user::User;
 
 
 #[get("/users")]
-pub async fn get_users(users: Data<User>, token: Data<AppState>) -> impl Responder{
-    let client = Client::new();
-    let access_token = token.token.lock().unwrap().access_token.clone();
+pub async fn get_users(users: Data<User>) -> impl Responder{
 
-    let found_users = users.get_users(client, access_token).await;
+    let found_users = users.get_users().await;
 
-    return HttpResponse::Ok().json(found_users)
+    HttpResponse::Ok().json(found_users)
 }

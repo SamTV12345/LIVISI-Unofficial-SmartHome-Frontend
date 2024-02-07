@@ -1,8 +1,9 @@
-use reqwest::Client;
-use crate::utils::header_utils::HeaderUtils;
+
+
 use serde_derive::Serialize;
 use serde_derive::Deserialize;
 use crate::api_lib::device::DevicePost;
+use crate::CLIENT_DATA;
 
 #[derive(Clone)]
 pub struct Location{
@@ -32,9 +33,10 @@ impl Location {
         }
     }
 
-    pub async fn get_locations(&self, client: Client, token: String) -> Vec<LocationResponse> {
-        let response = client.get(self.base_url.clone())
-            .headers(HeaderUtils::get_auth_token_header(token))
+    pub async fn get_locations(&self) -> Vec<LocationResponse> {
+        let locked_client = CLIENT_DATA.get().unwrap().lock();
+
+        let response = locked_client.unwrap().client.get(self.base_url.clone())
             .send()
             .await
             .unwrap();
@@ -45,9 +47,9 @@ impl Location {
             .unwrap()
     }
 
-    pub async fn get_location_by_id(&self, client: Client, token: String, location_id: String) -> LocationResponse {
-        let response = client.get(self.base_url.clone()+"/"+&location_id)
-            .headers(HeaderUtils::get_auth_token_header(token))
+    pub async fn get_location_by_id(&self, location_id: String) -> LocationResponse {
+        let locked_client = CLIENT_DATA.get().unwrap().lock();
+        let response = locked_client.unwrap().client.get(self.base_url.clone()+"/"+&location_id)
             .send()
             .await
             .unwrap();

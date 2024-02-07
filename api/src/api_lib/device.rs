@@ -3,10 +3,11 @@ use reqwest::Client;
 use serde_derive::Serialize;
 use serde_derive::Deserialize;
 use serde_json::Value;
-use crate::api_lib::capability::{CapValueItem, CapValueType};
+use crate::api_lib::capability::{CapValueType};
 use crate::api_lib::location::{LocationResponse};
+use crate::CLIENT_DATA;
 
-use crate::utils::header_utils::HeaderUtils;
+
 
 #[derive(Clone)]
 pub struct Device{
@@ -88,25 +89,25 @@ impl Device {
             base_url: server_url+"/device"
         }
     }
-   pub async fn get_devices(&self, client: Client, access_token: String)  ->DeviceResponse{
-        let response = client.get(self.base_url.clone())
-            .headers(HeaderUtils::get_auth_token_header(access_token))
+   pub async fn get_devices(&self)  ->DeviceResponse{
+       let locked_client = CLIENT_DATA.get().unwrap().lock();
+       let response = locked_client.unwrap().client.get(self.base_url.clone())
             .send()
             .await
             .unwrap();
-        return  response.json::<DeviceResponse>()
+        response.json::<DeviceResponse>()
             .await
             .unwrap()
     }
 
 
-    pub async fn get_all_device_states(&self, client: Client, access_token: String) ->DeviceStateResponse{
-        let response = client.get(self.base_url.clone()+"/states")
-            .headers(HeaderUtils::get_auth_token_header(access_token))
+    pub async fn get_all_device_states(&self) ->DeviceStateResponse{
+        let locked_client = CLIENT_DATA.get().unwrap().lock();
+        let response = locked_client.unwrap().client.get(self.base_url.clone()+"/states")
             .send()
             .await
             .unwrap();
-        return  response.json::<DeviceStateResponse>()
+        response.json::<DeviceStateResponse>()
             .await
             .unwrap()
     }
@@ -121,18 +122,18 @@ impl Device {
             Ok(response) => {
                 match response.status().as_u16() {
                     200 => {
-                        let response = response.text().await.unwrap();
-                        response
+                        
+                        response.text().await.unwrap()
                     },
                     _ => {
-                        let response = response.text().await.unwrap();
-                        response
+                        
+                        response.text().await.unwrap()
                     }
                 }
             },
             Err(e) => {
-                let response = e.to_string();
-                response
+                
+                e.to_string()
             }
         }
     }

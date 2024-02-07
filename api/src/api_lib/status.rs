@@ -1,8 +1,9 @@
-use reqwest::Client;
+
 use serde_derive::Serialize;
 use serde_derive::Deserialize;
+use crate::CLIENT_DATA;
 
-use crate::utils::header_utils::HeaderUtils;
+
 
 #[derive(Clone)]
 pub struct Status{
@@ -13,7 +14,7 @@ pub struct Status{
 #[serde(rename_all = "camelCase")]
 pub struct StatusResponse{
     pub app_version: String,
-    pub config_version: String,
+    pub config_version: i32,
     pub connected: bool,
     pub controller_type: String,
     pub network: StatusNetwork,
@@ -46,9 +47,9 @@ impl Status {
             base_url: server_url+"/status"
         }
     }
-   pub async fn get_status(&self, client: Client, token: String) -> StatusResponse {
-        let response = client.get(self.base_url.clone())
-            .headers(HeaderUtils::get_auth_token_header(token))
+   pub async fn get_status(&self) -> StatusResponse {
+       let locked_client = CLIENT_DATA.get().unwrap().lock();
+        let response = locked_client.unwrap().client.get(self.base_url.clone())
             .send()
             .await.unwrap();
 

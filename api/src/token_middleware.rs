@@ -17,6 +17,7 @@ use crate::AppState;
 use crate::utils::connection::RedisConnection;
 
 
+#[derive(Default)]
 pub struct AuthFilter {
 }
 
@@ -31,12 +32,7 @@ pub struct AuthFilterMiddleware<S>{
     service: Rc<S>
 }
 
-impl Default for AuthFilter {
-    fn default() -> Self {
-        Self {
-        }
-    }
-}
+
 
 impl<S, B> Transform<S, ServiceRequest> for AuthFilter
     where
@@ -74,7 +70,7 @@ impl<S, B> Service<ServiceRequest> for AuthFilterMiddleware<S>
     fn call(&self, req: ServiceRequest) -> Self::Future {
 
             // It can only be no auth
-            return self.handle_no_auth(req);
+            self.handle_no_auth(req)
     }
 }
 
@@ -105,7 +101,7 @@ impl<S, B> AuthFilterMiddleware<S> where B: 'static + MessageBody, S: 'static + 
                     extracted_token.created_at = CreatedAt(current_time);
                     extracted_token.expires_in = token.expires_in;
                 }
-                return service
+                service
                     .call(req)
                     .await
                     .map(|res| res.map_into_left_body())
@@ -115,7 +111,7 @@ impl<S, B> AuthFilterMiddleware<S> where B: 'static + MessageBody, S: 'static + 
 
         let service = Rc::clone(&self.service);
         async move {
-            return service
+            service
                 .call(req)
                 .await
                 .map(|res| res.map_into_left_body())

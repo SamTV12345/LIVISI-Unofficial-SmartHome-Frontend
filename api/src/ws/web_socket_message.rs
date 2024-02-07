@@ -21,17 +21,12 @@ pub struct WsMessage(pub String);
 
 type Socket = Recipient<WsMessage>;
 
+#[derive(Default)]
 pub struct Lobby {
     sessions: HashMap<Uuid, Socket>,
 }
 
-impl Default for Lobby {
-    fn default() -> Lobby {
-        Lobby {
-            sessions: HashMap::new(),
-        }
-    }
-}
+
 
 impl Handler<BroadcastMessage> for Lobby {
     type Result = ();

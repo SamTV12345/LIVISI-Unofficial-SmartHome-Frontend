@@ -11,6 +11,8 @@ use crate::api_lib::capability::Capability;
 use crate::api_lib::device::{Device, DevicePost};
 use crate::api_lib::location::{Location, LocationResponse};
 use crate::api_lib::user_storage::UserStorage;
+use crate::CLIENT_DATA;
+use crate::models::client_data::ClientData;
 
 #[derive(Clone)]
 pub struct RedisConnection{
@@ -18,12 +20,12 @@ pub struct RedisConnection{
 
 impl RedisConnection{
     pub fn get_connection() -> Client {
-        return Client::open(var(REDIS_ENV).unwrap()).unwrap();
+        Client::open(var(REDIS_ENV).unwrap()).unwrap()
 
     }
 
     pub fn get_redis_connection(client: Client) -> Connection {
-        return client.get_connection().unwrap();
+        client.get_connection().unwrap()
     }
 
     pub fn save_to_redis(mut client: Connection, key: &str, value: &str) {
@@ -32,17 +34,21 @@ impl RedisConnection{
 
     pub fn get_from_redis(mut conn: Connection, key: &str) -> String {
         let res:redis::RedisResult<String> = redis::cmd("GET").arg(key).query(&mut conn);
-        return res.unwrap();
+        res.unwrap()
     }
 
     pub fn save_token(conn: Connection, token: Token){
+        {
+            let data = CLIENT_DATA.get().unwrap().lock();
+            *data.unwrap() = ClientData::new(token.access_token.clone());
+        }
         let token_string = serde_json::to_string(&token).unwrap();
         RedisConnection::save_to_redis(conn, TOKEN, &token_string);
     }
 
     pub fn is_token_present(mut conn: Connection) -> bool {
         let res:redis::RedisResult<String> = redis::cmd("GET").arg("token").query(&mut conn);
-        return res.is_ok();
+        res.is_ok()
     }
 
     pub async fn get_token() -> Result<Token, ()>{
@@ -63,7 +69,7 @@ impl RedisConnection{
                 println!("Error: {}", e);
             }
         }
-        return Err(());
+        Err(())
     }
 
     pub async fn do_db_initialization(){
@@ -92,21 +98,21 @@ impl RedisConnection{
         let capabilities = Capability::new(var(SERVER_URL).unwrap());
         let locations = Location::new(var(SERVER_URL).unwrap());
         let user_storage = UserStorage::new(var(SERVER_URL).unwrap());
-        let client = ReqwestClient::new();
-        let client2 = ReqwestClient::new();
+        let _client = ReqwestClient::new();
+        let _client2 = ReqwestClient::new();
 
 
 
-        let capabilities = capabilities.get_capabilities(client.clone(), token.access_token.clone())
+        let capabilities = capabilities.get_capabilities()
             .await;
 
         Self::save_to_redis(conn.get_connection().unwrap(),CAPABILITIES, &serde_json::to_string
             (&capabilities).unwrap());
 
-        let client = ReqwestClient::new();
-        let mut locations = locations.get_locations(client, token.access_token.clone()).await;
+        let _client = ReqwestClient::new();
+        let mut locations = locations.get_locations().await;
 
-        let mut found_devices = devices.get_devices(client2, token.access_token.clone()).await;
+        let mut found_devices = devices.get_devices().await;
 
         let mut map:HashMap<String, LocationResponse> = HashMap::new();
         let mut map_of_location_to_device:HashMap<String, Vec<DevicePost>> = HashMap::new();
@@ -116,7 +122,7 @@ impl RedisConnection{
         }
 
 
-        found_devices.0.iter_mut().for_each(|mut device| {
+        found_devices.0.iter_mut().for_each(|device| {
             if device.location.is_some(){
                 let opt_location = map.get(&device.location.clone().unwrap());
                 if opt_location.is_some(){

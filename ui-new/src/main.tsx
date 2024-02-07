@@ -16,6 +16,7 @@ import {HelpPage} from "@/src/pages/HelpPage.tsx";
 import {AboutPage} from "@/src/pages/AboutPage.tsx";
 import {ErrorPage} from "@/src/pages/ErrorPage.tsx";
 import {SocketMessage} from "@/src/models/SocketMessage.ts";
+import {SettingsPage} from "@/src/pages/SettingsPage.tsx";
 
 const router = createBrowserRouter(createRoutesFromElements(
     <Route path="/">
@@ -26,7 +27,7 @@ const router = createBrowserRouter(createRoutesFromElements(
             <Route path="home" element={<HomeScreen/>}/>
             <Route path="devices" element={<DeviceScreen/>}/>
             <Route path="news" element={<NewsScreen/>}/>
-            <Route path="settings" element={<div></div>}/>
+            <Route path="settings" element={<SettingsPage/>}/>
             <Route path="help">
                 <Route index element={<HelpPage/>}/>
                 <Route path="about" element={<AboutPage/>}/>

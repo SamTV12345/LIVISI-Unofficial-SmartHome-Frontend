@@ -1,4 +1,4 @@
-use std::env;
+
 use std::env::var;
 use std::pin::Pin;
 use std::rc::Rc;
@@ -21,6 +21,7 @@ use crate::constants::constants::{BASIC_AUTH, PASSWORD_BASIC, USERNAME_BASIC};
 
 
 
+#[derive(Default)]
 pub struct AuthFilter {
 }
 
@@ -35,12 +36,7 @@ pub struct AuthFilterMiddleware<S>{
     service: Rc<S>
 }
 
-impl Default for AuthFilter {
-    fn default() -> Self {
-        Self {
-        }
-    }
-}
+
 
 impl<S, B> Transform<S, ServiceRequest> for AuthFilter
     where
@@ -76,7 +72,7 @@ impl<S, B> Service<ServiceRequest> for AuthFilterMiddleware<S>
     forward_ready!(service);
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
-        return if var(BASIC_AUTH).is_ok() {
+        if var(BASIC_AUTH).is_ok() {
             self.handle_basic_auth(req)
         } else {
             // It can only be no auth
@@ -100,7 +96,7 @@ impl<S, B> AuthFilterMiddleware<S> where B: 'static + MessageBody, S: 'static + 
                         true => {
                             let service = Rc::clone(&self.service);
                             async move {
-                                return service
+                                service
                                     .call(req)
                                     .await
                                     .map(|res| res.map_into_left_body())
@@ -127,7 +123,7 @@ impl<S, B> AuthFilterMiddleware<S> where B: 'static + MessageBody, S: 'static + 
     futures_util::Future<Output=Result<ServiceResponse<EitherBody<B>>, Error>>>>{
         let service = Rc::clone(&self.service);
         async move {
-            return service
+            service
                 .call(req)
                 .await
                 .map(|res| res.map_into_left_body())
@@ -139,11 +135,11 @@ impl<S, B> AuthFilterMiddleware<S> where B: 'static + MessageBody, S: 'static + 
 impl AuthFilter{
     pub fn extract_basic_auth(auth: &str) -> (String, String) {
         let auth = auth.to_string();
-        let auth = auth.split(" ").collect::<Vec<&str>>();
+        let auth = auth.split(' ').collect::<Vec<&str>>();
         let auth = auth[1];
         let auth = general_purpose::STANDARD.decode(auth).unwrap();
         let auth = String::from_utf8(auth).unwrap();
-        let auth = auth.split(":").collect::<Vec<&str>>();
+        let auth = auth.split(':').collect::<Vec<&str>>();
         let username = auth[0];
         let password = auth[1];
         (username.to_string(), password.to_string())

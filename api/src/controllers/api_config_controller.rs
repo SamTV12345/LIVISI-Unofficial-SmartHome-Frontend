@@ -41,7 +41,7 @@ pub async fn get_api_config() ->impl Responder{
             scope: var(OIDC_SCOPE).unwrap_or("openid profile email".to_string())
         });
     }
-    return HttpResponse::Ok().json(config);
+    HttpResponse::Ok().json(config)
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -52,7 +52,7 @@ pub struct LoginRequest {
 
 #[post("/login")]
 pub async fn login(auth: web::Json<LoginRequest>) -> impl Responder {
-    if !var(BASIC_AUTH).is_ok() {
+    if var(BASIC_AUTH).is_err() {
         return HttpResponse::Unauthorized()
             .json("Username or password incorrect");
     }
@@ -60,6 +60,6 @@ pub async fn login(auth: web::Json<LoginRequest>) -> impl Responder {
     if auth.0.username == var(USERNAME_BASIC).unwrap() && auth.0.password == var(PASSWORD_BASIC).unwrap() {
         return HttpResponse::Ok().json("Login successful");
     }
-    return HttpResponse::Unauthorized()
-        .json("Username or password incorrect");
+    HttpResponse::Unauthorized()
+        .json("Username or password incorrect")
 }

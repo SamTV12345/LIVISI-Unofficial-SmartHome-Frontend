@@ -1,16 +1,14 @@
 
 use actix_web::{get, HttpResponse, Responder};
 use actix_web::web::Data;
-use reqwest::Client;
-use crate::AppState;
+
+
 use crate::api_lib::status::Status;
 
 
 #[get("/status")]
-pub async fn get_status(status_lib:Data<Status>, token: Data<AppState>) -> impl Responder{
-    let client = Client::new();
-    let access_token = token.token.lock().unwrap().access_token.clone();
-    let response = status_lib.get_status(client, access_token).await;
-    return HttpResponse::Ok()
-        .json(response);
+pub async fn get_status(status_lib:Data<Status>) -> impl Responder{
+    let response = status_lib.get_status().await;
+    HttpResponse::Ok()
+        .json(response)
 }

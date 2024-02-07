@@ -1,7 +1,8 @@
-use reqwest::Client;
-use crate::utils::header_utils::HeaderUtils;
+
+
 use serde::Serialize;
 use serde::Deserialize;
+use crate::CLIENT_DATA;
 
 #[derive(Default,Serialize,Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -39,9 +40,10 @@ impl Home{
         }
     }
 
-    pub async fn get_home_setup(&self, client: Client, token: String) ->HomeSetupResponse {
-        let response = client.get(self.base_url.clone()+"/setup")
-            .headers(HeaderUtils::get_auth_token_header(token))
+    pub async fn get_home_setup(&self) ->HomeSetupResponse {
+        let locked_client = CLIENT_DATA.get().unwrap().lock();
+
+        let response = locked_client.unwrap().client.get(self.base_url.clone()+"/setup")
             .send()
             .await
             .unwrap();

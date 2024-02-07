@@ -12,7 +12,7 @@ impl HeaderUtils{
         let auth_string = "clientId:clientPass";
         let b64_auth = general_purpose::STANDARD.encode(auth_string);
         map.append(AUTHORIZATION, ("Basic ".to_owned() + &b64_auth).parse().unwrap());
-        return map
+        map
     }
 
     pub fn get_auth_token_header(token:String)->HeaderMap{
@@ -20,6 +20,6 @@ impl HeaderUtils{
 
         map.append(AUTHORIZATION, HeaderValue::from_str(&format!("Bearer {}",token)
         ).unwrap());
-        return map
+        map
     }
 }

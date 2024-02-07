@@ -1,5 +1,4 @@
 export const formatTime = (time: string): string => {
-    console.log(time)
     const date = new Date(time)
     const now = new Date()
     date.setSeconds(0)

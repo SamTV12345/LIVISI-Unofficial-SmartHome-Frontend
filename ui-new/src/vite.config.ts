@@ -1,58 +1,28 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react-swc'
 
+const target = {
+    target: 'http://127.0.0.1:8000',
+    changeOrigin: true,
+    secure: false
+}
 // https://vitejs.dev/config/
 export default defineConfig({
     base:'/ui/',
     plugins: [react()],
     server:{
         proxy:{
-            '/websocket':{
-                target: 'http://127.0.0.1:8000',
-                changeOrigin: true,
-                secure: false,
-                forward: true
-            },
-            '/status':{
-                target: 'http://127.0.0.1:8000',
-                changeOrigin: true,
-                secure: false,
-            },
-            '/states':{
-                target: 'http://127.0.0.1:8000',
-                changeOrigin: true,
-                secure: false,
-            },
-            '/device':{
-                target: 'http://127.0.0.1:8000',
-                changeOrigin: true,
-                secure: false,
-            },
-            '/capability':{
-                target: 'http://127.0.0.1:8000',
-                changeOrigin: true,
-                secure: false,
-            },
-            '/message':{
-                target: 'http://127.0.0.1:8000',
-                changeOrigin: true,
-                secure: false,
-            },
-            '/interaction':{
-                target: 'http://127.0.0.1:8000',
-                changeOrigin: true,
-                secure: false,
-            },
-            '/hash':{
-                target: 'http://127.0.0.1:8000',
-                changeOrigin: true,
-                secure: false,
-            },
-            '/api/server':{
-                target: 'http://127.0.0.1:8000',
-                changeOrigin: true,
-                secure: false,
-            }
+            '/websocket': target,
+            '/usb_storage': target,
+            '/unmount': target,
+            '/status': target,
+            '/states': target,
+            '/device': target,
+            '/capability': target,
+            '/message':target,
+            '/interaction':target,
+            '/hash':target,
+            '/api/server': target
         }
     }
 })

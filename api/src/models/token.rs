@@ -13,12 +13,9 @@ pub struct Token {
 }
 
 #[derive(Serialize,Deserialize, Debug,Clone)]
+#[derive(Default)]
 pub struct CreatedAt(pub u64);
-impl Default for CreatedAt {
-    fn default() -> Self {
-        CreatedAt(0)
-    }
-}
+
 
 #[derive(Serialize,Deserialize, Debug, Clone)]
 pub struct TokenRequest{
