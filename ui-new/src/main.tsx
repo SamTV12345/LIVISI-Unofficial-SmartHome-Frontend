@@ -30,7 +30,10 @@ const router = createBrowserRouter(createRoutesFromElements(
     basename: import.meta.env.BASE_URL
 })
 
-const ws = new WebSocket("ws://localhost:8000/websocket")
+
+const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws"
+
+const ws = new WebSocket(wsProtocol+"://"+window.location.host+"/websocket")
 
 ws.onerror = (e)=>{
     console.log(e)
