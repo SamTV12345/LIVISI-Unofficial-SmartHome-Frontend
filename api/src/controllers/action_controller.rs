@@ -7,7 +7,7 @@ use actix_web::post;
 
 #[post("/action")]
 pub async fn post_action(action_lib: Data<Action>,action: web::Json<ActionPost>, token:
-Data<AppState>)-> Result<HttpResponse, crate::api_lib::livisiresponse_type::ErrorConstruct>{
+Data<AppState>)-> Result<HttpResponse, crate::api_lib::livisi_response_type::ErrorConstruct>{
     let client = Client::new();
     let access_token = token.token.lock().unwrap().access_token.clone();
 

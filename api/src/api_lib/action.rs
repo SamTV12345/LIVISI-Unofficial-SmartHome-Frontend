@@ -5,7 +5,7 @@ use serde::Serialize;
 use serde::Deserialize;
 use serde_json::Value;
 use crate::api_lib::interaction::ValueItem;
-use crate::api_lib::livisiresponse_type::{ErrorConstruct, LivisResponseType};
+use crate::api_lib::livisi_response_type::{ErrorConstruct, LivisResponseType};
 
 #[derive(Clone)]
 pub struct Action{
