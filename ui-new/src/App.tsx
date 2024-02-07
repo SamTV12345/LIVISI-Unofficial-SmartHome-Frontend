@@ -23,9 +23,10 @@ function App() {
     const mapOfStates = useContentModel(state => state.mapOfStates)
     const deviceIdMap = useContentModel(state => state.deviceIdMap)
     const loadingComplete = useMemo(() => {
-        return devices && capabilityStates && mapOfStates.size > 0 && mapOfDevices.size > 0
+        return devices && capabilityStates && mapOfStates !==undefined && mapOfDevices !==undefined
 
-    }, [devices, capabilityStates])
+    }, [devices, capabilityStates,mapOfStates, mapOfDevices])
+
     const navigate = useNavigate()
 
     useEffect(() => {

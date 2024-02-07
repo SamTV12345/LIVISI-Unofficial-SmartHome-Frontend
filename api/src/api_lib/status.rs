@@ -12,12 +12,32 @@ pub struct Status{
 #[derive(Default,Serialize,Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct StatusResponse{
-    pub serial_number: String,
-    pub connected: bool,
     pub app_version: String,
-    pub os_version: String,
     pub config_version: String,
-    pub controller_type: String
+    pub connected: bool,
+    pub controller_type: String,
+    pub network: StatusNetwork,
+    pub os_version: String,
+    pub serial_number: String,
+    pub operation_status: String
+}
+
+#[derive(Default,Serialize,Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct StatusNetwork {
+    pub backend_available: bool,
+    pub bluetooth_hotspot_name: String,
+    pub eth_cable_attached: bool,
+    pub eth_ip_address: String,
+    pub eth_mac_address: String,
+    pub hostname: String,
+    pub hotspot_active: bool,
+    pub in_use_adapter: String,
+    pub wifi_active_ssid: String,
+    pub wifi_ip_address: String,
+    pub wifi_mac_address: String,
+    pub wifi_signal_strength: i32,
+    pub wps_active: bool,
 }
 
 impl Status {
