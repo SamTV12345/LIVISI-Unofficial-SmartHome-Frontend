@@ -226,6 +226,7 @@ pub fn get_ui_config() -> Scope {
 use std::thread::spawn;
 use actix::{Actor, Addr};
 use crate::controllers::websocket_controller::start_connection;
+use crate::models::socket_event::SocketEvent;
 use crate::ws::broadcast_message::BroadcastMessage;
 use crate::ws::web_socket_message::Lobby;
 
@@ -238,11 +239,12 @@ pub async fn init_socket(base_url:String, token: String){
         let (mut socket, _response) = connect(url).expect("Can't connect");
         loop {
             let msg = socket.read().unwrap();
-
+            println!("Received: {}", msg);
+            let parsed_message = serde_json::from_str::<SocketEvent>(&msg.to_string()).unwrap();
             println!("Received: {}", msg);
             let lobby = WINNER.get().unwrap();
             lobby.do_send(BroadcastMessage{
-                message: msg.to_string()
+                message: parsed_message
             });
 
         }

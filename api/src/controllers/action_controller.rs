@@ -4,6 +4,7 @@ use reqwest::Client;
 use crate::AppState;
 use crate::api_lib::action::{Action, ActionPost, ActionPostResponse};
 use actix_web::post;
+use crate::api_lib::livisi_response_type::LivisResponseType;
 
 #[post("/action")]
 pub async fn post_action(action_lib: Data<Action>,action: web::Json<ActionPost>, token:
@@ -11,7 +12,10 @@ Data<AppState>)-> Result<HttpResponse, crate::api_lib::livisi_response_type::Err
     let client = Client::new();
     let access_token = token.token.lock().unwrap().access_token.clone();
 
-    let result = action_lib.post_action(action.into_inner(), access_token, client).await?;
+    let result = action_lib.post_action(action.into_inner(), access_token, client).await;
 
-    Ok(HttpResponse::Ok().json(result))
+    return match result {
+        LivisResponseType::Ok(result) => Ok(HttpResponse::Ok().json(result)),
+        LivisResponseType::Err(err) => Err(err)
+    }
 }

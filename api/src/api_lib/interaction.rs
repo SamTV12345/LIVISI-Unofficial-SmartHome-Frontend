@@ -46,6 +46,8 @@ pub struct InteractionResponse{
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tags: Option<HashMap<String,String>>
 }
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Details {}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(untagged)]
@@ -54,6 +56,7 @@ pub enum FieldValue {
     BooleanValue(bool),
     IntegerValue(i32),
     FloatValue(f32),
+    Struct(Details)
 }
 
 #[derive(Serialize,Deserialize, Debug, Clone)]

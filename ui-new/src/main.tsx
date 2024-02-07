@@ -14,6 +14,8 @@ import {Root} from "@/src/components/actionComponents/Root.tsx";
 import {NewsScreen} from "@/src/pages/NewsScreen.tsx";
 import {HelpPage} from "@/src/pages/SettingsPage.tsx";
 import {AboutPage} from "@/src/pages/AboutPage.tsx";
+import {ErrorPage} from "@/src/pages/ErrorPage.tsx";
+import {SocketMessage} from "@/src/models/SocketMessage.ts";
 
 const router = createBrowserRouter(createRoutesFromElements(
     <Route path="/">
@@ -28,6 +30,7 @@ const router = createBrowserRouter(createRoutesFromElements(
             <Route path="help">
                 <Route index element={<HelpPage/>}/>
                 <Route path="about" element={<AboutPage/>}/>
+                <Route path="errors" element={<ErrorPage/>}/>
             </Route>
 
         </Route>
@@ -38,10 +41,17 @@ const router = createBrowserRouter(createRoutesFromElements(
     basename: import.meta.env.BASE_URL
 })
 
-
+let ws
 const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws"
+if (import.meta.env.MODE === "development") {
+    console.log("development mode")
+    console.log("connecting to " + wsProtocol + "://" + window.location.host + "/websocket")
+    ws = new WebSocket(wsProtocol + "://" + "localhost:8000" + "/websocket")
 
-const ws = new WebSocket(wsProtocol + "://" + window.location.host + "/websocket")
+} else {
+    ws = new WebSocket(wsProtocol + "://" + window.location.host + "/websocket")
+
+}
 
 ws.onerror = (e) => {
     console.log(e)
@@ -50,7 +60,7 @@ ws.onopen = () => {
     console.log("connected")
 }
 
-ws.onmessage = (e) => {
+ws.onmessage = (e: MessageEvent<SocketMessage>) => {
     console.log(e.data)
 }
 

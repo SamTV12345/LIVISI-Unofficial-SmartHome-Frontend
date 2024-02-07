@@ -67,7 +67,7 @@ impl Action {
             base_url: server_url + "/action"
         }
     }
-    pub async fn post_action(&self, action: ActionPost, access_token: String, client: Client) -> Result<ActionPostResponse, ErrorConstruct>
+    pub async fn post_action(&self, action: ActionPost, access_token: String, client: Client) -> LivisResponseType<ActionPostResponse>
     {
         let response = client.post(self.base_url.clone())
             .headers(HeaderUtils::get_auth_token_header(access_token))
@@ -76,7 +76,7 @@ impl Action {
             .await
             .unwrap();
         response
-            .json::<Result<ActionPostResponse, ErrorConstruct>>()
+            .json::<LivisResponseType<ActionPostResponse>>()
             .await
             .unwrap()
     }

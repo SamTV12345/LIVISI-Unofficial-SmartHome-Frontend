@@ -1,11 +1,13 @@
 use std::fmt::{Display, Formatter};
 use actix_web::ResponseError;
 use serde_derive::{Deserialize, Serialize};
-use crate::api_lib::action::ActionPost;
 
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(untagged)]
 pub enum LivisResponseType<T> {
-    Success(T),
-    Error(ErrorConstruct)
+    Ok(T),
+    Err(ErrorConstruct)
 }
 
 #[derive(Default,Serialize,Deserialize, Debug)]
