@@ -1,6 +1,8 @@
 export const CAPABILITY_PREFIX = '/capability/'
 export const CAPABILITY_FULL_PATH = "/capability/states"
 
+export const INTERACTION_PREFIX = '/interaction'
+
 export const USER_STORAGE_FULL_PATH = "/userstorage"
 
 export const HOME_PAGE_DEVIVE_VISIBILITY = "HomepageDeviceVisibility"

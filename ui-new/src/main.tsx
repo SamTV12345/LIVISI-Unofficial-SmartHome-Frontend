@@ -17,6 +17,8 @@ import {AboutPage} from "@/src/pages/AboutPage.tsx";
 import {ErrorPage} from "@/src/pages/ErrorPage.tsx";
 import {SocketMessage} from "@/src/models/SocketMessage.ts";
 import {SettingsPage} from "@/src/pages/SettingsPage.tsx";
+import {DeviceDetailPage} from "@/src/pages/DeviceDetailPage.tsx";
+import {ScenarioScreen} from "@/src/pages/ScenarioScreen.tsx";
 
 const router = createBrowserRouter(createRoutesFromElements(
     <Route path="/">
@@ -25,7 +27,13 @@ const router = createBrowserRouter(createRoutesFromElements(
         </AuthWrapper>}>
             <Route index element={<HomeScreen/>}/>
             <Route path="home" element={<HomeScreen/>}/>
-            <Route path="devices" element={<DeviceScreen/>}/>
+            <Route path="devices">
+                <Route index element={<DeviceScreen/>}/>
+                <Route path=":id" element={<DeviceDetailPage/>}/>
+            </Route>
+            <Route path="scenarios">
+                <Route index element={<ScenarioScreen/>}/>
+            </Route>
             <Route path="news" element={<NewsScreen/>}/>
             <Route path="settings" element={<SettingsPage/>}/>
             <Route path="help">

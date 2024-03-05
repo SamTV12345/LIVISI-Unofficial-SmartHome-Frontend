@@ -9,13 +9,14 @@ import {LocationResponse} from "@/src/models/Location.ts";
 import {CapabilityState} from "@/src/models/CapabilityState.ts";
 import {
     CAPABILITY_FULL_PATH,
-    CAPABILITY_PREFIX,
+    CAPABILITY_PREFIX, INTERACTION_PREFIX,
     USER_STORAGE_FULL_PATH
 } from "@/src/constants/FieldConstants.ts";
 import {UserStorage} from "@/src/models/UserStorage.ts";
 import {LoadingScreen} from "@/src/components/actionComponents/LoadingScreen.tsx";
 import {useNavigate} from "react-router-dom";
 import logo from './assets/livisi-logo.png'
+import {Interaction} from "@/src/models/Interaction.ts";
 function App() {
     const devices = useContentModel(state => state.devices)
     const mapOfDevices = useContentModel(state => state.mapOfDevices)
@@ -56,6 +57,14 @@ function App() {
             })
         }
     }, [locations]);
+
+
+    useEffect(() => {
+        axios.get(INTERACTION_PREFIX)
+            .then((v: AxiosResponse<Interaction[]>) => {
+                useContentModel.getState().setInteractions(v.data)
+            })
+    }, []);
 
     useEffect(() => {
         axios.get(CAPABILITY_FULL_PATH)
@@ -107,7 +116,7 @@ function App() {
                 }}>Hilfe</button>
             </div>
             <div className="flex header mb-5">
-                <div><img src={logo} className="w-10" alt="LIVISI Smarthome logo"/></div>
+                <img src={logo} className="w-10" alt="LIVISI Smarthome logo"/>
                 <div className="ml-20 flex gap-10 text-2xl">
                     <LinkNav to={'/home'}>Home</LinkNav>
                     <LinkNav to={'/devices'}>Geräte</LinkNav>

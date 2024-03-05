@@ -4,10 +4,9 @@ use std::pin::Pin;
 use std::rc::Rc;
 
 
-use actix::ActorFutureExt;
 use actix::fut::{ok};
 use futures_util::{FutureExt};
-use actix_web::{dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform}, Error, HttpMessage};
+use actix_web::{dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform}, Error};
 use actix_web::body::{EitherBody, MessageBody};
 use actix_web::error::{ErrorUnauthorized};
 

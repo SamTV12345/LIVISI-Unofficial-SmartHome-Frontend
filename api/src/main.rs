@@ -129,7 +129,7 @@ async fn main() -> std::io::Result<()>{
         scheduler.every(1.day()).plus(10.minutes())
             .run(||{
                 println!("Fetching data");
-                async move {
+                let _ = async move {
                     RedisConnection::do_db_initialization().await;
                 };
 

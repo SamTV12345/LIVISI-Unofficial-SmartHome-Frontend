@@ -5,6 +5,7 @@ import {CapabilityState} from "@/src/models/CapabilityState.ts";
 import {UserStorage} from "@/src/models/UserStorage.ts";
 import {ConfigModel} from "@/src/models/ConfigModel.ts";
 import {Message} from "@/src/models/Messages.ts";
+import {Interaction} from "@/src/models/Interaction.ts";
 
 export type LoginData = {
     username: string,
@@ -28,12 +29,14 @@ interface ContentModelState {
     setUserStorage(data: UserStorage[]): void;
     userStorage: Map<string,UserStorage>;
     deviceIdMap: Map<string, Device>,
+    interactions: Interaction[]|undefined,
     loginConfig: ConfigModel|undefined
     setLoginConfig(config: ConfigModel): void,
     loginData: LoginData|undefined,
     setLoginData(data: LoginData): void,
     messages: Message[],
-    setMessages(data: Message[]): void
+    setMessages(data: Message[]): void,
+    setInteractions(data: Interaction[]): void
 }
 
 
@@ -78,5 +81,9 @@ export const useContentModel = create<ContentModelState>((set)=>({
     messages: [],
     setMessages(data: Message[]) {
         set(()=>({messages: data}))
+    },
+    interactions: undefined,
+    setInteractions(data: Interaction[]) {
+        set(()=>({interactions: data}))
     }
 }))

@@ -8,7 +8,8 @@ export default defineConfig({
   plugins: [tsconfigPaths(),react()],
   base: '/ui/',
   server:{
-    proxy:{
+    port: 3000,
+    proxy: {
       '/websocket':{
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,

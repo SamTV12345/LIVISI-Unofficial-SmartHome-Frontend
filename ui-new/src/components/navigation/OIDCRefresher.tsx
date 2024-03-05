@@ -2,7 +2,6 @@ import {FC, PropsWithChildren} from "react";
 import {useAuth} from "react-oidc-context";
 import axios from "axios";
 import useOnMount from "@/src/hooks/useOnMount.tsx";
-import {LoadingScreen} from "@/src/components/actionComponents/LoadingScreen.tsx";
 
 export const OIDCRefresher:FC<PropsWithChildren> = ({children})=>{
     const auth = useAuth()
@@ -22,7 +21,6 @@ export const OIDCRefresher:FC<PropsWithChildren> = ({children})=>{
 
     if (axios.defaults.headers.common['Authorization'] == undefined && auth.user?.access_token){
         axios.defaults.headers.common['Authorization'] = 'Bearer ' + auth.user.access_token
-        return <LoadingScreen/>
     }
 
     return <>
