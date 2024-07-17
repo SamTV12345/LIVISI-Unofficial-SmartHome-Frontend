@@ -56,7 +56,8 @@ pub enum FieldValue {
     BooleanValue(bool),
     IntegerValue(i32),
     FloatValue(f32),
-    Struct(Details)
+    Struct(Details),
+    None
 }
 
 #[derive(Serialize,Deserialize, Debug, Clone)]
