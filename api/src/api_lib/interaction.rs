@@ -57,7 +57,6 @@ pub enum FieldValue {
     IntegerValue(i32),
     FloatValue(f32),
     Struct(Details),
-    None
 }
 
 #[derive(Serialize,Deserialize, Debug, Clone)]
@@ -80,7 +79,7 @@ pub struct InteractionRule{
 #[serde(rename_all = "camelCase")]
 pub struct ValueItem{
     pub r#type: String,
-    pub value: FieldValue
+    pub value: Option<FieldValue>
 }
 
 #[derive(Serialize,Deserialize, Debug, Clone)]
