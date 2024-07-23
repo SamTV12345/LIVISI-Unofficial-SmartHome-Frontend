@@ -8,7 +8,7 @@ pub struct UserStorage{
     pub base_url: String,
 }
 
-#[derive(Serialize,Deserialize, Debug)]
+#[derive(Serialize,Deserialize, Debug, Clone)]
 pub struct UserStorageResponse(pub Vec<Value>);
 
 impl UserStorage {

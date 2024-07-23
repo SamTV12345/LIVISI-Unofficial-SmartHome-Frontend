@@ -188,6 +188,7 @@ pub fn get_secured_scope() ->Scope<impl ServiceFactory<ServiceRequest, Config = 
             .service(get_relationship)
             .service(get_device_states)
             .service(get_interactions)
+            .service(get_all_api)
             .service(unmount_usb_storage)
             .service(get_usb_status)
 }
@@ -224,6 +225,7 @@ pub fn get_ui_config() -> Scope {
 
 use std::thread::spawn;
 use actix::{Actor, Addr};
+use crate::controllers::all_api::get_all_api;
 use crate::controllers::unmount_controller::{get_usb_status, unmount_usb_storage};
 use crate::controllers::websocket_controller::start_connection;
 use crate::models::client_data::ClientData;

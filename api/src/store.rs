@@ -28,7 +28,9 @@ pub struct DeviceStore {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tags: Option<Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub location_data: Option<LocationResponse>
+    pub location_data: Option<LocationResponse>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub capability_data: Option<Vec<CapabilitiesStore>>
 }
 
 #[derive(Default,Serialize,Deserialize, Debug,Clone)]
@@ -39,6 +41,7 @@ pub struct  CapabilitiesStore {
     pub config: CapabilityConfig
 }
 
+#[derive(Default,Serialize,Deserialize, Debug, Clone)]
 pub struct Data {
     pub devices: Vec<DeviceStore>,
     pub status: Option<StatusResponse>,
@@ -65,6 +68,7 @@ impl Data {
                 capabilities: device.capabilities.clone(),
                 tags: device.tags.clone(),
                 location_data: None,
+                capability_data: None
             }
         ).collect::<Vec<_>>();
         self.devices = devices;
@@ -77,28 +81,52 @@ impl Data {
     pub fn set_locations(&mut self, locations: Vec<LocationResponse>) {
         self.locations = locations.clone();
         self.devices.iter_mut().for_each(|device| {
-            if device.location.is_some(){
-                let opt_location = locations.iter().find(|location| location.id == device.location.clone().unwrap());
-                if opt_location.is_some(){
-                    let wrapped = opt_location.unwrap();
-                    device.location_data = Some(LocationResponse{
-                        id: wrapped.id.clone(),
-                        config: wrapped.config.clone(),
-                        devices: None
-                    });
-                }
+
+            match &device.location {
+                Some(location) => {
+                    let opt_location = locations.iter().find(|location_iter| location_iter.id ==
+                        location.replace("/location/","").clone());
+                    if opt_location.is_some(){
+                        let wrapped = opt_location.unwrap();
+                        device.location_data = Some(LocationResponse{
+                            id: wrapped.id.clone(),
+                            config: wrapped.config.clone(),
+                            devices: None
+                        });
+                    }
+                },
+                None => {}
             }
         });
     }
 
     pub fn set_capabilities(&mut self, capabilities: CapabilityResponse) {
-        self.capabilities = capabilities.0.iter().map(|capability| CapabilitiesStore {
+        self.capabilities = capabilities.0
+            .iter()
+            .map(|capability| CapabilitiesStore {
             id: capability.id.clone(),
             r#type: capability.r#type.clone(),
             device: capability.device.clone(),
             config: capability.config.clone()
         })
             .collect::<Vec<_>>();
+
+        self.devices.iter_mut().for_each(|device|{
+
+            if let Some(capabilities) = &device.capabilities {
+                let mut cap = Vec::new();
+                capabilities.iter().for_each(|capability| {
+                    self.capabilities.iter().for_each(|capability_store| {
+                        if capability_store.id == *capability.replace("/capability/","") {
+                            cap.push(capability_store.clone());
+                        }
+                    })
+                });
+                device.capability_data = Some(cap);
+            }
+        })
+
+
     }
 
     pub fn set_user_storage(&mut self, user_storage: UserStorageResponse) {

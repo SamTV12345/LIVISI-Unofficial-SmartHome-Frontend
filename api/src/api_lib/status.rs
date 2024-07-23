@@ -10,7 +10,7 @@ pub struct Status{
     base_url: String,
 }
 
-#[derive(Default,Serialize,Deserialize, Debug)]
+#[derive(Default,Serialize,Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct StatusResponse{
     pub app_version: String,
@@ -23,7 +23,7 @@ pub struct StatusResponse{
     pub operation_status: String
 }
 
-#[derive(Default,Serialize,Deserialize, Debug)]
+#[derive(Default,Serialize,Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct StatusNetwork {
     pub backend_available: bool,
