@@ -1,7 +1,7 @@
-use actix_web::http::header::{AUTHORIZATION, HeaderValue};
 use base64::Engine;
 use base64::engine::general_purpose;
-use reqwest::header::HeaderMap;
+use reqwest::header::{AUTHORIZATION, HeaderMap, HOST};
+use crate::STORE_DATA;
 
 pub struct HeaderUtils;
 
@@ -11,15 +11,17 @@ impl HeaderUtils{
         let mut map = HeaderMap::new();
         let auth_string = "clientId:clientPass";
         let b64_auth = general_purpose::STANDARD.encode(auth_string);
-        map.append(AUTHORIZATION, ("Basic ".to_owned() + &b64_auth).parse().unwrap());
+        map.insert(AUTHORIZATION, ("Basic ".to_owned() + &b64_auth).parse().unwrap());
         map
     }
 
-    pub fn get_auth_token_header(token:String)->HeaderMap{
+    pub fn get_auth_token_header()->HeaderMap{
         let mut map = HeaderMap::new();
+        let token = STORE_DATA.get().unwrap().token.lock().unwrap();
 
-        map.append(AUTHORIZATION, HeaderValue::from_str(&format!("Bearer {}",token)
-        ).unwrap());
+        map.append("Accept", "application/json".parse().unwrap());
+        map.insert("Authorization", format!("Bearer {}",token.access_token).parse().unwrap());
+
         map
     }
 }

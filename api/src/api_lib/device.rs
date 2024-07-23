@@ -6,8 +6,7 @@ use serde_json::Value;
 use crate::api_lib::capability::{CapValueType};
 use crate::api_lib::location::{LocationResponse};
 use crate::CLIENT_DATA;
-
-
+use crate::utils::header_utils::HeaderUtils;
 
 #[derive(Clone)]
 pub struct Device{
@@ -25,7 +24,7 @@ pub struct DeviceStateResponse(Vec<DeviceState>);
 
 #[derive(Default,Serialize,Deserialize, Debug,Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct DevicePost{
+pub struct DevicePost {
     pub manufacturer: String,
     pub r#type: String,
     pub version: String,
@@ -92,6 +91,7 @@ impl Device {
    pub async fn get_devices(&self)  ->DeviceResponse{
        let locked_client = CLIENT_DATA.get().unwrap().lock();
        let response = locked_client.unwrap().client.get(self.base_url.clone())
+           .headers(HeaderUtils::get_auth_token_header())
             .send()
             .await
             .unwrap();

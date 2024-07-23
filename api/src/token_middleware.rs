@@ -14,7 +14,6 @@ use futures_util::future::{LocalBoxFuture, Ready};
 
 use crate::models::token::{CreatedAt};
 use crate::AppState;
-use crate::utils::connection::RedisConnection;
 
 
 #[derive(Default)]
@@ -89,10 +88,7 @@ impl<S, B> AuthFilterMiddleware<S> where B: 'static + MessageBody, S: 'static + 
         if now > expires_in {
             let service = Rc::clone(&self.service);
             return async move {
-                let token = RedisConnection::get_token().await.unwrap();
-                let conn = RedisConnection::get_connection();
-                RedisConnection::save_token(conn.get_connection().unwrap(), token.clone());
-
+                let token = crate::utils::connection::RedisConnection::get_token().await.unwrap();
                 let current_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
                 {
                     let mut extracted_token = req.app_data::<web::Data<AppState>>().unwrap().token.lock().unwrap();

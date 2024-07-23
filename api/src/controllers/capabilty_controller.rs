@@ -1,19 +1,14 @@
 use actix_web::{HttpResponse, Responder};
 use actix_web::web::Data;
 
-use crate::AppState;
-use crate::api_lib::capability::{Capability, CapabilityResponse};
+use crate::{AppState, STORE_DATA};
+use crate::api_lib::capability::{Capability};
 use actix_web::get;
 
-use crate::utils::connection::RedisConnection;
-use redis::{Client as RedisClient};
-use crate::constants::constants::CAPABILITIES;
-
 #[get("/capability")]
-pub async fn get_capabilties(redis_conn: Data<RedisClient>) -> impl
+pub async fn get_capabilties() -> impl
 Responder {
-    let capabilities = RedisConnection::get_from_redis(redis_conn.get_connection().unwrap(), CAPABILITIES);
-    let capabilities = serde_json::from_str::<Vec<CapabilityResponse>>(&capabilities).unwrap();
+    let capabilities = &STORE_DATA.get().unwrap().data.lock().unwrap().capabilities;
     HttpResponse::Ok()
         .json(capabilities)
 }

@@ -7,7 +7,7 @@ mod utils;
 mod constants;
 mod auth_middleware;
 mod ws;
-
+mod store;
 
 use std::{env, thread};
 use std::env::var;
@@ -61,6 +61,7 @@ pub struct AppState{
 
 pub static CLIENT_DATA: OnceLock<Mutex<ClientData>> = OnceLock::new();
 
+pub static STORE_DATA: OnceLock<Store> = OnceLock::new();
 
 async fn index() -> impl Responder {
     let index_html = include_str!(concat!(
@@ -76,17 +77,8 @@ async fn index() -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()>{
-    /*
-        let mut read: String = "".to_string();
-        let mut resp = File::open("../response.json").unwrap();
-        resp.read_to_string(&mut read).expect("TODO: panic message");
-        println!("Result is {}", read[10700..10720].to_string());
-    */
-
-
 
     let base_url = var("BASE_URL").unwrap();
-    CLIENT_DATA.get_or_init(|| Mutex::new(ClientData::new("".to_string())));
 
     WINNER.get_or_init(|| Lobby::default().start());
     let mut oidc_opt: Option<Oidc> = None;
@@ -117,11 +109,9 @@ async fn main() -> std::io::Result<()>{
     let action = api_lib::action::Action::new(base_url.clone());
     let relationship = api_lib::relationship::Relationship::new(base_url.clone());
     let interaction = api_lib::interaction::Interaction::new(base_url.clone());
-    let redis_conn = RedisConnection::get_connection();
     let jwk_service = web::Data::new(Mutex::new(models::jwkservice::JWKService::new()));
     let unmount_service = api_lib::unmount_service::USBService::new(base_url.clone());
 
-    let data_redis_conn = web::Data::new(redis_conn);
 
     spawn(||{
         println!("Starting scheduler");
@@ -161,7 +151,6 @@ async fn main() -> std::io::Result<()>{
             .app_data(web::Data::new(relationship.clone()))
             .app_data(jwk_service.clone())
             .app_data(web::Data::new(interaction.clone()))
-            .app_data(data_redis_conn.clone())
             .app_data(token.clone())
             .configure(|cfg|{
                 if oidc_opt.clone().is_some() {
@@ -239,6 +228,7 @@ use crate::controllers::unmount_controller::{get_usb_status, unmount_usb_storage
 use crate::controllers::websocket_controller::start_connection;
 use crate::models::client_data::ClientData;
 use crate::models::socket_event::SocketEvent;
+use crate::store::Store;
 use crate::ws::broadcast_message::BroadcastMessage;
 use crate::ws::web_socket_message::Lobby;
 

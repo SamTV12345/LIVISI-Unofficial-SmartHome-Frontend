@@ -5,7 +5,6 @@ use actix_web::web::Data;
 use crate::api_lib::device::{Device, DeviceResponse};
 use actix_web::Responder;
 use actix_web::get;
-use redis::{Client as RedisClient};
 
 
 
@@ -13,15 +12,13 @@ use crate::utils::connection::RedisConnection;
 
 
 use crate::constants::constants::DEVICES;
+use crate::STORE_DATA;
 
 #[get("/device")]
-pub async fn get_devices(redis_conn: Data<RedisClient>)
+pub async fn get_devices()
     -> impl
 Responder {
-
-    let conn = redis_conn.get_connection().unwrap();
-    let devices_string = RedisConnection::get_from_redis(conn, DEVICES);
-    let devices = serde_json::from_str::<DeviceResponse>(&devices_string).unwrap();
+    let devices = &STORE_DATA.get().unwrap().data.lock().unwrap().devices;
     HttpResponse::Ok().json(devices)
 }
 

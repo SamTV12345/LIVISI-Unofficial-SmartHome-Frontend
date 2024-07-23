@@ -3,6 +3,7 @@
 use serde_derive::Serialize;
 use serde_derive::Deserialize;
 use crate::CLIENT_DATA;
+use crate::utils::header_utils::HeaderUtils;
 
 #[derive(Clone)]
 pub struct Hash{
@@ -25,6 +26,7 @@ impl Hash{
     pub async fn get_hash(&self) -> HashResponse {
         let locked_client = CLIENT_DATA.get().unwrap().lock();
         let response = locked_client.unwrap().client.get(self.base_url.clone())
+            .headers(HeaderUtils::get_auth_token_header())
             .send()
             .await
             .unwrap();

@@ -12,7 +12,7 @@ pub struct Capability{
 }
 
 #[derive(Default,Serialize,Deserialize, Debug)]
-pub struct CapabilityResponse(Vec<CapabilityInner>);
+pub struct CapabilityResponse(pub Vec<CapabilityInner>);
 
 #[derive(Default,Serialize,Deserialize, Debug)]
 pub struct CapabilityInner{
@@ -22,7 +22,7 @@ pub struct CapabilityInner{
     pub config: CapabilityConfig
 }
 
-#[derive(Default,Serialize,Deserialize, Debug)]
+#[derive(Default,Serialize,Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct CapabilityConfig{
     pub activity_log_active: bool,
