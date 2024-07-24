@@ -1,6 +1,6 @@
 use base64::Engine;
 use base64::engine::general_purpose;
-use reqwest::header::{AUTHORIZATION, HeaderMap, HOST};
+use reqwest::header::{AUTHORIZATION, HeaderMap};
 use crate::STORE_DATA;
 
 pub struct HeaderUtils;

@@ -1,15 +1,12 @@
-use std::collections::HashMap;
 use std::env::var;
 use std::sync::Mutex;
-use std::time::{SystemTime, UNIX_EPOCH};
-use actix_web::web::to;
 use crate::models::token::{Token, TokenRequest};
 use crate::utils::header_utils::HeaderUtils;
 use reqwest::Client as ReqwestClient;
-use crate::constants::constants::{CAPABILITIES, DEVICES, LOCATION_URL, LOCATIONS, REDIS_ENV, SERVER_URL, TOKEN, USER_STORAGE};
+use crate::constants::constants::{SERVER_URL};
 use crate::api_lib::capability::Capability;
-use crate::api_lib::device::{Device, DevicePost};
-use crate::api_lib::location::{Location, LocationResponse};
+use crate::api_lib::device::{Device};
+use crate::api_lib::location::{Location};
 use crate::api_lib::user_storage::UserStorage;
 use crate::{CLIENT_DATA, STORE_DATA};
 use crate::models::client_data::ClientData;
@@ -60,20 +57,18 @@ impl RedisConnection{
         let store = store_tmp.as_mut().unwrap();
         let mut st = store.data.lock().unwrap();
 
-        let mut found_devices = devices.get_devices().await;
+        let found_devices = devices.get_devices().await;
         st.set_devices(found_devices);
 
-        let capabilities = capabilities.get_capabilities()
+        let capabilities_found = capabilities.get_capabilities()
             .await;
-            st.set_capabilities(capabilities);
+        st.set_capabilities(capabilities_found);
 
         let _client = ReqwestClient::new();
-        let mut locations = locations.get_locations().await;
+        let locations = locations.get_locations().await;
 
-
-        let mut map:HashMap<String, LocationResponse> = HashMap::new();
-        let mut map_of_location_to_device:HashMap<String, Vec<DevicePost>> = HashMap::new();
         st.set_locations(locations.clone());
+        st.set_capabilities_state(capabilities.get_all_capability_states().await);
         let user_storage_data = user_storage.get_user_storage()
             .await;
         st.set_user_storage(user_storage_data);

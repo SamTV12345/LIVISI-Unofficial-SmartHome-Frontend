@@ -19,7 +19,7 @@ impl UserStorage {
     }
 
     pub async fn get_user_storage(&self) -> UserStorageResponse {
-        let mut locked_client = CLIENT_DATA.get().unwrap().lock();
+        let locked_client = CLIENT_DATA.get().unwrap().lock();
         let response = locked_client.unwrap().client.get(self.base_url.clone())
             .headers(HeaderUtils::get_auth_token_header())
             .send()

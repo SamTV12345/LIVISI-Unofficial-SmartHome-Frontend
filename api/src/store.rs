@@ -1,8 +1,8 @@
 use std::sync::Mutex;
 use serde_derive::{Deserialize, Serialize};
 use serde_json::Value;
-use crate::api_lib::capability::{Capability, CapabilityConfig, CapabilityResponse};
-use crate::api_lib::device::{DeviceConfig, DevicePost, DeviceResponse};
+use crate::api_lib::capability::{CapabilityConfig, CapabilityResponse, CapabilityStateResponse};
+use crate::api_lib::device::{DeviceConfig, DeviceResponse};
 use crate::api_lib::location::LocationResponse;
 use crate::api_lib::status::StatusResponse;
 use crate::api_lib::user_storage::UserStorageResponse;
@@ -30,7 +30,8 @@ pub struct DeviceStore {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub location_data: Option<LocationResponse>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub capability_data: Option<Vec<CapabilitiesStore>>
+    pub capability_data: Option<Vec<CapabilitiesStore>>,
+    pub capability_state: Option<CapabilityStateResponse>
 }
 
 #[derive(Default,Serialize,Deserialize, Debug,Clone)]
@@ -68,7 +69,8 @@ impl Data {
                 capabilities: device.capabilities.clone(),
                 tags: device.tags.clone(),
                 location_data: None,
-                capability_data: None
+                capability_data: None,
+                capability_state: None
             }
         ).collect::<Vec<_>>();
         self.devices = devices;
@@ -79,7 +81,7 @@ impl Data {
     }
 
     pub fn set_locations(&mut self, locations: Vec<LocationResponse>) {
-        self.locations = locations.clone();
+        self.locations.clone_from(&locations);
         self.devices.iter_mut().for_each(|device| {
 
             match &device.location {
@@ -127,6 +129,24 @@ impl Data {
         })
 
 
+    }
+
+
+    pub fn set_capabilities_state(&mut self, capabilities_arg: CapabilityStateResponse) {
+        self.devices.iter_mut().for_each(|device| {
+            if let Some(capabilities) = &device.capabilities {
+                let mut cap = Vec::new();
+                capabilities.iter().for_each(|capability| {
+                    let capability_store = capabilities_arg.0
+                        .iter()
+                        .find(|capability_store| capability_store.id == *capability.replace("/capability/",""));
+                        if let Some(capability_store) = capability_store {
+                            cap.push(capability_store.clone());
+                        }
+                });
+                device.capability_state = Some(CapabilityStateResponse(cap));
+            }
+        })
     }
 
     pub fn set_user_storage(&mut self, user_storage: UserStorageResponse) {

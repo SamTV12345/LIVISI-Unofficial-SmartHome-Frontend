@@ -29,10 +29,10 @@ pub struct CapabilityConfig{
     pub name: String
 }
 
-#[derive(Default,Serialize,Deserialize, Debug)]
-pub struct CapabilityStateResponse(Vec<CapabilityStateInner>);
+#[derive(Default,Serialize,Deserialize, Debug, Clone)]
+pub struct CapabilityStateResponse(pub Vec<CapabilityStateInner>);
 
-#[derive(Default,Serialize,Deserialize, Debug)]
+#[derive(Default,Serialize,Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct CapabilityStateInner{
     pub id: String,
@@ -110,7 +110,7 @@ impl Capability{
 
 
 
-    pub async fn get_all_capability_states(&self, _token: String) -> CapabilityStateResponse {
+    pub async fn get_all_capability_states(&self) -> CapabilityStateResponse {
         let locked_client = CLIENT_DATA.get().unwrap().lock();
         let response = locked_client.unwrap().client.get(self.base_url.clone()+"/states")
             .send()

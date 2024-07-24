@@ -17,6 +17,6 @@ Responder {
 pub async fn get_capability_states(capability_lib: Data<Capability>, token: Data<AppState>) -> impl
 Responder {
     let access_token = token.token.lock().unwrap().access_token.clone();
-    let capabilities = capability_lib.get_all_capability_states(access_token).await;
+    let capabilities = capability_lib.get_all_capability_states().await;
     HttpResponse::Ok().json(capabilities)
 }

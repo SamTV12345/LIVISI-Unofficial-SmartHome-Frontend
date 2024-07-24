@@ -1,5 +1,4 @@
 use actix_web::{get, HttpResponse, Responder};
-use crate::store::Data;
 use crate::STORE_DATA;
 
 #[get("/api/all")]
