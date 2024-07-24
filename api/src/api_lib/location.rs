@@ -27,9 +27,9 @@ pub struct LocationConfig{
 }
 
 impl Location {
-    pub fn new(server_url: String) -> Self {
+    pub fn new(server_url: &str) -> Self {
         Self {
-            base_url: server_url + "/location"
+            base_url: format!("{}{}", server_url, "/location")
         }
     }
 

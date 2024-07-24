@@ -4,6 +4,7 @@ use serde_json::Value;
 use crate::api_lib::capability::{CapabilityConfig, CapabilityResponse, CapabilityStateResponse};
 use crate::api_lib::device::{DeviceConfig, DeviceResponse};
 use crate::api_lib::location::LocationResponse;
+use crate::api_lib::message::MessageResponse;
 use crate::api_lib::status::StatusResponse;
 use crate::api_lib::user_storage::UserStorageResponse;
 use crate::models::token::Token;
@@ -48,12 +49,12 @@ pub struct Data {
     pub status: Option<StatusResponse>,
     pub user_storage: Option<UserStorageResponse>,
     pub locations: Vec<LocationResponse>,
-    pub(crate) capabilities: Vec<CapabilitiesStore>
+    pub(crate) capabilities: Vec<CapabilitiesStore>,
+    pub messages: Vec<MessageResponse>
 }
 
 
 impl Data {
-
     pub fn set_devices(&mut self, devices: DeviceResponse) {
         let devices = devices.0.into_iter().map(|device|
             DeviceStore {
@@ -152,6 +153,10 @@ impl Data {
     pub fn set_user_storage(&mut self, user_storage: UserStorageResponse) {
         self.user_storage = Some(user_storage);
     }
+
+    pub fn set_messages(&mut self, messages: Vec<MessageResponse>) {
+        self.messages.clone_from(&messages);
+    }
 }
 
 pub struct Store {
@@ -168,7 +173,8 @@ impl Store {
                 devices: Vec::new(),
                 user_storage: None,
                 locations: Vec::new(),
-                capabilities: Vec::new()
+                capabilities: Vec::new(),
+                messages: Vec::new()
             })
         }
     }

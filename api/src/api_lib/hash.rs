@@ -17,9 +17,9 @@ pub struct HashResponse{
 }
 
 impl Hash{
-    pub fn new(server_url: String) -> Self {
+    pub fn new(server_url: &str) -> Self {
         Self {
-            base_url: server_url+"/product/hash"
+            base_url: format!("{}{}", server_url, "/product/hash")
         }
     }
 

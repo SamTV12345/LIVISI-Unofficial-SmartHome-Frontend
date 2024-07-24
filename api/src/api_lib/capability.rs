@@ -87,9 +87,9 @@ pub struct BooleanCapabilityState{
 }
 
 impl Capability{
-    pub fn new(server_url: String) -> Self {
+    pub fn new(server_url: &str) -> Self {
         Self {
-            base_url: server_url+"/capability"
+            base_url: format!("{}{}", server_url,"/capability")
         }
     }
 

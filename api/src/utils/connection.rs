@@ -9,6 +9,7 @@ use crate::api_lib::device::{Device};
 use crate::api_lib::location::{Location};
 use crate::api_lib::user_storage::UserStorage;
 use crate::{CLIENT_DATA, STORE_DATA};
+use crate::api_lib::message;
 use crate::models::client_data::ClientData;
 use crate::store::Store;
 
@@ -42,16 +43,15 @@ impl RedisConnection{
     pub async fn do_db_initialization(){
         println!("Doing db initialization");
         let token = Self::get_token().await.unwrap();
-
+        let base_url = var(SERVER_URL).unwrap();
         STORE_DATA.get_or_init(|| Store::new(token.clone()));
         CLIENT_DATA.get_or_init(|| Mutex::new(ClientData::new(token.access_token)));
+        let message = message::Message::new(&base_url);
 
-        let devices = Device::new(var(SERVER_URL).unwrap());
-        let capabilities = Capability::new(var(SERVER_URL).unwrap());
-        let locations = Location::new(var(SERVER_URL).unwrap());
-        let user_storage = UserStorage::new(var(SERVER_URL).unwrap());
-        let _client = ReqwestClient::new();
-        let _client2 = ReqwestClient::new();
+        let devices = Device::new(&base_url);
+        let capabilities = Capability::new(&base_url);
+        let locations = Location::new(&base_url);
+        let user_storage = UserStorage::new(&base_url);
 
         let mut store_tmp = STORE_DATA.get();
         let store = store_tmp.as_mut().unwrap();
@@ -64,7 +64,6 @@ impl RedisConnection{
             .await;
         st.set_capabilities(capabilities_found);
 
-        let _client = ReqwestClient::new();
         let locations = locations.get_locations().await;
 
         st.set_locations(locations.clone());
@@ -72,5 +71,7 @@ impl RedisConnection{
         let user_storage_data = user_storage.get_user_storage()
             .await;
         st.set_user_storage(user_storage_data);
+        let message_data = message.get_messages().await;
+        st.set_messages(message_data)
     }
 }

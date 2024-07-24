@@ -34,9 +34,9 @@ pub struct HomeSetupConfig{
 }
 
 impl Home{
-    pub fn new(server_url: String) -> Self {
+    pub fn new(server_url: &str) -> Self {
         Self {
-            base_url: server_url + "/home"
+            base_url: format!("{}{}", server_url, "/home")
         }
     }
 

@@ -42,9 +42,10 @@ pub struct StatusNetwork {
 }
 
 impl Status {
-    pub fn new(server_url: String) -> Self {
+    pub fn new(server_url: &str) -> Self {
+        server_url.to_owned().push_str("/status");
         Self {
-            base_url: server_url+"/status"
+            base_url: server_url.to_string()
         }
     }
    pub async fn get_status(&self) -> StatusResponse {

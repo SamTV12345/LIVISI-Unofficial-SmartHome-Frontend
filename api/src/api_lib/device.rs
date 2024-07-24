@@ -83,9 +83,9 @@ pub struct DeviceConfig{
 
 
 impl Device {
-    pub fn new(server_url: String) -> Self {
+    pub fn new(server_url: &str) -> Self {
         Self {
-            base_url: server_url+"/device"
+            base_url:format!("{}{}", server_url, "/device")
         }
     }
    pub async fn get_devices(&self)  ->DeviceResponse{

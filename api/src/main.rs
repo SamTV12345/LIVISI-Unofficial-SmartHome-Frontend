@@ -96,21 +96,21 @@ async fn main() -> std::io::Result<()>{
     //Initialize db at startup
     RedisConnection::do_db_initialization().await;
     // Init
-    let status = Status::new(base_url.clone());
-    let users = User::new(base_url.clone());
-    let devices = Device::new(base_url.clone());
-    let user_storage = UserStorage::new(base_url.clone());
-    let hash = Hash::new(base_url.clone());
-    let message = api_lib::message::Message::new(base_url.clone());
-    let locations = api_lib::location::Location::new(base_url.clone());
+    let status = Status::new(&base_url);
+    let users = User::new(&base_url);
+    let devices = Device::new(&base_url);
+    let user_storage = UserStorage::new(&base_url);
+    let hash = Hash::new(&base_url);
+    let message = api_lib::message::Message::new(&base_url);
+    let locations = api_lib::location::Location::new(&base_url);
     let token = web::Data::new(AppState{ token: Mutex::new(Token::default())});
-    let capabilties = api_lib::capability::Capability::new(base_url.clone());
-    let home = api_lib::home::Home::new(base_url.clone());
-    let action = api_lib::action::Action::new(base_url.clone());
-    let relationship = api_lib::relationship::Relationship::new(base_url.clone());
-    let interaction = api_lib::interaction::Interaction::new(base_url.clone());
+    let capabilties = api_lib::capability::Capability::new(&base_url);
+    let home = api_lib::home::Home::new(&base_url);
+    let action = api_lib::action::Action::new(&base_url);
+    let relationship = api_lib::relationship::Relationship::new(&base_url);
+    let interaction = api_lib::interaction::Interaction::new(&base_url);
     let jwk_service = web::Data::new(Mutex::new(models::jwkservice::JWKService::new()));
-    let unmount_service = api_lib::unmount_service::USBService::new(base_url.clone());
+    let unmount_service = api_lib::unmount_service::USBService::new(&base_url);
 
 
     spawn(||{
