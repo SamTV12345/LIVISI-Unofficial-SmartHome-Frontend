@@ -12,7 +12,7 @@ type MessageReturnType = {
 }
 
 export const NewsScreen = ()=>{
-    const messages = useContentModel(state => state.messages)
+    const messages = useContentModel(state=>state.allThings)
 
     const determineTitleAndDescription = (message: Message):MessageReturnType=>{
         switch (message.type){
@@ -39,9 +39,9 @@ export const NewsScreen = ()=>{
 
         <div>
             {
-                messages.length===0?<div>Keine Nachrichten vorhanden</div>:null
+                messages?.messages.length===0?<div>Keine Nachrichten vorhanden</div>:null
             }
-            {messages.sort((a,b)=>b.timestamp.localeCompare(a.timestamp))
+            {messages?.messages.sort((a,b)=>b.timestamp.localeCompare(a.timestamp))
                 .map((message)=>{
                 const {title, description} = determineTitleAndDescription(message)
                 return <Card key={message.id} className="mt-2 p-5 relative">

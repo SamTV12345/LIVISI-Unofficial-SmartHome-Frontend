@@ -7,3 +7,6 @@ export const isHEATING = (thing: Device): boolean => {
 
 
 
+export const HEATING_TEMPERATURE = "setpointTemperature"
+export const CURRENT_TEMPERATURE = "temperature"
+export const HUMIDITY = "humidity"

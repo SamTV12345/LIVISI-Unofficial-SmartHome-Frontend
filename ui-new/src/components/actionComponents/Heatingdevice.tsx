@@ -1,23 +1,37 @@
 import {Device} from "@/src/models/Device.ts";
-import {FC, useState} from "react";
+import {FC, useMemo, useState} from "react";
 import {Thermometer} from 'lucide-react'
-import {useContentModel} from "@/src/store.tsx";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/src/components/layout/Card.tsx";
 import {SliderCDN} from "@/src/components/actionComponents/Slider.tsx";
 import {useDebounce} from "@/src/utils/useDebounce.ts";
 import axios from "axios";
 import {CapabilityState} from "@/src/models/CapabilityState.ts";
 import {ACTION_ENDPOINT, CAPABILITY_PREFIX} from '@/src/constants/FieldConstants.ts';
-import {isHEATING} from "@/src/constants/StaticChecks.ts";
+import {CURRENT_TEMPERATURE, HEATING_TEMPERATURE, HUMIDITY, isHEATING} from "@/src/constants/StaticChecks.ts";
 
 type HeatingdeviceProps = {
     device: Device
 }
 
 export const Heatingdevice: FC<HeatingdeviceProps> = ({device}) => {
-    const mapOfStates = useContentModel(state => state.mapOfStates)
-    const [currentTemperature, setTemperature] = useState<number>()
-    const [state, setState] = useState<CapabilityState>()
+    const devMap = useMemo(()=>{
+        const devMap = new Map<string, CapabilityState>()
+        for (const devState of device.capabilityState!) {
+            if (devState.state.setpointTemperature) {
+                devMap.set(HEATING_TEMPERATURE, devState)
+            } else if (devState.state.temperature) {
+                devMap.set(CURRENT_TEMPERATURE, devState)
+            } else if (devState.state.humidity) {
+                devMap.set(HUMIDITY, devState)
+            }
+        }
+        return devMap
+    }, [device])
+
+    const [currentTemperature, setTemperature] = useState<number>(()=>{
+        return devMap.get(HEATING_TEMPERATURE)!.state!.setpointTemperature.value as number
+    })
+
 
     const constructHeatingModel = (newState: CapabilityState) => {
         return {
@@ -34,21 +48,16 @@ export const Heatingdevice: FC<HeatingdeviceProps> = ({device}) => {
     }
 
     const updatePointTemperature = async () => {
-        if (state == null) {
-            console.error("State is null")
-            return
-        }
-        const heatingModel = constructHeatingModel(state)
+        const heatingModel = constructHeatingModel(devMap.get(HEATING_TEMPERATURE)!)
         axios.post(ACTION_ENDPOINT, heatingModel)
             .then(() => {
-                // @ts-ignore
-                mapOfStates.get(CAPABILITY_PREFIX + state.id).state.setpointTemperature.value = currentTemperature
+                //mapOfStates.get(CAPABILITY_PREFIX + state.id).state.setpointTemperature.value = currentTemperature
+                 device.capabilityState!.find(state => state.id === devMap.get(HEATING_TEMPERATURE)!.id)!.state.setpointTemperature.value = currentTemperature
             })
     }
 
     useDebounce(() => {
         updatePointTemperature()
-
     }, 2000, [currentTemperature])
 
     return <Card key={device.id} className="">
@@ -64,47 +73,16 @@ export const Heatingdevice: FC<HeatingdeviceProps> = ({device}) => {
                 <div>
                     <div className="grid grid-cols-[auto_1fr]">
                         <div className="static">
-
                             <div className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-1">
                                 {
-                                    device.capabilities.map(capability => {
-                                        const state = mapOfStates.get(capability)
-                                        console.log("My state is",state)
-                                        if (state == null) {
-                                            console.log("State is null")
-                                            return <>
-                                                <div></div>
-                                                <div></div>
-                                            </>
-                                        }
-
-                                        if (state.state && state.state.setpointTemperature) {
-                                            if (!currentTemperature) {
-                                                setTemperature(state.state.setpointTemperature.value as number)
-                                                setState(state)
-                                            }
-                                            return <>
-                                                <div key={capability}>Zieltemperatur:</div>
-                                                <div>{currentTemperature}°C</div>
-                                            </>
-                                        } else if (state.state && state.state.humidity) {
-                                            return <>
-                                                <div key={capability}>Feuchtigkeit:</div>
-                                                <div>{state.state.humidity && state.state.humidity.value}%</div>
-                                            </>
-                                        } else if (state.state && state.state.temperature) {
-
-                                            return <>
-                                                <div key={capability}>Temperatur:</div>
-                                                <div>{state.state.temperature && state.state.temperature.value}°C</div>
-                                            </>
-                                        } else {
-                                            return <>
-                                                <div></div>
-                                                <div></div>
-                                            </>
-                                        }
-                                    })
+                                    <>
+                                        <div>Zieltemperatur:</div>
+                                        <div>{currentTemperature}°C</div>
+                                        <div>Temperatur:</div>
+                                        <div>{devMap.get(CURRENT_TEMPERATURE)?.state!.temperature.value}°C</div>
+                                        <div>Luftfeuchtigkeit:</div>
+                                        <div>{devMap.get(HUMIDITY)?.state!.humidity.value}%</div>
+                                    </>
                                 }
                             </div>
                         </div>

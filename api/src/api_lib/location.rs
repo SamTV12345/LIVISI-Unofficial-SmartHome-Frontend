@@ -16,7 +16,7 @@ pub struct LocationResponse{
     pub config: LocationConfig,
     pub id:String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub devices: Option<Vec<DevicePost>>
+    pub devices: Option<Vec<String>>
 }
 
 #[derive(Default,Serialize,Deserialize, Debug, Clone)]

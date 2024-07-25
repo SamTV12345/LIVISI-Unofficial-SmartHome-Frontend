@@ -22,7 +22,8 @@ export default defineConfig({
             '/message':target,
             '/interaction':target,
             '/hash':target,
-            '/api/server': target
+            '/api/server': target,
+            '/api/all': target
         }
     }
 })

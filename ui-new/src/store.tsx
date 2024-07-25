@@ -13,11 +13,21 @@ export type LoginData = {
     rememberMe: boolean
 };
 
+export type AxiosDeviceResponse = {
+    devices:{
+        [key: string]: Device
+    }
+    status: null,
+    user_storage: any[],
+    locations: LocationResponse[],
+    messages: Message[],
+}
+
+
 interface ContentModelState {
+    allThings: AxiosDeviceResponse|undefined
+    setAllThings(data: AxiosDeviceResponse): void;
     mapOfStates: Map<string, CapabilityState>
-    devices: Device[]|undefined,
-    setDevices: (devices: Device[]) => void,
-    mapOfDevices: Map<string, Device[]>
     setLocations(data: LocationResponse[]): void;
     locations: LocationResponse[]|undefined,
     mapOfLocations: Map<string, LocationResponse>
@@ -41,14 +51,12 @@ interface ContentModelState {
 
 
 export const useContentModel = create<ContentModelState>((set)=>({
+    allThings: undefined,
+    setAllThings(data: AxiosDeviceResponse) {
+        set(()=>({allThings: data}))
+    },
     deviceIdMap: new Map<string, Device>(),
     userStorage: new Map<string, UserStorage>(),
-    setDevices: (devices: Device[]) => {
-        set(()=>({
-            devices: devices
-        }))
-    },
-    devices: undefined,
     mapOfDevices: new Map<string, Device[]>,
     setLocations(data: LocationResponse[]) {
         set(()=>({locations: data}))

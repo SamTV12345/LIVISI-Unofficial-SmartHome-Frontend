@@ -12,6 +12,25 @@ export interface Device {
     location: string,
     tags: DeviceTags,
     locationData?: LocationResponse
+    capabilityData?: CapabilityData[]
+    capabilityState?: CapabilityStateDevice[]
+}
+
+type CapabilityStateDevice = {
+    id: string,
+    state:{
+    [key: string]: any
+    }
+}
+
+type CapabilityData = {
+    id: string,
+    type: string,
+    device: string
+    config: {
+        activityLogActive: boolean,
+        name: string,
+    }
 }
 
 

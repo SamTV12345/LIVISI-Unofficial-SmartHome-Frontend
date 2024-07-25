@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::sync::Mutex;
 use serde_derive::{Deserialize, Serialize};
 use serde_json::Value;
@@ -45,7 +46,7 @@ pub struct  CapabilitiesStore {
 
 #[derive(Default,Serialize,Deserialize, Debug, Clone)]
 pub struct Data {
-    pub devices: Vec<DeviceStore>,
+    pub devices: HashMap<String, DeviceStore>,
     pub status: Option<StatusResponse>,
     pub user_storage: Option<UserStorageResponse>,
     pub locations: Vec<LocationResponse>,
@@ -56,8 +57,8 @@ pub struct Data {
 
 impl Data {
     pub fn set_devices(&mut self, devices: DeviceResponse) {
-        let devices = devices.0.into_iter().map(|device|
-            DeviceStore {
+        devices.0.into_iter().for_each(|device|{
+            let device_store = DeviceStore {
                 manufacturer: device.manufacturer.clone(),
                 r#type: device.r#type.clone(),
                 version: device.version.clone(),
@@ -72,9 +73,9 @@ impl Data {
                 location_data: None,
                 capability_data: None,
                 capability_state: None
-            }
-        ).collect::<Vec<_>>();
-        self.devices = devices;
+            };
+            self.devices.insert(device.id.clone().unwrap(), device_store);
+        });
     }
 
     pub fn set_status(&mut self, status: StatusResponse) {
@@ -83,7 +84,7 @@ impl Data {
 
     pub fn set_locations(&mut self, locations: Vec<LocationResponse>) {
         self.locations.clone_from(&locations);
-        self.devices.iter_mut().for_each(|device| {
+        self.devices.iter_mut().for_each(|(id,device)| {
 
             match &device.location {
                 Some(location) => {
@@ -95,6 +96,16 @@ impl Data {
                             id: wrapped.id.clone(),
                             config: wrapped.config.clone(),
                             devices: None
+                        });
+                        self.locations.iter_mut().for_each(|location| {
+                            if location.id == wrapped.id {
+                                if location.devices.is_none() {
+                                    location.devices = Some(vec![id.clone()]);
+                                }
+                                else {
+                                    location.devices.as_mut().unwrap().push(id.clone());
+                                }
+                            }
                         });
                     }
                 },
@@ -114,30 +125,27 @@ impl Data {
         })
             .collect::<Vec<_>>();
 
-        self.devices.iter_mut().for_each(|device|{
-
-            if let Some(capabilities) = &device.capabilities {
-                let mut cap = Vec::new();
-                capabilities.iter().for_each(|capability| {
-                    self.capabilities.iter().for_each(|capability_store| {
-                        if capability_store.id == *capability.replace("/capability/","") {
-                            cap.push(capability_store.clone());
-                        }
-                    })
-                });
-                device.capability_data = Some(cap);
-            }
-        })
-
-
+        self.capabilities.iter().for_each(|cap|{
+           self.devices.contains_key(&cap.device).then(||{
+               let found_device = self.devices.get_mut(&cap.device.replace("/device/","")).unwrap();
+               if found_device.capability_data.is_none() {
+                   found_device.capability_data = Some(vec![cap.clone()]);
+               }
+               else {
+                   found_device.capability_data.as_mut().unwrap().push(cap.clone());
+               }
+               self.devices.get_mut(&cap.device).unwrap().capabilities = Some(vec![cap.id.clone()]);
+           });
+        });
     }
 
 
     pub fn set_capabilities_state(&mut self, capabilities_arg: CapabilityStateResponse) {
-        self.devices.iter_mut().for_each(|device| {
+        self.devices.iter_mut().for_each(|(id, device)| {
             if let Some(capabilities) = &device.capabilities {
                 let mut cap = Vec::new();
-                capabilities.iter().for_each(|capability| {
+                capabilities.iter()
+                    .for_each(|capability| {
                     let capability_store = capabilities_arg.0
                         .iter()
                         .find(|capability_store| capability_store.id == *capability.replace("/capability/",""));
@@ -170,7 +178,7 @@ impl Store {
             token: Mutex::new(token),
             data: Mutex::new(Data{
                 status: None,
-                devices: Vec::new(),
+                devices: HashMap::new(),
                 user_storage: None,
                 locations: Vec::new(),
                 capabilities: Vec::new(),

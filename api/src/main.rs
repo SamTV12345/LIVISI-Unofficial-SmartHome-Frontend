@@ -249,6 +249,7 @@ pub async fn init_socket(base_url:String, token: String){
                     Ok(msg) => {
                         let parsed_message = serde_json::from_str::<SocketEvent>(&msg.to_string()).unwrap();
                         let lobby = WINNER.get().unwrap();
+                        println!("Sending message to lobby {:?}", parsed_message);
                         lobby.do_send(BroadcastMessage{
                             message: parsed_message
                         });
