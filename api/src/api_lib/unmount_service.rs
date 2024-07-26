@@ -1,8 +1,7 @@
-
 use serde_derive::{Deserialize, Serialize};
-use crate::api_lib::livisi_response_type::{LivisResponseType};
-use crate::CLIENT_DATA;
 
+use crate::api_lib::livisi_response_type::LivisResponseType;
+use crate::CLIENT_DATA;
 
 #[derive(Clone)]
 pub struct USBService {
@@ -16,10 +15,10 @@ pub struct USBStatus {
 }
 
 impl USBService {
-    pub fn new(base_url: String) -> Self {
+    pub fn new(base_url: &str) -> Self {
         USBService {
-            base_url: base_url.clone()+"/unmount",
-            usb_status: base_url+"/usb_storage"
+            base_url: format!("{}{}", base_url, "/unmount"),
+            usb_status: format!("{}{}", base_url, "/usb_storage")
         }
     }
 

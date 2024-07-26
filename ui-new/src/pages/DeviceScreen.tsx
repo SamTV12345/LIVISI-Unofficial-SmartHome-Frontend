@@ -5,15 +5,24 @@ import {Accordion} from "@radix-ui/react-accordion";
 import {TYPES} from "@/src/constants/FieldConstants.ts";
 import {DeviceDecider} from "@/src/components/actionComponents/DeviceDecider.tsx";
 import {useTranslation} from "react-i18next";
+import {Device} from "@/src/models/Device.ts";
 
 export const DeviceScreen = ()=>{
     const [selectedTab, setSelectedTab] = useState<number>(0)
-    const locations = useContentModel(state => state.locations)
-    const mapOfDevices = useContentModel(state => state.mapOfDevices)
-    const sortedDevices = useMemo(()=>{
-        return locations?.filter(l=>l.devices&&l.devices!.length>0).sort((a,b)=>a.config.name.localeCompare(b.config.name))
-    },[locations])
+    const allDevices = useContentModel(state=>state.allThings)
 
+    const mappedDevicesToType = useMemo(() => {
+        if (!allDevices?.devices) return undefined
+        console.log("Mapping")
+        const map = new Map<string, Device[]>
+        TYPES.forEach(type=>{
+            map.set(type,[])
+        })
+        for (const devDevice of Object.entries(allDevices?.devices!)) {
+                map.get(devDevice[1].type!)?.push(devDevice[1])
+        }
+        return map
+    }, [allDevices?.devices]);
 
     const {t} = useTranslation()
     return <div className="grid grid-cols-2">
@@ -21,14 +30,19 @@ export const DeviceScreen = ()=>{
         <div className={`${selectedTab===1&&'border-b-8 border-cyan-600'} text-center  border-b border-black`} onClick={()=>setSelectedTab(1)}>Gerätetyp</div>
         {selectedTab===0&&<div className="col-span-2">
         {
-            sortedDevices!.map(location=>{
+            allDevices?.locations&& Object.entries(allDevices?.locations!).map(([_,location])=>{
                 return        <Accordion type="single" collapsible className="rounded-3xl" key={location.id}>
                     <AccordionItem value="beleuchtung" className="text-black rounded">
                         <AccordionTrigger className="text-center ml-2">{location.config.name}</AccordionTrigger>
                         <AccordionContent>
                             <div className="grid grid-cols-2 gap-4">
-                                {location.devices?.filter(device=>TYPES.includes(device.type))
-                                    .map(device=><DeviceDecider device={device}/>)}
+                                {location.devices?.filter(device=>{
+                                    return TYPES.includes(allDevices?.devices[device].type!)
+                                })
+                                    .map(device=>{
+                                        return <DeviceDecider device={allDevices?.devices[device]!} key={device}/>
+                                    })
+                                }
                             </div>
                         </AccordionContent>
                     </AccordionItem>
@@ -39,17 +53,25 @@ export const DeviceScreen = ()=>{
         {selectedTab===1&&<div className="col-span-2">
             {
                                 <div className="">
-                                    {[...mapOfDevices.keys()].filter(device=>TYPES.includes(device))
-                                        .map(key=><Accordion type="single" collapsible className="rounded-3xl" key={key}>
+                                    {mappedDevicesToType &&[...mappedDevicesToType.entries()]
+                                        .map(([key, dev])=>{
+                                            return <Accordion type="single" collapsible className="rounded-3xl" key={key}>
                                             <AccordionItem value="beleuchtung" className="text-black rounded">
                                                 <AccordionTrigger className="text-center ml-2">{t(key)}</AccordionTrigger>
                                                 <AccordionContent>
                                                     <div className="grid grid-cols-2 gap-4">
-                                                        {mapOfDevices.get(key)?.map(device=><DeviceDecider device={device}/>)}
+                                                        {
+                                                            dev!.map(device=>{
+                                                                console.log(device)
+                                                                return <DeviceDecider device={device} key={device.id}/>
+                                                            })
+                                                        }
                                                     </div>
                                                 </AccordionContent>
                                             </AccordionItem>
-                                        </Accordion>)}
+                                        </Accordion>
+                                        })
+                                    }
                                 </div>
             }
         </div>}

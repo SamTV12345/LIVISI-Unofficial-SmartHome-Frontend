@@ -7,7 +7,7 @@ mod utils;
 mod constants;
 mod auth_middleware;
 mod ws;
-
+mod store;
 
 use std::{env, thread};
 use std::env::var;
@@ -61,6 +61,7 @@ pub struct AppState{
 
 pub static CLIENT_DATA: OnceLock<Mutex<ClientData>> = OnceLock::new();
 
+pub static STORE_DATA: OnceLock<Store> = OnceLock::new();
 
 async fn index() -> impl Responder {
     let index_html = include_str!(concat!(
@@ -76,17 +77,8 @@ async fn index() -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()>{
-    /*
-        let mut read: String = "".to_string();
-        let mut resp = File::open("../response.json").unwrap();
-        resp.read_to_string(&mut read).expect("TODO: panic message");
-        println!("Result is {}", read[10700..10720].to_string());
-    */
-
-
-
+    init_logging();
     let base_url = var("BASE_URL").unwrap();
-    CLIENT_DATA.get_or_init(|| Mutex::new(ClientData::new("".to_string())));
 
     WINNER.get_or_init(|| Lobby::default().start());
     let mut oidc_opt: Option<Oidc> = None;
@@ -104,31 +96,29 @@ async fn main() -> std::io::Result<()>{
     //Initialize db at startup
     RedisConnection::do_db_initialization().await;
     // Init
-    let status = Status::new(base_url.clone());
-    let users = User::new(base_url.clone());
-    let devices = Device::new(base_url.clone());
-    let user_storage = UserStorage::new(base_url.clone());
-    let hash = Hash::new(base_url.clone());
-    let message = api_lib::message::Message::new(base_url.clone());
-    let locations = api_lib::location::Location::new(base_url.clone());
+    let status = Status::new(&base_url);
+    let users = User::new(&base_url);
+    let devices = Device::new(&base_url);
+    let user_storage = UserStorage::new(&base_url);
+    let hash = Hash::new(&base_url);
+    let message = api_lib::message::Message::new(&base_url);
+    let locations = api_lib::location::Location::new(&base_url);
     let token = web::Data::new(AppState{ token: Mutex::new(Token::default())});
-    let capabilties = api_lib::capability::Capability::new(base_url.clone());
-    let home = api_lib::home::Home::new(base_url.clone());
-    let action = api_lib::action::Action::new(base_url.clone());
-    let relationship = api_lib::relationship::Relationship::new(base_url.clone());
-    let interaction = api_lib::interaction::Interaction::new(base_url.clone());
-    let redis_conn = RedisConnection::get_connection();
+    let capabilties = api_lib::capability::Capability::new(&base_url);
+    let home = api_lib::home::Home::new(&base_url);
+    let action = api_lib::action::Action::new(&base_url);
+    let relationship = api_lib::relationship::Relationship::new(&base_url);
+    let interaction = api_lib::interaction::Interaction::new(&base_url);
     let jwk_service = web::Data::new(Mutex::new(models::jwkservice::JWKService::new()));
-    let unmount_service = api_lib::unmount_service::USBService::new(base_url.clone());
+    let unmount_service = api_lib::unmount_service::USBService::new(&base_url);
 
-    let data_redis_conn = web::Data::new(redis_conn);
 
     spawn(||{
-        println!("Starting scheduler");
+        log::info!("Starting scheduler");
         let mut scheduler = Scheduler::new();
         scheduler.every(1.day()).plus(10.minutes())
             .run(||{
-                println!("Fetching data");
+                log::info!("Fetching data");
                 let _ = async move {
                     RedisConnection::do_db_initialization().await;
                 };
@@ -161,7 +151,6 @@ async fn main() -> std::io::Result<()>{
             .app_data(web::Data::new(relationship.clone()))
             .app_data(jwk_service.clone())
             .app_data(web::Data::new(interaction.clone()))
-            .app_data(data_redis_conn.clone())
             .app_data(token.clone())
             .configure(|cfg|{
                 if oidc_opt.clone().is_some() {
@@ -199,6 +188,7 @@ pub fn get_secured_scope() ->Scope<impl ServiceFactory<ServiceRequest, Config = 
             .service(get_relationship)
             .service(get_device_states)
             .service(get_interactions)
+            .service(get_all_api)
             .service(unmount_usb_storage)
             .service(get_usb_status)
 }
@@ -235,10 +225,14 @@ pub fn get_ui_config() -> Scope {
 
 use std::thread::spawn;
 use actix::{Actor, Addr};
+use crate::controllers::all_api::get_all_api;
 use crate::controllers::unmount_controller::{get_usb_status, unmount_usb_storage};
 use crate::controllers::websocket_controller::start_connection;
 use crate::models::client_data::ClientData;
-use crate::models::socket_event::SocketEvent;
+use crate::models::socket_event::Properties::Value;
+use crate::models::socket_event::{Properties, SocketData, SocketEvent};
+use crate::store::Store;
+use crate::utils::logging::init_logging;
 use crate::ws::broadcast_message::BroadcastMessage;
 use crate::ws::web_socket_message::Lobby;
 
@@ -255,7 +249,31 @@ pub async fn init_socket(base_url:String, token: String){
             loop {
                 match socket.read() {
                     Ok(msg) => {
-                        let parsed_message = serde_json::from_str::<SocketEvent>(&msg.to_string()).unwrap();
+                        let mut parsed_message = serde_json::from_str::<SocketEvent>(&msg.to_string()).unwrap();
+                        let store_data = STORE_DATA.get().unwrap();
+                        let mut data = store_data.data.lock().unwrap();
+                        data.handle_socket_event(&mut parsed_message);
+                        if let Some(props) = &parsed_message.properties {
+                            match props{
+                                Value(v)=>{
+                                    log::error!("Unknown properties!! {}", v);
+
+                                }
+                                _ => {}
+                            }
+                        }
+
+                        if let Some(data) =  &parsed_message.data {
+                            match data {
+                                SocketData::Value(v)=>{
+                                    log::error!("Unknown data!! {}", v);
+
+                                }
+                                _ => {}
+                            }
+                        }
+
+
                         let lobby = WINNER.get().unwrap();
                         lobby.do_send(BroadcastMessage{
                             message: parsed_message
@@ -269,6 +287,6 @@ pub async fn init_socket(base_url:String, token: String){
             retries += 1;
             thread::sleep(Duration::from_secs(5));
         }
-        println!("Socket connection failed");
+        log::info!("Socket connection failed");
     });
 }

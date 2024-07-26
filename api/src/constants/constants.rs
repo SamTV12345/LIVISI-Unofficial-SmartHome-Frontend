@@ -11,11 +11,6 @@ pub const LOCATIONS: &str = "locations";
 pub const USER_STORAGE: &str = "user_storage";
 
 
-
-pub const REDIS_ENV: &str = "REDIS_URL";
-
-
-
 pub const LOCATION_URL: &str = "/location/";
 
 pub const USERNAME:&str = "USERNAME";

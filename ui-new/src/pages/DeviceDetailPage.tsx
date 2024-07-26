@@ -7,33 +7,25 @@ import {useNavigate} from "react-router-dom";
 import {CapabilityState} from "@/src/models/CapabilityState.ts";
 import {useDebounce} from "@/src/utils/useDebounce.ts";
 import axios from "axios";
-import {ACTION_ENDPOINT, CAPABILITY_PREFIX} from "@/src/constants/FieldConstants.ts";
+import {ACTION_ENDPOINT} from "@/src/constants/FieldConstants.ts";
 
 export const DeviceDetailPage = ()=>{
     const params = useParams()
-    const devices = useContentModel(state=>state.devices)
+    const devices = useContentModel(state=>state.allThings)
     const [device,setDevice] = useState<Device>()
     const navigate = useNavigate()
-    const mapOfStates = useContentModel(state => state.mapOfStates)
-    const [state, setState] = useState<CapabilityState>()
     const [turnedOn, setTurnedOn] = useState<boolean>()
 
     useEffect(() => {
         if(devices){
-            setDevice(devices.find(d=>d.id===params.id))
+            setDevice(devices.devices[params.id!])
         }
     }, []);
 
 
     useEffect(()=>{
         if (!device) return
-        device.capabilities.forEach(c=>{
-            const currentState = mapOfStates.get(c)
-            if(currentState && currentState.state &&currentState.state.onState){
-                setState(currentState)
-                setTurnedOn(currentState.state.onState.value as boolean)
-            }
-        })
+            setTurnedOn(device!.capabilityState![0].state.onState.value)
     },[device])
 
     const constructSwitchPostModel = (newStatus: CapabilityState)=>{
@@ -52,15 +44,13 @@ export const DeviceDetailPage = ()=>{
     }
 
     useDebounce(()=>{
-        if(state){
-            const switchModel = constructSwitchPostModel(state)
-            axios.post(ACTION_ENDPOINT,switchModel)
-                .then(()=>{
-                    // @ts-ignore
-                    mapOfStates.get(CAPABILITY_PREFIX+state.id).state.onState.value = turnedOn
-                })
-        }
-    },2000,[turnedOn])
+        if (!device) return
+        const switchModel = constructSwitchPostModel(device.capabilityState![0])
+        axios.post(ACTION_ENDPOINT,switchModel)
+            .then(()=>{
+                console.log('Switched')
+            })
+    },200,[turnedOn, device])
 
     return <div>
         <button onClick={() => navigate(-1)}><ArrowLeft/></button>

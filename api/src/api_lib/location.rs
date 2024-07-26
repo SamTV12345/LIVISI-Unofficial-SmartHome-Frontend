@@ -2,7 +2,7 @@
 
 use serde_derive::Serialize;
 use serde_derive::Deserialize;
-use crate::api_lib::device::DevicePost;
+
 use crate::CLIENT_DATA;
 
 #[derive(Clone)]
@@ -16,7 +16,7 @@ pub struct LocationResponse{
     pub config: LocationConfig,
     pub id:String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub devices: Option<Vec<DevicePost>>
+    pub devices: Option<Vec<String>>
 }
 
 #[derive(Default,Serialize,Deserialize, Debug, Clone)]
@@ -27,9 +27,9 @@ pub struct LocationConfig{
 }
 
 impl Location {
-    pub fn new(server_url: String) -> Self {
+    pub fn new(server_url: &str) -> Self {
         Self {
-            base_url: server_url + "/location"
+            base_url: format!("{}{}", server_url, "/location")
         }
     }
 

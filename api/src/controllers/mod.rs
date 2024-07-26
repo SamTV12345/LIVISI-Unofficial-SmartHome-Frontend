@@ -13,3 +13,4 @@ pub mod interaction_controller;
 pub mod api_config_controller;
 pub mod websocket_controller;
 pub mod unmount_controller;
+pub mod all_api;

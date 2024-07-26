@@ -63,9 +63,9 @@ pub struct BooleanCapabilityState{
 
 impl Action {
 
-    pub fn new(server_url: String) -> Self {
+    pub fn new(server_url: &str) -> Self {
         Self {
-            base_url: server_url + "/action"
+            base_url: format!("{}{}", server_url, "/action")
         }
     }
     pub async fn post_action(&self, action: ActionPost) -> LivisResponseType<ActionPostResponse>

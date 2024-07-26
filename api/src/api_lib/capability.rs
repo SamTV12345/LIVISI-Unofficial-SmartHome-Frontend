@@ -12,7 +12,7 @@ pub struct Capability{
 }
 
 #[derive(Default,Serialize,Deserialize, Debug)]
-pub struct CapabilityResponse(Vec<CapabilityInner>);
+pub struct CapabilityResponse(pub Vec<CapabilityInner>);
 
 #[derive(Default,Serialize,Deserialize, Debug)]
 pub struct CapabilityInner{
@@ -22,17 +22,17 @@ pub struct CapabilityInner{
     pub config: CapabilityConfig
 }
 
-#[derive(Default,Serialize,Deserialize, Debug)]
+#[derive(Default,Serialize,Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct CapabilityConfig{
     pub activity_log_active: bool,
     pub name: String
 }
 
-#[derive(Default,Serialize,Deserialize, Debug)]
-pub struct CapabilityStateResponse(Vec<CapabilityStateInner>);
+#[derive(Default,Serialize,Deserialize, Debug, Clone)]
+pub struct CapabilityStateResponse(pub Vec<CapabilityStateInner>);
 
-#[derive(Default,Serialize,Deserialize, Debug)]
+#[derive(Default,Serialize,Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct CapabilityStateInner{
     pub id: String,
@@ -87,9 +87,9 @@ pub struct BooleanCapabilityState{
 }
 
 impl Capability{
-    pub fn new(server_url: String) -> Self {
+    pub fn new(server_url: &str) -> Self {
         Self {
-            base_url: server_url+"/capability"
+            base_url: format!("{}{}", server_url,"/capability")
         }
     }
 
@@ -110,7 +110,7 @@ impl Capability{
 
 
 
-    pub async fn get_all_capability_states(&self, _token: String) -> CapabilityStateResponse {
+    pub async fn get_all_capability_states(&self) -> CapabilityStateResponse {
         let locked_client = CLIENT_DATA.get().unwrap().lock();
         let response = locked_client.unwrap().client.get(self.base_url.clone()+"/states")
             .send()

@@ -10,7 +10,7 @@ pub struct Message{
     pub base_url: String,
 }
 
-#[derive(Default,Serialize,Deserialize, Debug)]
+#[derive(Default,Serialize,Deserialize, Debug, Clone)]
 pub struct MessageResponse{
     id: String,
     r#type: String,
@@ -31,7 +31,7 @@ pub struct MessageResponse{
     tags: Option<HashMap<String,String>>
 }
 
-#[derive(Default,Serialize,Deserialize, Debug)]
+#[derive(Default,Serialize,Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct MessageProperties{
     pub device_location: Option<String>,
@@ -44,9 +44,9 @@ pub struct MessageProperties{
 }
 
 impl Message {
-    pub fn new(server_url: String) -> Self {
+    pub fn new(server_url: &str) -> Self {
         Self {
-            base_url: server_url+"/message"
+            base_url: server_url.to_string() +"/message"
         }
     }
 

@@ -10,7 +10,7 @@ pub struct Status{
     base_url: String,
 }
 
-#[derive(Default,Serialize,Deserialize, Debug)]
+#[derive(Default,Serialize,Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct StatusResponse{
     pub app_version: String,
@@ -23,7 +23,7 @@ pub struct StatusResponse{
     pub operation_status: String
 }
 
-#[derive(Default,Serialize,Deserialize, Debug)]
+#[derive(Default,Serialize,Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct StatusNetwork {
     pub backend_available: bool,
@@ -42,9 +42,10 @@ pub struct StatusNetwork {
 }
 
 impl Status {
-    pub fn new(server_url: String) -> Self {
+    pub fn new(server_url: &str) -> Self {
+        server_url.to_owned().push_str("/status");
         Self {
-            base_url: server_url+"/status"
+            base_url: server_url.to_string()
         }
     }
    pub async fn get_status(&self) -> StatusResponse {

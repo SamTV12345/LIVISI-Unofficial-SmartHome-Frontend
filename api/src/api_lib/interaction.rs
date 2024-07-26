@@ -135,9 +135,9 @@ pub struct InteractionConditionParam(HashMap<String, ValueItem>);
 pub struct InteractionParamParam(HashMap<String, ValueItem>);
 
 impl Interaction{
-    pub fn new(server_url: String) -> Self {
+    pub fn new(server_url: &str) -> Self {
         Self {
-            base_url: server_url + "/interaction"
+            base_url: format!("{}{}", server_url, "/interaction")
         }
     }
 
