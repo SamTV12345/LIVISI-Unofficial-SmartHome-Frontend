@@ -7,14 +7,13 @@ import {useNavigate} from "react-router-dom";
 import {CapabilityState} from "@/src/models/CapabilityState.ts";
 import {useDebounce} from "@/src/utils/useDebounce.ts";
 import axios from "axios";
-import {ACTION_ENDPOINT, CAPABILITY_PREFIX} from "@/src/constants/FieldConstants.ts";
+import {ACTION_ENDPOINT} from "@/src/constants/FieldConstants.ts";
 
 export const DeviceDetailPage = ()=>{
     const params = useParams()
     const devices = useContentModel(state=>state.allThings)
     const [device,setDevice] = useState<Device>()
     const navigate = useNavigate()
-    const mapOfStates = useContentModel(state => state.mapOfStates)
     const [turnedOn, setTurnedOn] = useState<boolean>()
 
     useEffect(() => {

@@ -34,14 +34,14 @@ impl RedisConnection{
                 return  Ok(e.json::<Token>().await.unwrap());
             }
             Err(e)=>{
-                println!("Error: {}", e);
+                log::error!("Error: {}", e);
             }
         }
         Err(())
     }
 
     pub async fn do_db_initialization(){
-        println!("Doing db initialization");
+        log::info!("Doing db initialization");
         let token = Self::get_token().await.unwrap();
         let base_url = var(SERVER_URL).unwrap();
         STORE_DATA.get_or_init(|| Store::new(token.clone()));

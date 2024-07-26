@@ -6,7 +6,7 @@ use crate::AppState;
 #[get("/unmount")]
 pub async fn unmount_usb_storage(usb_service: Data<USBService>, token: Data<AppState>) -> impl Responder {
     let token = token.token.lock().unwrap().access_token.clone();
-    println!("{token}");
+    log::info!("{token}");
     usb_service.unmount_usb_storage().await;
     HttpResponse::Ok().body("USB storage unmounted.")
 }

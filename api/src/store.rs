@@ -1,13 +1,18 @@
 use std::collections::HashMap;
 use std::sync::Mutex;
+use actix_web::cookie::Expiration::DateTime;
+use chrono::Utc;
 use serde_derive::{Deserialize, Serialize};
 use serde_json::Value;
+use crate::api_lib::{capability, interaction};
 use crate::api_lib::capability::{CapabilityConfig, CapabilityResponse, CapabilityStateResponse};
+use crate::api_lib::capability::CapValueType::CapValueItem;
 use crate::api_lib::device::{DeviceConfig, DeviceResponse};
 use crate::api_lib::location::LocationResponse;
 use crate::api_lib::message::MessageResponse;
 use crate::api_lib::status::StatusResponse;
 use crate::api_lib::user_storage::UserStorageResponse;
+use crate::models::socket_event::{Properties, SocketEvent, Source};
 use crate::models::token::Token;
 
 #[derive(Default,Serialize,Deserialize, Debug,Clone)]
@@ -56,6 +61,122 @@ pub struct Data {
 
 
 impl Data {
+    pub fn handle_socket_event(&mut self, socket_event: &mut SocketEvent) {
+        match socket_event.get_source() {
+            Source::Device => {
+                log::info!("device change")
+            }
+            Source::Capability => {
+                log::info!("capability change");
+                self.devices.iter_mut().for_each(|(id, device)| {
+                    if let Some(capabilities) = &device.capabilities {
+                        let found_id = &socket_event.get_id();
+                        if let Some(found_id) = found_id.clone() {
+                            if capabilities.contains(&socket_event.source) {
+                                let mut state = device.capability_state.as_mut();
+                                socket_event.device = Some(id.clone());
+                                if let Some(cap_state) = state {
+                                    cap_state.0.iter_mut().for_each(|mut cap_s| {
+                                        if cap_s.id == found_id {
+                                            match &socket_event.properties {
+                                                None => {}
+                                                Some(props) => {
+                                                    match props {
+                                                        Properties::HumidityChange(h)=>{
+                                                            let map = cap_s.state.as_mut();
+                                                            if let Some(m) = map {
+                                                                let current_value = Utc::now()
+                                                                    .to_rfc3339();
+                                                                let cap_value = CapValueItem
+                                                                    (capability::CapValueItem{
+                                                                        value: Some
+                                                                            (interaction::FieldValue::FloatValue(h.humidity as f32)),
+                                                                        last_changed: current_value
+                                                                    });
+
+                                                                m.insert("humidity".to_string(),
+                                                                         cap_value);
+                                                            }
+                                                        }
+                                                        Properties::PointTemperature(_) => {}
+                                                        Properties::Temperature(temp) => {
+                                                            let map = cap_s.state.as_mut();
+                                                            if let Some(m) = map {
+                                                                let current_value = Utc::now()
+                                                                    .to_rfc3339();
+                                                                let cap_value = CapValueItem
+                                                                    (capability::CapValueItem{
+                                                                        value: Some
+                                                                            (interaction::FieldValue::FloatValue(temp.temperature as f32)),
+                                                                        last_changed: current_value
+                                                                    });
+
+                                                                m.insert("temperature".to_string(),
+                                                                         cap_value);
+                                                            }
+                                                        }
+                                                        Properties::Threshold(_) => {}
+                                                        Properties::OnState(e) => {
+                                                            let map = cap_s.state.as_mut();
+                                                            if let Some(m) = map {
+                                                                let current_value = Utc::now()
+                                                                    .to_rfc3339();
+                                                                let cap_value = CapValueItem
+                                                                    (capability::CapValueItem{
+                                                                        value: Some
+                                                                            (interaction::FieldValue::BooleanValue(e.on_state)),
+                                                                        last_changed: current_value
+                                                                    });
+
+                                                                m.insert("onState".to_string(),
+                                                                         cap_value);
+                                                            }
+                                                        }
+                                                        Properties::ConfigVersion(_) => {}
+                                                        Properties::ZustandChange(_) => {}
+                                                        Properties::DeviceConfigurationState(_) => {}
+                                                        Properties::HeatingSetPoint(v) => {
+                                                            let map = cap_s.state.as_mut();
+                                                            if let Some(m) = map {
+                                                                let current_value = Utc::now()
+                                                                    .to_rfc3339();
+                                                                let cap_value = CapValueItem
+                                                                    (capability::CapValueItem{
+                                                                        value: Some
+                                                                            (interaction::FieldValue::FloatValue(v.setpoint_temperature as f32)),
+                                                                        last_changed: current_value
+                                                                    });
+
+                                                                m.insert("setpointTemperature".to_string(), cap_value);
+                                                            }
+                                                        }
+                                                        Properties::CPUUsage(_) => {}
+                                                        Properties::Value(_) => {}
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    })
+                                }
+                            }
+                        }
+                    }
+                })
+            }
+            Source::Location => {
+                log::info!("location change")
+
+            }
+            Source::User => {
+                log::info!("user change")
+
+            }
+            Source::System => {
+                log::info!("system change")
+            }
+        }
+    }
+
     pub fn set_devices(&mut self, devices: DeviceResponse) {
         devices.0.into_iter().for_each(|device|{
             let device_store = DeviceStore {

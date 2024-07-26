@@ -40,7 +40,7 @@ export const DeviceScreen = ()=>{
                                     return TYPES.includes(allDevices?.devices[device].type!)
                                 })
                                     .map(device=>{
-                                        return <DeviceDecider device={allDevices?.devices[device]!}/>
+                                        return <DeviceDecider device={allDevices?.devices[device]!} key={device}/>
                                     })
                                 }
                             </div>
@@ -55,7 +55,6 @@ export const DeviceScreen = ()=>{
                                 <div className="">
                                     {mappedDevicesToType &&[...mappedDevicesToType.entries()]
                                         .map(([key, dev])=>{
-                                            console.log("Device is", key)
                                             return <Accordion type="single" collapsible className="rounded-3xl" key={key}>
                                             <AccordionItem value="beleuchtung" className="text-black rounded">
                                                 <AccordionTrigger className="text-center ml-2">{t(key)}</AccordionTrigger>
@@ -64,7 +63,7 @@ export const DeviceScreen = ()=>{
                                                         {
                                                             dev!.map(device=>{
                                                                 console.log(device)
-                                                                return <DeviceDecider device={device} key={key}/>
+                                                                return <DeviceDecider device={device} key={device.id}/>
                                                             })
                                                         }
                                                     </div>

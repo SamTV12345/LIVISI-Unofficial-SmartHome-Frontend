@@ -1,1 +1,9 @@
 .idea
+api/static/*.js
+api/static/*.css
+api/static/*.map
+api/static/*.html
+api/static/*.txt
+api/static/*.xml
+api/static/*.ico
+api/static/*.png

@@ -77,7 +77,7 @@ async fn index() -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()>{
-
+    init_logging();
     let base_url = var("BASE_URL").unwrap();
 
     WINNER.get_or_init(|| Lobby::default().start());
@@ -114,11 +114,11 @@ async fn main() -> std::io::Result<()>{
 
 
     spawn(||{
-        println!("Starting scheduler");
+        log::info!("Starting scheduler");
         let mut scheduler = Scheduler::new();
         scheduler.every(1.day()).plus(10.minutes())
             .run(||{
-                println!("Fetching data");
+                log::info!("Fetching data");
                 let _ = async move {
                     RedisConnection::do_db_initialization().await;
                 };
@@ -229,8 +229,10 @@ use crate::controllers::all_api::get_all_api;
 use crate::controllers::unmount_controller::{get_usb_status, unmount_usb_storage};
 use crate::controllers::websocket_controller::start_connection;
 use crate::models::client_data::ClientData;
-use crate::models::socket_event::SocketEvent;
+use crate::models::socket_event::Properties::Value;
+use crate::models::socket_event::{Properties, SocketData, SocketEvent};
 use crate::store::Store;
+use crate::utils::logging::init_logging;
 use crate::ws::broadcast_message::BroadcastMessage;
 use crate::ws::web_socket_message::Lobby;
 
@@ -247,9 +249,32 @@ pub async fn init_socket(base_url:String, token: String){
             loop {
                 match socket.read() {
                     Ok(msg) => {
-                        let parsed_message = serde_json::from_str::<SocketEvent>(&msg.to_string()).unwrap();
+                        let mut parsed_message = serde_json::from_str::<SocketEvent>(&msg.to_string()).unwrap();
+                        let store_data = STORE_DATA.get().unwrap();
+                        let mut data = store_data.data.lock().unwrap();
+                        data.handle_socket_event(&mut parsed_message);
+                        if let Some(props) = &parsed_message.properties {
+                            match props{
+                                Value(v)=>{
+                                    log::error!("Unknown properties!! {}", v);
+
+                                }
+                                _ => {}
+                            }
+                        }
+
+                        if let Some(data) =  &parsed_message.data {
+                            match data {
+                                SocketData::Value(v)=>{
+                                    log::error!("Unknown data!! {}", v);
+
+                                }
+                                _ => {}
+                            }
+                        }
+
+
                         let lobby = WINNER.get().unwrap();
-                        println!("Sending message to lobby {:?}", parsed_message);
                         lobby.do_send(BroadcastMessage{
                             message: parsed_message
                         });
@@ -262,6 +287,6 @@ pub async fn init_socket(base_url:String, token: String){
             retries += 1;
             thread::sleep(Duration::from_secs(5));
         }
-        println!("Socket connection failed");
+        log::info!("Socket connection failed");
     });
 }
