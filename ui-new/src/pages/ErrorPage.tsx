@@ -6,10 +6,10 @@ import {ArrowLeft} from 'lucide-react'
 import {useNavigate} from "react-router-dom";
 export const ErrorPage = () => {
     const navigate = useNavigate()
-    const devices = useContentModel(state => state.devices)
+    const allThings = useContentModel(state => state.allThings)
     const shc = useMemo(()=> {
-       return devices?.filter(d=>d.id == '00000000000000000000000000000000')[0]!
-    },    [devices])
+       return allThings?.devices['00000000000000000000000000000000']
+    },    [allThings])
 
 
     return <div>
@@ -20,9 +20,9 @@ export const ErrorPage = () => {
         </p>
         <Button className="w-full h-14 mt-10" onClick={() => {
             axios.post("/action", {
-                    id: shc.id,
+                    id: shc!.id,
                     type: "Restart",
-                    target: "/device/" + shc.id,
+                    target: "/device/" + shc!.id,
                     namespace: "core.RWE",
                     params: {
                         reason: {
