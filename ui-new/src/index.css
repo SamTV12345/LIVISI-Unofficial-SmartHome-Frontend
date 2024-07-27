@@ -205,3 +205,9 @@ input[type=email].active, input[type=email]:active, input[type=email]:focus, inp
 .submit-button-error {
   @apply border-red-600 text-red-600 border-[1px];
 }
+
+
+.network-img{
+  width: 60%;
+
+}

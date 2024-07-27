@@ -25,6 +25,7 @@ import {LANPage} from "@/src/pages/LANPage.tsx";
 import {DeviceLocations} from "@/src/pages/DeviceLocations.tsx";
 import {LocationUpdateScreen} from "@/src/pages/LocationUpdateScreen.tsx";
 import {ServicesScreen} from "@/src/pages/ServicesScreen.tsx";
+import {MobileAccessScreen} from "@/src/components/actionComponents/MobileAccessScreen.tsx";
 
 const router = createBrowserRouter(createRoutesFromElements(
     <Route path="/">
@@ -39,6 +40,7 @@ const router = createBrowserRouter(createRoutesFromElements(
             </Route>
             <Route path="services">
                 <Route index element={<ServicesScreen/>}/>
+                <Route path="mobile-access" element={<MobileAccessScreen/>}/>
             </Route>
             <Route path="scenarios">
                 <Route index element={<ScenarioScreen/>}/>

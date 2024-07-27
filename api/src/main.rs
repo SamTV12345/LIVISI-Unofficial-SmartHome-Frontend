@@ -136,10 +136,11 @@ async fn main() -> std::io::Result<()>{
     HttpServer::new(move || {
         App::new()
             .service(start_connection)
+            .service(get_images)
+            .service(get_resources)
             .service(redirect("/", "/ui/"))
             .service(get_ui_config())
             .service(login)
-            .service(get_images)
             .service(get_api_config)
             .service(get_secured_scope())
             .app_data(bucket_images.clone())
@@ -237,7 +238,7 @@ use std::thread::spawn;
 use actix::{Actor, Addr};
 use kv::Config;
 use crate::controllers::all_api::get_all_api;
-use crate::controllers::images_controller::get_images;
+use crate::controllers::images_controller::{get_images, get_resources};
 use crate::controllers::unmount_controller::{get_usb_status, unmount_usb_storage};
 use crate::controllers::websocket_controller::start_connection;
 use crate::models::client_data::ClientData;

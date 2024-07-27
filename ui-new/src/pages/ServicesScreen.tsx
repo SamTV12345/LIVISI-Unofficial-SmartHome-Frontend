@@ -6,7 +6,7 @@ export const ServicesScreen = ()=>{
     const {t} = useTranslation()
 
     return <PageComponent title="Dienste">
-        <PageBox title="Mobiler Zugang" description="Gültig (kostenfrei)"/>
+        <PageBox title="Mobiler Zugang" description="Gültig (kostenfrei)" to="/services/mobile-access"/>
         <PageBox title="Sonnenauf-/-untergang" description={t('SmartCode.ServiceDetails.ControlSelectedDevices')!}/>
         <PageBox title="SMS" description={0 +" "+t('SmartCode.ServiceDetails.SMSRemaining')}/>
     </PageComponent>
