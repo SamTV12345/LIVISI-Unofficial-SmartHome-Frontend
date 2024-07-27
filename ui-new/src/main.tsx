@@ -26,6 +26,8 @@ import {DeviceLocations} from "@/src/pages/DeviceLocations.tsx";
 import {LocationUpdateScreen} from "@/src/pages/LocationUpdateScreen.tsx";
 import {ServicesScreen} from "@/src/pages/ServicesScreen.tsx";
 import {MobileAccessScreen} from "@/src/components/actionComponents/MobileAccessScreen.tsx";
+import {EmailPage} from "@/src/pages/EmailPage.tsx";
+import {Imprint} from "@/src/pages/Imprint.tsx";
 
 const router = createBrowserRouter(createRoutesFromElements(
     <Route path="/">
@@ -53,6 +55,8 @@ const router = createBrowserRouter(createRoutesFromElements(
                 <Route path="lan" element={<LANPage/>}/>
                 <Route path="deviceLocations" element={<DeviceLocations/>}/>
                 <Route path="deviceLocations/:id" element={<LocationUpdateScreen/>}/>
+                <Route path="email" element={<EmailPage/>}/>
+                <Route path="imprint" element={<Imprint/>}/>
             </Route>
             <Route path="help">
                 <Route index element={<HelpPage/>}/>

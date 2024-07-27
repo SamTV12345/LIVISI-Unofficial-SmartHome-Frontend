@@ -12,3 +12,4 @@ pub mod relationship;
 pub mod interaction;
 pub(crate) mod livisi_response_type;
 pub mod unmount_service;
+pub mod email;

@@ -15,3 +15,4 @@ pub mod websocket_controller;
 pub mod unmount_controller;
 pub mod all_api;
 pub mod images_controller;
+pub mod email_controller;

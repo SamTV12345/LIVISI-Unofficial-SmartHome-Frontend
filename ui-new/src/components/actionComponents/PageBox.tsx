@@ -5,7 +5,7 @@ import {ChevronRight} from "lucide-react";
 export type PageBoxProps = {
     children?: React.ReactNode
     title?: string
-    description?: string,
+    description?: React.ReactNode,
     to?: string,
     variant?: "default"|"gray"
 }
@@ -18,7 +18,7 @@ export const PageBox: FC<PageBoxProps> = ({description,title,children, to, varia
         <div className="">
             <h2 className="text-xl text-black">{title}</h2>
         </div>
-        <div className="text-gray-500">
+        <div className="text-gray-500 text-sm">
             {description}
         </div>
         {to&&<ChevronRight className="absolute right-5 top-1/3 text-gray-500"/>}

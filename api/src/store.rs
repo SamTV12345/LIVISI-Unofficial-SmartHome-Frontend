@@ -8,6 +8,7 @@ use crate::api_lib::{capability, interaction};
 use crate::api_lib::capability::{CapabilityConfig, CapabilityResponse, CapabilityStateResponse};
 use crate::api_lib::capability::CapValueType::CapValueItem;
 use crate::api_lib::device::{DeviceConfig, DeviceResponse};
+use crate::api_lib::email::EmailAPI;
 use crate::api_lib::location::LocationResponse;
 use crate::api_lib::message::MessageResponse;
 use crate::api_lib::status::StatusResponse;
@@ -56,7 +57,8 @@ pub struct Data {
     pub user_storage: Option<UserStorageResponse>,
     pub locations: Vec<LocationResponse>,
     pub(crate) capabilities: Vec<CapabilitiesStore>,
-    pub messages: Vec<MessageResponse>
+    pub messages: Vec<MessageResponse>,
+    pub email: Option<EmailAPI>
 }
 
 
@@ -176,6 +178,10 @@ impl Data {
                 log::info!("system change")
             }
         }
+    }
+
+    pub fn set_email(&mut self, email: EmailAPI) {
+        self.email = Some(email);
     }
 
     pub fn set_devices(&mut self, devices: DeviceResponse) {
@@ -305,7 +311,8 @@ impl Store {
                 user_storage: None,
                 locations: Vec::new(),
                 capabilities: Vec::new(),
-                messages: Vec::new()
+                messages: Vec::new(),
+                email: None,
             })
         }
     }

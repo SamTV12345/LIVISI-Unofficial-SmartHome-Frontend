@@ -116,6 +116,7 @@ async fn main() -> std::io::Result<()>{
     let jwk_service = web::Data::new(Mutex::new(models::jwkservice::JWKService::new()));
     let unmount_service = api_lib::unmount_service::USBService::new(&base_url);
     let bucket_images = web::Data::new(store_images);
+    let email = api_lib::email::Email::new(&base_url);
 
     spawn(||{
         log::info!("Starting scheduler");
@@ -146,6 +147,7 @@ async fn main() -> std::io::Result<()>{
             .app_data(bucket_images.clone())
             .app_data(web::Data::new(action.clone()))
             .app_data(web::Data::new(unmount_service.clone()))
+            .app_data(web::Data::new(email.clone()))
             .app_data(web::Data::new(home.clone()))
             .app_data(web::Data::new(status.clone()))
             .app_data(web::Data::new(users.clone()))
@@ -181,6 +183,7 @@ pub fn get_secured_scope() ->Scope<impl ServiceFactory<ServiceRequest, Config = 
             .wrap(Condition::new(var(OIDC_AUTH).is_ok(),biscuit_validator))
             .wrap(Condition::new(var(BASIC_AUTH).is_ok(),middleware))
             .wrap(token_middleware::AuthFilter::new())
+            .service(get_email_routes())
             .service(get_status)
             .service(get_users)
             .service(get_devices)
@@ -238,6 +241,7 @@ use std::thread::spawn;
 use actix::{Actor, Addr};
 use kv::Config;
 use crate::controllers::all_api::get_all_api;
+use crate::controllers::email_controller::get_email_routes;
 use crate::controllers::images_controller::{get_images, get_resources};
 use crate::controllers::unmount_controller::{get_usb_status, unmount_usb_storage};
 use crate::controllers::websocket_controller::start_connection;

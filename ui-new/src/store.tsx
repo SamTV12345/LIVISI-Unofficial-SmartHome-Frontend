@@ -46,7 +46,18 @@ export type AxiosDeviceResponse = {
     status: Status,
     user_storage: any[],
     locations: LocationResponse[],
-    messages: Message[]
+    messages: Message[],
+    email: EmailConfig
+}
+
+export type EmailConfig = {
+    server_address: string,
+    server_port_number: number,
+    email_username: string,
+    email_password: string,
+    recipient_list: string[]
+    notifications_device_unreachable: boolean,
+    notification_device_low_battery: boolean,
 }
 
 
