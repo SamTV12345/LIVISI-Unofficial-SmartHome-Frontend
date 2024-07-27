@@ -20,8 +20,8 @@ function App() {
     }, [])
 
 
-    return <div className="shadow-2xl p-2" id='content'>
-        <div className="h-20">
+    return <div className="shadow-2xl" id='content'>
+        <div className="h-20 navbar-bar">
             <div className="float-right flex gap-5">
                 <button onClick={()=>{
                     navigate('/settings')

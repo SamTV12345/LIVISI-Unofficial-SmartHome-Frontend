@@ -10,6 +10,7 @@ use crate::api_lib::location::{Location};
 use crate::api_lib::user_storage::UserStorage;
 use crate::{CLIENT_DATA, STORE_DATA};
 use crate::api_lib::message;
+use crate::api_lib::status::Status;
 use crate::models::client_data::ClientData;
 use crate::store::Store;
 
@@ -51,6 +52,7 @@ impl RedisConnection{
         let devices = Device::new(&base_url);
         let capabilities = Capability::new(&base_url);
         let locations = Location::new(&base_url);
+        let status = Status::new(&base_url);
         let user_storage = UserStorage::new(&base_url);
 
         let mut store_tmp = STORE_DATA.get();
@@ -70,6 +72,7 @@ impl RedisConnection{
         st.set_capabilities_state(capabilities.get_all_capability_states().await);
         let user_storage_data = user_storage.get_user_storage()
             .await;
+        st.set_status(status.get_status().await);
         st.set_user_storage(user_storage_data);
         let message_data = message.get_messages().await;
         st.set_messages(message_data)

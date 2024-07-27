@@ -35,7 +35,7 @@ use crate::controllers::device_controller::{get_device_states, get_devices};
 use crate::controllers::hash_controller::get_hash;
 use crate::controllers::home_controller::get_home_setup;
 use crate::controllers::interaction_controller::get_interactions;
-use crate::controllers::location_controller::get_locations;
+use crate::controllers::location_controller::{create_location, delete_location, get_location_by_id, get_locations, update_location};
 use crate::controllers::message_controller::get_messages;
 use crate::controllers::relationship_controller::get_relationship;
 use crate::controllers::status_controller::get_status;
@@ -77,6 +77,10 @@ async fn index() -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()>{
+    let cfg = Config::new("./db");
+    let store = kv::Store::new(cfg).unwrap();
+    let store_images = store.bucket::<String, String>(Some("images")).unwrap();
+
     init_logging();
     let base_url = var("BASE_URL").unwrap();
 
@@ -111,7 +115,7 @@ async fn main() -> std::io::Result<()>{
     let interaction = api_lib::interaction::Interaction::new(&base_url);
     let jwk_service = web::Data::new(Mutex::new(models::jwkservice::JWKService::new()));
     let unmount_service = api_lib::unmount_service::USBService::new(&base_url);
-
+    let bucket_images = web::Data::new(store_images);
 
     spawn(||{
         log::info!("Starting scheduler");
@@ -135,8 +139,10 @@ async fn main() -> std::io::Result<()>{
             .service(redirect("/", "/ui/"))
             .service(get_ui_config())
             .service(login)
+            .service(get_images)
             .service(get_api_config)
             .service(get_secured_scope())
+            .app_data(bucket_images.clone())
             .app_data(web::Data::new(action.clone()))
             .app_data(web::Data::new(unmount_service.clone()))
             .app_data(web::Data::new(home.clone()))
@@ -180,9 +186,13 @@ pub fn get_secured_scope() ->Scope<impl ServiceFactory<ServiceRequest, Config = 
             .service(get_hash)
             .service(get_messages)
             .service(get_locations)
+            .service(create_location)
+            .service(get_location_by_id)
             .service(get_capabilties)
             .service(get_user_storage)
             .service(get_capability_states)
+            .service(delete_location)
+            .service(update_location)
             .service(get_home_setup)
             .service(post_action)
             .service(get_relationship)
@@ -225,7 +235,9 @@ pub fn get_ui_config() -> Scope {
 
 use std::thread::spawn;
 use actix::{Actor, Addr};
+use kv::Config;
 use crate::controllers::all_api::get_all_api;
+use crate::controllers::images_controller::get_images;
 use crate::controllers::unmount_controller::{get_usb_status, unmount_usb_storage};
 use crate::controllers::websocket_controller::start_connection;
 use crate::models::client_data::ClientData;

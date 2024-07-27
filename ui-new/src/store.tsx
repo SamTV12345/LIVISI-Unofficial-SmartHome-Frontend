@@ -13,14 +13,40 @@ export type LoginData = {
     rememberMe: boolean
 };
 
+type Status = {
+    appVersion: string,
+    configVersion: number,
+    connected: boolean,
+    controllerType: string,
+    network:{
+        backendAvailable: boolean,
+        bluetoothHotspotName: string,
+        ethCableAttached: boolean,
+        ethIpAddress: string,
+        ethMacAddress: string,
+        hostname: string,
+        hotspotActive: boolean,
+        inUseAdapter: string,
+        wifiActiveSsid: string,
+        wifiIpAddress: string,
+        wifiMacAddress: string
+        wifiSignalStrength: number
+        wpsActive: boolean
+    }
+    osVersion: string,
+    serialNumber: string,
+    operationStatus: string,
+}
+
+
 export type AxiosDeviceResponse = {
     devices:{
         [key: string]: Device
     }
-    status: null,
+    status: Status,
     user_storage: any[],
     locations: LocationResponse[],
-    messages: Message[],
+    messages: Message[]
 }
 
 

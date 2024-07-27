@@ -7,3 +7,9 @@ api/static/*.txt
 api/static/*.xml
 api/static/*.ico
 api/static/*.png
+
+
+# db dir
+
+api/db/*
+!api/db/.gitkeep

@@ -1,5 +1,4 @@
-
-
+use std::collections::HashMap;
 use serde_derive::Serialize;
 use serde_derive::Deserialize;
 
@@ -16,6 +15,8 @@ pub struct LocationResponse{
     pub config: LocationConfig,
     pub id:String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub tags: Option<HashMap<String, String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub devices: Option<Vec<String>>
 }
 
@@ -31,6 +32,47 @@ impl Location {
         Self {
             base_url: format!("{}{}", server_url, "/location")
         }
+    }
+
+    pub async fn update_location(&self, location_data: LocationResponse, location_id: String) -> LocationResponse {
+        let locked_client = CLIENT_DATA.get().unwrap().lock();
+        let response = locked_client.unwrap().client.put(self.base_url.clone()+"/"+&location_id)
+            .json(&location_data)
+            .send()
+            .await
+            .unwrap();
+
+            response
+                .json::<LocationResponse>()
+            .await
+            .unwrap()
+    }
+
+    pub async fn delete_location(&self, location_id: String) -> LocationResponse {
+        let locked_client = CLIENT_DATA.get().unwrap().lock();
+        let response = locked_client.unwrap().client.delete(self.base_url.clone()+"/"+&location_id)
+            .send()
+            .await
+            .unwrap();
+
+            response
+                .json::<LocationResponse>()
+            .await
+            .unwrap()
+    }
+
+    pub async fn create_location(&self, location_data: LocationResponse) -> LocationResponse {
+        let locked_client = CLIENT_DATA.get().unwrap().lock();
+        let response = locked_client.unwrap().client.post(self.base_url.clone())
+            .json(&location_data)
+            .send()
+            .await
+            .unwrap();
+
+            response
+                .json::<LocationResponse>()
+            .await
+            .unwrap()
     }
 
     pub async fn get_locations(&self) -> Vec<LocationResponse> {

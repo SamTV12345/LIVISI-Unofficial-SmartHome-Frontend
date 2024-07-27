@@ -22,5 +22,6 @@ export const ZWISCHENSTECKER = "PSS"
 export const TYPES = [WANDSENDER, ZWISCHENSTECKER, HEATING]
 
 export const ACTION_ENDPOINT = '/action'
+export const LOCATION_ENDPOINT = '/location'
 
 

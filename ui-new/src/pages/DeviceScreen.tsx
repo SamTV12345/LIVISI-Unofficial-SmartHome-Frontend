@@ -6,6 +6,7 @@ import {TYPES} from "@/src/constants/FieldConstants.ts";
 import {DeviceDecider} from "@/src/components/actionComponents/DeviceDecider.tsx";
 import {useTranslation} from "react-i18next";
 import {Device} from "@/src/models/Device.ts";
+import {PageComponent} from "@/src/components/actionComponents/PageComponent.tsx";
 
 export const DeviceScreen = ()=>{
     const [selectedTab, setSelectedTab] = useState<number>(0)
@@ -25,9 +26,10 @@ export const DeviceScreen = ()=>{
     }, [allDevices?.devices]);
 
     const {t} = useTranslation()
-    return <div className="grid grid-cols-2">
-        <div className={`${selectedTab===0&&'border-b-8 border-cyan-600'} text-center `} onClick={()=>setSelectedTab(0)}>Ort</div>
-        <div className={`${selectedTab===1&&'border-b-8 border-cyan-600'} text-center  border-b border-black`} onClick={()=>setSelectedTab(1)}>Gerätetyp</div>
+    return         <PageComponent title={t('HouseholdIdDevicesTag')}>
+        <div className="grid grid-cols-2">
+        <div className={`${selectedTab===0&&'border-b-8 border-cyan-600'} text-center text-xl mb-3 border-b border-black `} onClick={()=>setSelectedTab(0)}>Ort</div>
+        <div className={`${selectedTab===1&&'border-b-8 border-cyan-600'} text-center  border-b border-black text-xl mb-3`} onClick={()=>setSelectedTab(1)}>Gerätetyp</div>
         {selectedTab===0&&<div className="col-span-2">
         {
             allDevices?.locations&& Object.entries(allDevices?.locations!).map(([_,location])=>{
@@ -75,5 +77,5 @@ export const DeviceScreen = ()=>{
                                 </div>
             }
         </div>}
-    </div>
+        </div></PageComponent>
 }

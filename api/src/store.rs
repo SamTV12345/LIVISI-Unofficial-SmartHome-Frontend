@@ -152,6 +152,7 @@ impl Data {
                                                         }
                                                         Properties::CPUUsage(_) => {}
                                                         Properties::Value(_) => {}
+                                                        _ => {}
                                                     }
                                                 }
                                             }
@@ -216,7 +217,8 @@ impl Data {
                         device.location_data = Some(LocationResponse{
                             id: wrapped.id.clone(),
                             config: wrapped.config.clone(),
-                            devices: None
+                            devices: None,
+                            tags: wrapped.tags.clone()
                         });
                         self.locations.iter_mut().for_each(|location| {
                             if location.id == wrapped.id {

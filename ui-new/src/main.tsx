@@ -19,6 +19,12 @@ import {SocketMessage} from "@/src/models/SocketMessage.ts";
 import {SettingsPage} from "@/src/pages/SettingsPage.tsx";
 import {DeviceDetailPage} from "@/src/pages/DeviceDetailPage.tsx";
 import {ScenarioScreen} from "@/src/pages/ScenarioScreen.tsx";
+import {DeviceDrivers} from "@/src/components/actionComponents/DeviceDrivers.tsx";
+import {NetworkPage} from "@/src/components/actionComponents/NetworkPage.tsx";
+import {LANPage} from "@/src/pages/LANPage.tsx";
+import {DeviceLocations} from "@/src/pages/DeviceLocations.tsx";
+import {LocationUpdateScreen} from "@/src/pages/LocationUpdateScreen.tsx";
+import {ServicesScreen} from "@/src/pages/ServicesScreen.tsx";
 
 const router = createBrowserRouter(createRoutesFromElements(
     <Route path="/">
@@ -31,11 +37,21 @@ const router = createBrowserRouter(createRoutesFromElements(
                 <Route index element={<DeviceScreen/>}/>
                 <Route path=":id" element={<DeviceDetailPage/>}/>
             </Route>
+            <Route path="services">
+                <Route index element={<ServicesScreen/>}/>
+            </Route>
             <Route path="scenarios">
                 <Route index element={<ScenarioScreen/>}/>
             </Route>
             <Route path="news" element={<NewsScreen/>}/>
-            <Route path="settings" element={<SettingsPage/>}/>
+            <Route path="settings">
+                <Route index={true} element={<SettingsPage/>}/>
+                <Route path="deviceDrivers" element={<DeviceDrivers/>}/>
+                <Route path="network" element={<NetworkPage/>}/>
+                <Route path="lan" element={<LANPage/>}/>
+                <Route path="deviceLocations" element={<DeviceLocations/>}/>
+                <Route path="deviceLocations/:id" element={<LocationUpdateScreen/>}/>
+            </Route>
             <Route path="help">
                 <Route index element={<HelpPage/>}/>
                 <Route path="about" element={<AboutPage/>}/>
