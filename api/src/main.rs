@@ -51,7 +51,6 @@ use crate::controllers::api_config_controller::{get_api_config, login};
 use crate::models::token::Token;
 use crate::utils::connection::RedisConnection;
 
-
 static WINNER: OnceLock<Addr<Lobby>> = OnceLock::new();
 use tungstenite::connect;
 
@@ -129,11 +128,17 @@ async fn main() -> std::io::Result<()>{
                 };
 
         });
+
+
         loop {
             scheduler.run_pending();
             thread::sleep(Duration::from_secs(10));
         }
     });
+
+
+
+
     HttpServer::new(move || {
         App::new()
             .service(start_connection)

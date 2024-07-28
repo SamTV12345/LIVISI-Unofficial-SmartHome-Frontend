@@ -46,8 +46,37 @@ impl RedisConnection{
         log::info!("Doing db initialization");
         let token = Self::get_token().await.unwrap();
         let base_url = var(SERVER_URL).unwrap();
-        STORE_DATA.get_or_init(|| Store::new(token.clone()));
-        CLIENT_DATA.get_or_init(|| Mutex::new(ClientData::new(token.access_token)));
+
+        match STORE_DATA.get() {
+            Some(e) => {
+                let mut store = e.token.lock();
+                let st = store.as_mut().unwrap();
+                st.clone_from(&token.clone());
+            }
+            None => {
+                let e = STORE_DATA.set(Store::new(token.clone()));
+                if e.is_err(){
+                    log::error!("Error setting store data");
+                }
+            }
+        }
+
+
+        match CLIENT_DATA.get() {
+            Some(e) => {
+                let data = ClientData::new(token.clone().access_token);
+                let mut res = e.lock().unwrap();
+                res.client.clone_from(&data.client);
+                res.token.clone_from(&data.token);
+            }
+            None => {
+                let e = CLIENT_DATA.set(Mutex::new(ClientData::new(token.clone().access_token)));
+                if e.is_err(){
+                    log::error!("Error setting client data");
+                }
+            }
+        }
+
         let message = message::Message::new(&base_url);
 
         let devices = Device::new(&base_url);
