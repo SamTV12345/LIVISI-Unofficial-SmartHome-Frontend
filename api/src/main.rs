@@ -184,6 +184,7 @@ pub fn get_secured_scope() ->Scope<impl ServiceFactory<ServiceRequest, Config = 
             .wrap(Condition::new(var(BASIC_AUTH).is_ok(),middleware))
             .wrap(token_middleware::AuthFilter::new())
             .service(get_email_routes())
+            .service(get_capability_routes())
             .service(get_status)
             .service(get_users)
             .service(get_devices)
@@ -241,6 +242,7 @@ use std::thread::spawn;
 use actix::{Actor, Addr};
 use kv::Config;
 use crate::controllers::all_api::get_all_api;
+use crate::controllers::data_controller::get_capability_routes;
 use crate::controllers::email_controller::get_email_routes;
 use crate::controllers::images_controller::{get_images, get_resources};
 use crate::controllers::unmount_controller::{get_usb_status, unmount_usb_storage};

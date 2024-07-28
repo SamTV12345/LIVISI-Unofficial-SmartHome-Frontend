@@ -30,6 +30,7 @@ export const DeviceScreen = ()=>{
         <div className="grid grid-cols-2">
         <div className={`${selectedTab===0&&'border-b-8 border-cyan-600'} text-center text-xl mb-3 border-b border-black `} onClick={()=>setSelectedTab(0)}>Ort</div>
         <div className={`${selectedTab===1&&'border-b-8 border-cyan-600'} text-center  border-b border-black text-xl mb-3`} onClick={()=>setSelectedTab(1)}>Gerätetyp</div>
+        </div>
         {selectedTab===0&&<div className="col-span-2">
         {
             allDevices?.locations&& Object.entries(allDevices?.locations!).map(([_,location])=>{
@@ -37,7 +38,7 @@ export const DeviceScreen = ()=>{
                     <AccordionItem value="beleuchtung" className="text-black rounded">
                         <AccordionTrigger className="text-center ml-2">{location.config.name}</AccordionTrigger>
                         <AccordionContent>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid md:grid-cols-2 grid-cols-1 gap-4">
                                 {location.devices?.filter(device=>{
                                     return TYPES.includes(allDevices?.devices[device].type!)
                                 })
@@ -61,10 +62,9 @@ export const DeviceScreen = ()=>{
                                             <AccordionItem value="beleuchtung" className="text-black rounded">
                                                 <AccordionTrigger className="text-center ml-2">{t(key)}</AccordionTrigger>
                                                 <AccordionContent>
-                                                    <div className="grid grid-cols-2 gap-4">
+                                                    <div className="grid md:grid-cols-2 grid-cols-1   gap-4">
                                                         {
                                                             dev!.map(device=>{
-                                                                console.log(device)
                                                                 return <DeviceDecider device={device} key={device.id}/>
                                                             })
                                                         }
@@ -77,5 +77,5 @@ export const DeviceScreen = ()=>{
                                 </div>
             }
         </div>}
-        </div></PageComponent>
+        </PageComponent>
 }

@@ -13,7 +13,7 @@ export const PageComponent: FC<PageComponentProps> = ( {children, to, title, act
     const navigate = useNavigate()
 
     return <div className="">
-        <div className="flex gap-5 page-header">
+        <div className="flex gap-5 md:bg-white p-3 text-text-muted ml-10 md:ml-0 pt-4">
             {to&&<button  onClick={()=>to&&navigate(to)}><ArrowLeft className="self-center mt-1"/></button>}
             <h2 className="text-xl text-black">{title}</h2>
             {actionButton&&<><div className="flex-1"></div>

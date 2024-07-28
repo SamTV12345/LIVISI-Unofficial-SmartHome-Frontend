@@ -4,11 +4,13 @@ use serde_derive::Deserialize;
 use crate::api_lib::interaction::{FieldValue};
 
 use std::collections::HashMap;
+use serde_json::Value;
 use crate::CLIENT_DATA;
 
 #[derive(Clone)]
 pub struct Capability{
     pub base_url: String,
+    pub server_url: String
 }
 
 #[derive(Default,Serialize,Deserialize, Debug)]
@@ -86,11 +88,36 @@ pub struct BooleanCapabilityState{
     pub last_changed: String
 }
 
+#[derive(Default,Serialize,Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct CapabilityTempData {
+    event_type: String,
+    event_time: String,
+    data_name: String,
+    data_value: String,
+    entity_id: String,
+}
+
+
 impl Capability{
     pub fn new(server_url: &str) -> Self {
         Self {
+            server_url: server_url.to_string(),
             base_url: format!("{}{}", server_url,"/capability")
         }
+    }
+
+    pub async fn get_historic_data(&self, path: &str) -> Vec<CapabilityTempData> {
+        let locked_client = CLIENT_DATA.get().unwrap().lock();
+        let response = locked_client.unwrap().client.get(self.server_url.clone()+path)
+            .send()
+            .await
+            .unwrap();
+
+            response
+                .json::<Vec<CapabilityTempData>>()
+                .await
+                .unwrap()
     }
 
     pub async fn get_capabilities(&self) -> CapabilityResponse {

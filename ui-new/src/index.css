@@ -211,3 +211,29 @@ input[type=email].active, input[type=email]:active, input[type=email]:focus, inp
   width: 60%;
 
 }
+
+@keyframes slideInFromLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutToLeft {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+.drawer-custom {
+  animation: slideInFromLeft 0.1s ease-in;
+}
+
+.drawer-custom-close {
+  animation: slideOutToLeft 0.1s ease-out;
+}

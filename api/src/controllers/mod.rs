@@ -16,3 +16,4 @@ pub mod unmount_controller;
 pub mod all_api;
 pub mod images_controller;
 pub mod email_controller;
+pub mod data_controller;

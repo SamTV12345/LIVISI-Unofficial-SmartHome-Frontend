@@ -4,6 +4,7 @@ import {useContentModel} from "@/src/store.tsx";
 import {useEffect} from "react";
 import {Card} from "@/src/components/layout/Card.tsx";
 import {formatTime} from "@/src/utils/timeUtils.ts";
+import {PageComponent} from "@/src/components/actionComponents/PageComponent.tsx";
 
 
 type MessageReturnType = {
@@ -35,9 +36,9 @@ export const NewsScreen = ()=>{
     },[])
 
 
-    return <div className=" h-full rounded-3xl">
+    return <PageComponent title="Nachrichten">
 
-        <div>
+        <div className="p-4">
             {
                 messages?.messages.length===0?<div>Keine Nachrichten vorhanden</div>:null
             }
@@ -53,5 +54,5 @@ export const NewsScreen = ()=>{
             }
         </div>
 
-    </div>
+    </PageComponent>
 }

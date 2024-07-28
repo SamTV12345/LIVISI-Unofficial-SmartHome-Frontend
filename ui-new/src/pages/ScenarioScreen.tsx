@@ -1,4 +1,5 @@
 import {useEffect} from "react";
+import {PageComponent} from "@/src/components/actionComponents/PageComponent.tsx";
 
 export const ScenarioScreen = ()=>{
 
@@ -6,8 +7,7 @@ export const ScenarioScreen = ()=>{
 
     }, []);
 
-    return <div>
-        <h1 className="text-2xl">Szenarien</h1>
-
-    </div>
+    return <PageComponent title="Szenarien">
+        <div>WIP</div>
+    </PageComponent>
 }

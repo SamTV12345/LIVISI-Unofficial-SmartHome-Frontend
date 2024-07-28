@@ -1,10 +1,12 @@
-import {Accordion} from "@/src/components/actionComponents/Accordion.tsx"
+import {PageComponent} from "@/src/components/actionComponents/PageComponent.tsx";
+import {Accordion} from "@/components/ui/accordion.tsx";
+import {AccordionTrigger} from "@/src/components/actionComponents/Accordion.tsx";
+import {AccordionContent, AccordionItem} from "@radix-ui/react-accordion";
+import {useMemo, useState} from "react";
 import {useContentModel} from "@/src/store.tsx";
-import {CATEGORY, TYPES} from "@/src/constants/FieldConstants.ts";
-import {useMemo} from "react";
-import {UserStorage} from "@/src/models/UserStorage.ts";
-import {UserStorageValueShow} from "@/src/models/UserStorageHomepage.ts";
-import {Category} from "@/src/components/actionComponents/Categories.tsx";
+import {Device} from "@/src/models/Device.ts";
+import axios, {AxiosResponse} from "axios";
+import TimeSeriesChart, {DataPoint} from "@/src/components/layout/TimeSeriesChart.tsx";
 
 
 /*
@@ -15,40 +17,89 @@ Room Heating Control (VRCC) that includes support for physical heating devices s
 Wall Switches (ISS, ISS2)
 Window-Door Sensor (WDS)
  */
+
+type CapData = {
+    eventType: string,
+    eventTime: string,
+    dataName: string,
+    dataValue: string
+    entityId: string
+}
+
 export const HomeScreen = ()=>{
-    const userStorage = useContentModel(state=>state.userStorage)
-    const mapOfDeviceIds = useContentModel(state=>state.deviceIdMap)
+    const allthings = useContentModel(state=>state.allThings)
+    const [deviceDataStore, setDeviceDataStore] = useState<Map<string,DataPoint[]>>(new Map<string, DataPoint[]>())
 
-    const res = useMemo(()=>{
-        const category = userStorage.get(CATEGORY)
-        if (!category){
-            return []
-        }
-        const json = JSON.parse(category.value  as unknown as string)
-
-        const userStorageWithValues:UserStorage[] = []
-        Object.keys(json).forEach(key=> {
-            // get actual home display
-            const result = userStorage.get(key)
-            if (result && typeof result.value === "string") {
-                const showingDevicesId: UserStorageValueShow = JSON.parse(result.value)
-                showingDevicesId.Show.map(c=> mapOfDeviceIds.get(c))
-                    .filter(c=>{return c!==undefined &&TYPES.includes(c.type)})
-                    .forEach(deviceId=>{
-                        if (result.devices===undefined){
-                            result.devices = []
-                        }
-                        result.devices.push(deviceId!)
-                    })
-                userStorageWithValues.push(result)
-            }
+    const roomsClimate = useMemo(()=>{
+        let deviceArrays: Device[] = []
+        if (!allthings?.devices) return deviceArrays
+        deviceArrays = Object.values(allthings?.devices).filter((d)=>{
+            return d.type === "VRCC"
         })
-        return userStorageWithValues
-    }, [])
+        return deviceArrays!
+    }, [allthings?.devices])
 
 
-    return <Accordion type="single" collapsible className="rounded-3xl">
-        {res.map((userStorage: UserStorage)=><Category key={userStorage.key} userStorage={userStorage}/>)}
-    </Accordion>
+    const loadObject = (device: Device, mapkey: string, capKey: string)=>{
+        const currentDate = new Date().toISOString()
+        const start = new Date()
+        start.setHours(start.getHours()-24)
+        axios.get('/data/capability', {
+            params:{
+                entityId: device.manufacturer+"."+device.type+"."+device.serialNumber+capKey,
+                start: start.toISOString(),
+                end: currentDate,
+                page: 1,
+                pagesize: 100,
+                eventType: "StateChanged"
+            }
+        }).then((v: AxiosResponse<CapData[]>)=>{
+
+            const data = v.data.map((v)=>{
+                return {
+                    timeString: v.eventTime,
+                    value: parseFloat(v.dataValue)
+                }
+            })
+
+            setDeviceDataStore((prev)=>{
+                return new Map(prev.set(device.id+mapkey, data))
+            })
+        })
+    }
+
+    const loadDeviceData = (device: Device)=>{
+        if (!deviceDataStore.has(device.id+"temp")){
+            loadObject(device, "temp", ".RoomTemperature")
+        }
+
+        if (!deviceDataStore.has(device.id+"humidity")){
+            loadObject(device, "humidity", ".RoomHumidity")
+        }
+
+
+    }
+
+    return <PageComponent title="Home">
+        <Accordion type="single" collapsible className="rounded-3xl" key={"Räume"}>
+            {
+                roomsClimate.map(r=>{
+                   return <AccordionItem value={r.locationData?.config.name!} className="text-black rounded" key={r.locationData?.config.name}>
+                        <AccordionTrigger className="text-center ml-2" onClick={()=>{
+                            loadDeviceData(r)
+                        }}>{r.locationData?.config.name}</AccordionTrigger>
+                        <AccordionContent>
+                            {
+                                deviceDataStore.has(r.id+'temp')&&<TimeSeriesChart chartTitle={"Temperatur in "+r.locationData?.config.name} ytitle="Temperatur in Grad" data={deviceDataStore.get(r.id+"temp")!} />
+                            }
+                            {
+                                deviceDataStore.has(r.id+'humidity')&&<TimeSeriesChart chartTitle={"Feuchtigkeit in "+r.locationData?.config.name} ytitle="Temperatur in Grad" data={deviceDataStore.get(r.id+"humidity")!} />
+                            }
+                        </AccordionContent>
+                    </AccordionItem>
+                })
+            }
+        </Accordion>
+    </PageComponent>
 
 }
