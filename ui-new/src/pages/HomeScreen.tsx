@@ -1,6 +1,5 @@
 import {PageComponent} from "@/src/components/actionComponents/PageComponent.tsx";
-import {Accordion} from "@/components/ui/accordion.tsx";
-import {AccordionTrigger} from "@/src/components/actionComponents/Accordion.tsx";
+import {Accordion, AccordionTrigger} from "@/src/components/actionComponents/Accordion.tsx";
 import {AccordionContent, AccordionItem} from "@radix-ui/react-accordion";
 import {useMemo, useState} from "react";
 import {useContentModel} from "@/src/store.tsx";
