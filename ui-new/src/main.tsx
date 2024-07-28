@@ -28,6 +28,7 @@ import {ServicesScreen} from "@/src/pages/ServicesScreen.tsx";
 import {MobileAccessScreen} from "@/src/components/actionComponents/MobileAccessScreen.tsx";
 import {EmailPage} from "@/src/pages/EmailPage.tsx";
 import {Imprint} from "@/src/pages/Imprint.tsx";
+import {ErrorAdvancedPage} from "@/src/pages/ErrorAdvancedPage.tsx";
 
 const router = createBrowserRouter(createRoutesFromElements(
     <Route path="/">
@@ -61,7 +62,10 @@ const router = createBrowserRouter(createRoutesFromElements(
             <Route path="help">
                 <Route index element={<HelpPage/>}/>
                 <Route path="about" element={<AboutPage/>}/>
-                <Route path="errors" element={<ErrorPage/>}/>
+                <Route path="errors">
+                    <Route index element={<ErrorPage/>}/>
+                    <Route path="advanced" element={<ErrorAdvancedPage/>}/>
+                </Route>
             </Route>
 
         </Route>

@@ -16,10 +16,13 @@ pub struct Action{
 #[derive(Default,Serialize,Deserialize, Debug)]
 pub struct ActionPost{
     pub r#type: String,
+    pub id: String,
     pub namespace: String,
     pub target: String,
-    pub params: HashMap<String, ValueItem>
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub params: Option<HashMap<String, ValueItem>>
 }
+
 
 #[derive(Default,Serialize,Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
