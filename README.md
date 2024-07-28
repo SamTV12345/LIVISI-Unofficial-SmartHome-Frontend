@@ -17,6 +17,8 @@ version: '3'
 services:
   gateway:
     image: samuel19982/gateway:latest
+    volumes:
+      - "./db:/app/db"
     ports:
       - "80:8000"
     environment:
