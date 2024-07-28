@@ -37,3 +37,11 @@ services:
 
 The url normally starts with http://<ip-address:8080 . Please don't add a / to the end of the url.
 The username is currently hardcoded in every LIVISI product admin. The password can be retrieved from the serial number of the device.
+
+# UI
+
+The UI is available at /ui. It is a beautiful interface to view the cached data.
+
+![charts](/docs/interface.png)
+
+![Settings](/docs/settings.png)
