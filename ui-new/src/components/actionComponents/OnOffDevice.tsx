@@ -1,6 +1,5 @@
 import {Device} from "@/src/models/Device.ts";
 import {FC, useState} from "react";
-import {useContentModel} from "@/src/store.tsx";
 import {Card, CardDescription, CardHeader, CardTitle} from "@/src/components/layout/Card.tsx";
 import {useDebounce} from "@/src/utils/useDebounce.ts";
 import {CapabilityState} from "@/src/models/CapabilityState.ts";
@@ -16,10 +15,13 @@ type HeatingdeviceProps = {
 }
 
 export const OnOffDevice:FC<HeatingdeviceProps> = ({device, showRoom=false}) => {
-    const mapOfLocations = useContentModel(state => state.mapOfLocations)
     const [turnedOn, setTurnedOn] = useState<boolean>(()=>{
-        console.log("The current zwischenstecker is",device)
-        return device.capabilityState && device.capabilityState.length > 0 && device.capabilityState![0].state.onState.value
+        for (const dev of device.capabilityState!){
+            if (dev.state.onState.value){
+                return true
+            }
+        }
+        return false
     })
     const navigate = useNavigate()
 
@@ -51,9 +53,9 @@ export const OnOffDevice:FC<HeatingdeviceProps> = ({device, showRoom=false}) => 
     }}>
         <CardHeader className="flex flex-row">
             <CardTitle className="text-xl mt-3">{device.config.name}</CardTitle>
-            {showRoom&&<CardDescription>{mapOfLocations.get(device.location.replace('/location/',''))?.config.name}</CardDescription>}
+            {showRoom&&<CardDescription>{device.locationData?.config.name}</CardDescription>}
             <span className="flex-1"></span>
-                <Power className={`rounded-full cursor-pointer border-gray-500 border-2 h-12 w-12 p-2 ${turnedOn?'bg-amber-300':''}`}  onClick={(e)=>{
+                <Power className={`rounded-full cursor-pointer border-gray-500 border-2 h-12 w-12 p-2 ${turnedOn?'bg-green-green':''}`}  onClick={(e)=>{
                     e.stopPropagation()
                     setTurnedOn(!turnedOn)}}/>
         </CardHeader>

@@ -17,9 +17,10 @@ export const HEATING = 'VRCC'
 export const WANDSENDER = "WSC2"
 
 export const ZWISCHENSTECKER = "PSS"
+export const ZWISCHENSTECKER_OUTDOOR = "PSSO"
 
 
-export const TYPES = [WANDSENDER, ZWISCHENSTECKER, HEATING]
+export const TYPES = [WANDSENDER, ZWISCHENSTECKER, HEATING, ZWISCHENSTECKER_OUTDOOR]
 
 export const ACTION_ENDPOINT = '/action'
 export const LOCATION_ENDPOINT = '/location'
