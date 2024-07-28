@@ -23,16 +23,6 @@ services:
       - BASE_URL=<your-livsi-url>
       - PASSWORD=<your-livisi-password>
       - USERNAME=<your-livisi-username>
-    depends_on:
-      - cache
-  cache:
-    image: redis:7.0.11
-    restart: always
-    ports:
-      - '6379:6379'
-    command: redis-server --save 20 1 --loglevel warning
-    volumes:
-      - cache:/data
 ```
 
 The url normally starts with http://<ip-address:8080 . Please don't add a / to the end of the url.
