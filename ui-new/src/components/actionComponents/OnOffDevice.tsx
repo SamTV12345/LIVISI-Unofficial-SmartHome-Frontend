@@ -18,7 +18,8 @@ type HeatingdeviceProps = {
 export const OnOffDevice:FC<HeatingdeviceProps> = ({device, showRoom=false}) => {
     const mapOfLocations = useContentModel(state => state.mapOfLocations)
     const [turnedOn, setTurnedOn] = useState<boolean>(()=>{
-        return device.capabilityState![0].state.onState.value
+        console.log("The current zwischenstecker is",device)
+        return device.capabilityState && device.capabilityState.length > 0 && device.capabilityState![0].state.onState.value
     })
     const navigate = useNavigate()
 
