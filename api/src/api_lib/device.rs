@@ -89,8 +89,12 @@ impl Device {
         }
     }
    pub async fn get_devices(&self)  ->DeviceResponse{
-       let locked_client = CLIENT_DATA.get().unwrap().lock();
-       let response = locked_client.unwrap().client.get(self.base_url.clone())
+       let api_client;
+       {
+           let locked_client = CLIENT_DATA.get().unwrap().lock();
+           api_client = locked_client.unwrap().client.clone()
+       }
+       let response = api_client.get(self.base_url.clone())
            .headers(HeaderUtils::get_auth_token_header())
             .send()
             .await
@@ -102,8 +106,12 @@ impl Device {
 
 
     pub async fn get_all_device_states(&self) ->DeviceStateResponse{
-        let locked_client = CLIENT_DATA.get().unwrap().lock();
-        let response = locked_client.unwrap().client.get(self.base_url.clone()+"/states")
+        let api_client;
+        {
+            let locked_client = CLIENT_DATA.get().unwrap().lock();
+            api_client = locked_client.unwrap().client.clone()
+        }
+        let response = api_client.get(self.base_url.clone()+"/states")
             .send()
             .await
             .unwrap();
@@ -113,8 +121,13 @@ impl Device {
     }
 
 
-    pub async fn post_status(&self, client: Client, device_post:DevicePost) -> String {
-        let response = client.post(self.base_url.clone())
+    pub async fn post_status(&self, device_post:DevicePost) -> String {
+        let api_client;
+        {
+            let locked_client = CLIENT_DATA.get().unwrap().lock();
+            api_client = locked_client.unwrap().client.clone()
+        }
+        let response = api_client.post(self.base_url.clone())
             .json::<DevicePost>(&device_post)
             .send()
             .await;

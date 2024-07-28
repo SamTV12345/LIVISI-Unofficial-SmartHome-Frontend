@@ -35,9 +35,13 @@ impl User {
     }
 
     pub async fn get_users(&self) -> UserResponse {
-        let locked_client = CLIENT_DATA.get().unwrap().lock();
+        let api_client;
+        {
+            let locked_client = CLIENT_DATA.get().unwrap().lock();
+            api_client = locked_client.unwrap().client.clone()
+        }
 
-        let response = locked_client.unwrap().client.get(self.base_url.clone())
+        let response = api_client.get(self.base_url.clone())
             .send()
             .await
             .unwrap();

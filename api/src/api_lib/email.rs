@@ -31,8 +31,12 @@ impl Email {
     }
 
     pub async fn get_email_settings(&self) -> EmailAPI {
-        let locked_client = CLIENT_DATA.get().unwrap().lock();
-        let response = locked_client.unwrap().client.get(self.base_url.clone()+"/settings")
+        let api_client;
+        {
+            let locked_client = CLIENT_DATA.get().unwrap().lock();
+            api_client = locked_client.unwrap().client.clone()
+        }
+        let response = api_client.get(self.base_url.clone()+"/settings")
             .send()
             .await
             .unwrap();
@@ -45,8 +49,12 @@ impl Email {
 
 
     pub async fn update_email_settings(&self, email_data: &EmailAPI) -> u16 {
-        let locked_client = CLIENT_DATA.get().unwrap().lock();
-        let response = locked_client.unwrap().client.put(self.base_url.clone()+"/settings")
+        let api_client;
+        {
+            let locked_client = CLIENT_DATA.get().unwrap().lock();
+            api_client = locked_client.unwrap().client.clone()
+        }
+        let response = api_client.put(self.base_url.clone()+"/settings")
             .json(&email_data)
             .send()
             .await
@@ -56,8 +64,12 @@ impl Email {
     }
 
     pub async fn test_email(&self) -> EmailResponse {
-        let locked_client = CLIENT_DATA.get().unwrap().lock();
-        locked_client.unwrap().client.get(self.base_url.clone()+"/test")
+        let api_client;
+        {
+            let locked_client = CLIENT_DATA.get().unwrap().lock();
+            api_client = locked_client.unwrap().client.clone()
+        }
+        api_client.get(self.base_url.clone()+"/test")
             .send()
             .await
             .unwrap()

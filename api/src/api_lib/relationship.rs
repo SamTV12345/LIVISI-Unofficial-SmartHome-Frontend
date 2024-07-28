@@ -33,8 +33,12 @@ impl Relationship{
 
     pub async fn get_relationship(&self) ->
                                                                         Vec<RelationshipResponse> {
-        let locked_client = CLIENT_DATA.get().unwrap().lock();
-        let response = locked_client.unwrap().client.get(self.base_url.clone())
+        let api_client;
+        {
+            let locked_client = CLIENT_DATA.get().unwrap().lock();
+            api_client = locked_client.unwrap().client.clone()
+        }
+        let response = api_client.get(self.base_url.clone())
             .send()
             .await
             .unwrap();

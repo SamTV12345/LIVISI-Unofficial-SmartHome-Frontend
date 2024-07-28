@@ -41,9 +41,13 @@ impl Home{
     }
 
     pub async fn get_home_setup(&self) ->HomeSetupResponse {
-        let locked_client = CLIENT_DATA.get().unwrap().lock();
+        let api_client;
+        {
+            let locked_client = CLIENT_DATA.get().unwrap().lock();
+            api_client = locked_client.unwrap().client.clone()
+        }
 
-        let response = locked_client.unwrap().client.get(self.base_url.clone()+"/setup")
+        let response = api_client.get(self.base_url.clone()+"/setup")
             .send()
             .await
             .unwrap();

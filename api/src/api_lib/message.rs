@@ -51,8 +51,12 @@ impl Message {
     }
 
     pub async fn get_messages(&self) -> Vec<MessageResponse> {
-        let locked_client = CLIENT_DATA.get().unwrap().lock();
-        let response = locked_client.unwrap().client.get(self.base_url.clone())
+        let api_client;
+        {
+            let locked_client = CLIENT_DATA.get().unwrap().lock();
+            api_client = locked_client.unwrap().client.clone()
+        }
+        let response = api_client.get(self.base_url.clone())
             .send()
             .await
             .unwrap();
@@ -63,8 +67,12 @@ impl Message {
     }
 
     pub async fn get_message_by_id(&self, message_id: String) -> MessageResponse {
-        let locked_client = CLIENT_DATA.get().unwrap().lock();
-        let response = locked_client.unwrap().client.get(self.base_url.clone()+ &format!("/{}", message_id))
+        let api_client;
+        {
+            let locked_client = CLIENT_DATA.get().unwrap().lock();
+            api_client = locked_client.unwrap().client.clone()
+        }
+        let response = api_client.get(self.base_url.clone()+ &format!("/{}", message_id))
             .send()
             .await
             .unwrap();
@@ -76,8 +84,12 @@ impl Message {
 
     pub async fn delete_message_by_id(&self, message_id: String)
         -> Response {
-        let locked_client = CLIENT_DATA.get().unwrap().lock();
-        locked_client.unwrap().client.delete(self.base_url.clone()+&format!("/{}",message_id))
+        let api_client;
+        {
+            let locked_client = CLIENT_DATA.get().unwrap().lock();
+            api_client = locked_client.unwrap().client.clone()
+        }
+        api_client.delete(self.base_url.clone()+&format!("/{}",message_id))
             .send()
             .await
             .unwrap()
@@ -85,9 +97,13 @@ impl Message {
 
     pub async fn update_mesage_read(&self, message_id: String)
         -> Response {
-        let locked_client = CLIENT_DATA.get().unwrap().lock();
+        let api_client;
+        {
+            let locked_client = CLIENT_DATA.get().unwrap().lock();
+            api_client = locked_client.unwrap().client.clone()
+        }
 
-        locked_client.unwrap().client.put(self.base_url.clone()+&format!("/{}",message_id))
+        api_client.put(self.base_url.clone()+&format!("/{}",message_id))
             .body("{\"read\":true}")
             .send()
             .await

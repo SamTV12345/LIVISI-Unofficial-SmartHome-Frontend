@@ -35,8 +35,12 @@ impl Location {
     }
 
     pub async fn update_location(&self, location_data: LocationResponse, location_id: String) -> LocationResponse {
-        let locked_client = CLIENT_DATA.get().unwrap().lock();
-        let response = locked_client.unwrap().client.put(self.base_url.clone()+"/"+&location_id)
+        let api_client;
+        {
+            let locked_client = CLIENT_DATA.get().unwrap().lock();
+            api_client = locked_client.unwrap().client.clone()
+        }
+        let response = api_client.put(self.base_url.clone()+"/"+&location_id)
             .json(&location_data)
             .send()
             .await
@@ -49,8 +53,12 @@ impl Location {
     }
 
     pub async fn delete_location(&self, location_id: String) -> LocationResponse {
-        let locked_client = CLIENT_DATA.get().unwrap().lock();
-        let response = locked_client.unwrap().client.delete(self.base_url.clone()+"/"+&location_id)
+        let api_client;
+        {
+            let locked_client = CLIENT_DATA.get().unwrap().lock();
+            api_client = locked_client.unwrap().client.clone()
+        }
+        let response = api_client.delete(self.base_url.clone()+"/"+&location_id)
             .send()
             .await
             .unwrap();
@@ -62,8 +70,12 @@ impl Location {
     }
 
     pub async fn create_location(&self, location_data: LocationResponse) -> LocationResponse {
-        let locked_client = CLIENT_DATA.get().unwrap().lock();
-        let response = locked_client.unwrap().client.post(self.base_url.clone())
+        let api_client;
+        {
+            let locked_client = CLIENT_DATA.get().unwrap().lock();
+            api_client = locked_client.unwrap().client.clone()
+        }
+        let response = api_client.post(self.base_url.clone())
             .json(&location_data)
             .send()
             .await
@@ -76,9 +88,13 @@ impl Location {
     }
 
     pub async fn get_locations(&self) -> Vec<LocationResponse> {
-        let locked_client = CLIENT_DATA.get().unwrap().lock();
+        let api_client;
+        {
+            let locked_client = CLIENT_DATA.get().unwrap().lock();
+            api_client = locked_client.unwrap().client.clone()
+        }
 
-        let response = locked_client.unwrap().client.get(self.base_url.clone())
+        let response = api_client.get(self.base_url.clone())
             .send()
             .await
             .unwrap();
@@ -90,8 +106,12 @@ impl Location {
     }
 
     pub async fn get_location_by_id(&self, location_id: String) -> LocationResponse {
-        let locked_client = CLIENT_DATA.get().unwrap().lock();
-        let response = locked_client.unwrap().client.get(self.base_url.clone()+"/"+&location_id)
+        let api_client;
+        {
+            let locked_client = CLIENT_DATA.get().unwrap().lock();
+            api_client = locked_client.unwrap().client.clone()
+        }
+        let response = api_client.get(self.base_url.clone()+"/"+&location_id)
             .send()
             .await
             .unwrap();

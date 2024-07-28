@@ -108,8 +108,12 @@ impl Capability{
     }
 
     pub async fn get_historic_data(&self, path: &str) -> Vec<CapabilityTempData> {
-        let locked_client = CLIENT_DATA.get().unwrap().lock();
-        let response = locked_client.unwrap().client.get(self.server_url.clone()+path)
+        let api_client;
+            {
+                let locked_client = CLIENT_DATA.get().unwrap().lock();
+                api_client = locked_client.unwrap().client.clone()
+            }
+        let response = api_client.get(self.server_url.clone()+path)
             .send()
             .await
             .unwrap();
@@ -121,9 +125,13 @@ impl Capability{
     }
 
     pub async fn get_capabilities(&self) -> CapabilityResponse {
-        let locked_client = CLIENT_DATA.get().unwrap().lock();
+        let api_client;
+        {
+            let locked_client = CLIENT_DATA.get().unwrap().lock();
+            api_client = locked_client.unwrap().client.clone()
+        }
 
-        let response = locked_client.unwrap().client.get(self.base_url.clone())
+        let response = api_client.get(self.base_url.clone())
             .send()
             .await
             .unwrap();
@@ -138,8 +146,12 @@ impl Capability{
 
 
     pub async fn get_all_capability_states(&self) -> CapabilityStateResponse {
-        let locked_client = CLIENT_DATA.get().unwrap().lock();
-        let response = locked_client.unwrap().client.get(self.base_url.clone()+"/states")
+        let api_client;
+        {
+            let locked_client = CLIENT_DATA.get().unwrap().lock();
+            api_client = locked_client.unwrap().client.clone()
+        }
+        let response = api_client.get(self.base_url.clone()+"/states")
             .send()
             .await
             .unwrap();

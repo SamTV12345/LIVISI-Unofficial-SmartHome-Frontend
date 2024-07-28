@@ -23,16 +23,24 @@ impl USBService {
     }
 
     pub async fn unmount_usb_storage(&self) {
-        let locked_client = CLIENT_DATA.get().unwrap().lock();
+        let api_client;
+        {
+            let locked_client = CLIENT_DATA.get().unwrap().lock();
+            api_client = locked_client.unwrap().client.clone()
+        }
 
-        locked_client.unwrap().client.get(self.base_url.clone())
+        api_client.get(self.base_url.clone())
            .send()
            .await.unwrap().text().await.unwrap();
     }
 
     pub async fn get_usb_status(&self) -> LivisResponseType<USBStatus> {
-        let locked_client = CLIENT_DATA.get().unwrap().lock();
-        let response = locked_client.unwrap().client.get(self.usb_status.clone())
+        let api_client;
+        {
+            let locked_client = CLIENT_DATA.get().unwrap().lock();
+            api_client = locked_client.unwrap().client.clone()
+        }
+        let response = api_client.get(self.usb_status.clone())
             .send()
             .await.expect("Error getting USB status.");
 
