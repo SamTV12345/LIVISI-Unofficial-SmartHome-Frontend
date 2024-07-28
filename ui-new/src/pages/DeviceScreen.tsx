@@ -2,7 +2,7 @@ import {useMemo, useState} from "react";
 import {useContentModel} from "@/src/store.tsx";
 import {AccordionContent, AccordionItem, AccordionTrigger} from "@/src/components/actionComponents/Accordion.tsx";
 import {Accordion} from "@radix-ui/react-accordion";
-import {TYPES} from "@/src/constants/FieldConstants.ts";
+import {TYPES, ZWISCHENSTECKER, ZWISCHENSTECKER_OUTDOOR} from "@/src/constants/FieldConstants.ts";
 import {DeviceDecider} from "@/src/components/actionComponents/DeviceDecider.tsx";
 import {useTranslation} from "react-i18next";
 import {Device} from "@/src/models/Device.ts";
@@ -14,12 +14,15 @@ export const DeviceScreen = ()=>{
 
     const mappedDevicesToType = useMemo(() => {
         if (!allDevices?.devices) return undefined
-        console.log("Mapping")
         const map = new Map<string, Device[]>
         TYPES.forEach(type=>{
             map.set(type,[])
         })
         for (const devDevice of Object.entries(allDevices?.devices!)) {
+            if(devDevice[1].type! === ZWISCHENSTECKER_OUTDOOR) {
+                map.get(ZWISCHENSTECKER)?.push(devDevice[1])
+                continue
+            }
                 map.get(devDevice[1].type!)?.push(devDevice[1])
         }
         return map
