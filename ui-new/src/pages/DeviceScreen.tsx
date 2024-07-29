@@ -16,6 +16,9 @@ export const DeviceScreen = ()=>{
         if (!allDevices?.devices) return undefined
         const map = new Map<string, Device[]>
         TYPES.forEach(type=>{
+            if(type === ZWISCHENSTECKER_OUTDOOR) {
+                return
+            }
             map.set(type,[])
         })
         for (const devDevice of Object.entries(allDevices?.devices!)) {

@@ -13,3 +13,5 @@ api/static/*.png
 
 api/db/*
 !api/db/.gitkeep
+
+api/APIALL.json

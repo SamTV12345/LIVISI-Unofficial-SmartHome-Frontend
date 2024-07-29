@@ -1,4 +1,5 @@
 use std::env::var;
+use std::fs;
 use std::sync::Mutex;
 use crate::models::token::{Token, TokenRequest};
 use crate::utils::header_utils::HeaderUtils;
@@ -13,10 +14,22 @@ use crate::api_lib::email::Email;
 use crate::api_lib::message;
 use crate::api_lib::status::Status;
 use crate::models::client_data::ClientData;
-use crate::store::Store;
+use crate::store::{Data, Store};
 
 #[derive(Clone)]
 pub struct RedisConnection{
+}
+
+
+use clap::Parser;
+
+/// Simple program to greet a person
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    /// Name of the person to greet
+    #[arg(short, long)]
+    file: Option<String>,
 }
 
 impl RedisConnection{
@@ -42,8 +55,13 @@ impl RedisConnection{
         Err(())
     }
 
+
     pub async fn do_db_initialization(){
+        let args = Args::parse();
+
+
         log::info!("Doing db initialization");
+
         let token = Self::get_token().await.unwrap();
         let base_url = var(SERVER_URL).unwrap();
 
@@ -77,39 +95,65 @@ impl RedisConnection{
             }
         }
 
-        let message = message::Message::new(&base_url);
 
-        let devices = Device::new(&base_url);
-        let capabilities = Capability::new(&base_url);
-        let locations = Location::new(&base_url);
-        let status = Status::new(&base_url);
-        let user_storage = UserStorage::new(&base_url);
-        let email = Email::new(&base_url);
+        match args.file {
+            Some(e) => {
+                log::info!("Reading from file: {}", e);
+                match fs::read_to_string(e) {
+                    Ok(e) => {
+                        let mut store = STORE_DATA.get();
+                        let mut st = store.as_mut().unwrap().data.lock().unwrap();
+                        let data = serde_json::from_str::<Data>(&e);
+                        match data {
+                            Ok(e) => {
+                                st.clone_from(&e);
+                            }
+                            Err(e) => {
+                                log::error!("Error: {}", e);
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        log::error!("Error: {}", e);
+                    }
+                }
+            }
+            None => {
+                let message = message::Message::new(&base_url);
 
-        let mut store_tmp = STORE_DATA.get();
-        let store = store_tmp.as_mut().unwrap();
-        let mut st = store.data.lock().unwrap();
+                let devices = Device::new(&base_url);
+                let capabilities = Capability::new(&base_url);
+                let locations = Location::new(&base_url);
+                let status = Status::new(&base_url);
+                let user_storage = UserStorage::new(&base_url);
+                let email = Email::new(&base_url);
 
-        let found_devices = devices.get_devices().await;
-        st.set_devices(found_devices);
+                let mut store_tmp = STORE_DATA.get();
+                let store = store_tmp.as_mut().unwrap();
+                let mut st = store.data.lock().unwrap();
 
-        let capabilities_found = capabilities.get_capabilities()
-            .await;
-        st.set_capabilities(capabilities_found);
+                let found_devices = devices.get_devices().await;
+                st.set_devices(found_devices);
 
-        let locations = locations.get_locations().await;
+                let capabilities_found = capabilities.get_capabilities()
+                    .await;
+                st.set_capabilities(capabilities_found);
 
-        st.set_locations(locations.clone());
-        st.set_capabilities_state(capabilities.get_all_capability_states().await);
-        let user_storage_data = user_storage.get_user_storage()
-            .await;
-        st.set_status(status.get_status().await);
-        st.set_user_storage(user_storage_data);
+                let locations = locations.get_locations().await;
 
-        let message_data = message.get_messages().await;
-        st.set_messages(message_data);
+                st.set_locations(locations.clone());
+                st.set_capabilities_state(capabilities.get_all_capability_states().await);
+                let user_storage_data = user_storage.get_user_storage()
+                    .await;
+                st.set_status(status.get_status().await);
+                st.set_user_storage(user_storage_data);
 
-        let email_data = email.get_email_settings().await;
-        st.set_email(email_data);
+                let message_data = message.get_messages().await;
+                st.set_messages(message_data);
+
+                let email_data = email.get_email_settings().await;
+                st.set_email(email_data);
+            }
+        }
     }
 }

@@ -31,5 +31,6 @@ kv = "0.24.0"
 jsonwebtoken = "9.3.0"
 env_logger = "0.11.5"
 path-clean = "1.0.1"
+clap = { version = "4.5.11", features = ["derive"] }
 [target.'cfg(not(windows))'.dependencies]
 openssl = {version="0.10.66", features = ["vendored"]}

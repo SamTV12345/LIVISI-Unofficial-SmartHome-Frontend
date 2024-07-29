@@ -74,6 +74,10 @@ async fn index() -> impl Responder {
         .body(index_html)
 }
 
+
+
+
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()>{
     let cfg = Config::new("./db");
@@ -94,10 +98,10 @@ async fn main() -> std::io::Result<()>{
 
     init_socket(base_url.clone(), token).await;
 
-
-
     //Initialize db at startup
     RedisConnection::do_db_initialization().await;
+
+
     // Init
     let status = Status::new(&base_url);
     let users = User::new(&base_url);
