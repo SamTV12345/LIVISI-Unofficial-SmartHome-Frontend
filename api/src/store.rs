@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::sync::Mutex;
-use actix_web::cookie::Expiration::DateTime;
 use chrono::Utc;
 use serde_derive::{Deserialize, Serialize};
 use serde_json::Value;
@@ -75,10 +74,10 @@ impl Data {
                         let found_id = &socket_event.get_id();
                         if let Some(found_id) = found_id.clone() {
                             if capabilities.contains(&socket_event.source) {
-                                let mut state = device.capability_state.as_mut();
+                                let state = device.capability_state.as_mut();
                                 socket_event.device = Some(id.clone());
                                 if let Some(cap_state) = state {
-                                    cap_state.0.iter_mut().for_each(|mut cap_s| {
+                                    cap_state.0.iter_mut().for_each(|cap_s| {
                                         if cap_s.id == found_id {
                                             match &socket_event.properties {
                                                 None => {}
@@ -270,7 +269,7 @@ impl Data {
 
 
     pub fn set_capabilities_state(&mut self, capabilities_arg: CapabilityStateResponse) {
-        self.devices.iter_mut().for_each(|(id, device)| {
+        self.devices.iter_mut().for_each(|(_, device)| {
             if let Some(capabilities) = &device.capabilities {
                 let mut cap = Vec::new();
                 capabilities.iter()

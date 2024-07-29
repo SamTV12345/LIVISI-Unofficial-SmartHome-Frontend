@@ -1,6 +1,6 @@
 use serde_derive::Serialize;
 use serde_derive::Deserialize;
-use crate::constants::constants::{PASSWORD, USERNAME};
+use crate::constants::constant_types::{PASSWORD, USERNAME};
 
 #[derive(Default,Serialize,Deserialize, Debug, Clone)]
 pub struct Token {

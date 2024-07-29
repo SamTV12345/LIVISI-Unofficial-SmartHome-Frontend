@@ -20,7 +20,7 @@ pub struct SocketEvent {
 #[serde(untagged)]
 pub enum SocketData {
     ConfigVersion(ConfigVersion),
-    DeviceUnreachable(DeviceUnreachable),
+    DeviceUnreachable(Box<DeviceUnreachable>),
     Value(Value)
 }
 

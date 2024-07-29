@@ -3,13 +3,12 @@ use std::fs;
 use std::sync::Mutex;
 use crate::models::token::{Token, TokenRequest};
 use crate::utils::header_utils::HeaderUtils;
-use reqwest::Client as ReqwestClient;
-use crate::constants::constants::{SERVER_URL};
+use crate::constants::constant_types::{SERVER_URL};
 use crate::api_lib::capability::Capability;
 use crate::api_lib::device::{Device};
 use crate::api_lib::location::{Location};
 use crate::api_lib::user_storage::UserStorage;
-use crate::{CLIENT_DATA, STORE_DATA};
+use crate::{CLIENT_DATA, lock_and_call, STORE_DATA};
 use crate::api_lib::email::Email;
 use crate::api_lib::message;
 use crate::api_lib::status::Status;
@@ -17,7 +16,7 @@ use crate::models::client_data::ClientData;
 use crate::store::{Data, Store};
 
 #[derive(Clone)]
-pub struct RedisConnection{
+pub struct MemPrefill {
 }
 
 
@@ -32,7 +31,7 @@ struct Args {
     file: Option<String>,
 }
 
-impl RedisConnection{
+impl MemPrefill {
 
     pub async fn get_token() -> Result<Token, ()>{
         let client = reqwest::Client::new();
@@ -130,29 +129,31 @@ impl RedisConnection{
 
                 let mut store_tmp = STORE_DATA.get();
                 let store = store_tmp.as_mut().unwrap();
-                let mut st = store.data.lock().unwrap();
 
                 let found_devices = devices.get_devices().await;
-                st.set_devices(found_devices);
+                lock_and_call!(store, set_devices, found_devices);
 
                 let capabilities_found = capabilities.get_capabilities()
                     .await;
-                st.set_capabilities(capabilities_found);
+                lock_and_call!(store, set_capabilities, capabilities_found);
 
                 let locations = locations.get_locations().await;
+                lock_and_call!(store, set_locations, locations);
+                let cap_state  = capabilities.get_all_capability_states().await;
+                lock_and_call!(store, set_capabilities_state, cap_state);
 
-                st.set_locations(locations.clone());
-                st.set_capabilities_state(capabilities.get_all_capability_states().await);
                 let user_storage_data = user_storage.get_user_storage()
                     .await;
-                st.set_status(status.get_status().await);
-                st.set_user_storage(user_storage_data);
+                let status = status.get_status().await;
+                lock_and_call!(store, set_status, status);
+                lock_and_call!(store, set_user_storage, user_storage_data);
 
                 let message_data = message.get_messages().await;
-                st.set_messages(message_data);
+                lock_and_call!(store, set_messages, message_data);
 
                 let email_data = email.get_email_settings().await;
-                st.set_email(email_data);
+
+                lock_and_call!(store, set_email, email_data);
             }
         }
     }

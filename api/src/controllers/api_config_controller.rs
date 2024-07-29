@@ -1,6 +1,6 @@
 use std::env::var;
 use actix_web::{HttpResponse, Responder, web};
-use crate::constants::constants::{BASIC_AUTH, OIDC_AUTH, OIDC_AUTHORITY, OIDC_CLIENT_ID, OIDC_REDIRECT_URI, OIDC_SCOPE, PASSWORD_BASIC, USERNAME_BASIC};
+use crate::constants::constant_types::{BASIC_AUTH, OIDC_AUTH, OIDC_AUTHORITY, OIDC_CLIENT_ID, OIDC_REDIRECT_URI, OIDC_SCOPE, PASSWORD_BASIC, USERNAME_BASIC};
 use serde::{Serialize, Deserialize};
 use actix_web::get;
 use actix_web::post;

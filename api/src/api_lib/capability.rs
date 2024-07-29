@@ -4,7 +4,6 @@ use serde_derive::Deserialize;
 use crate::api_lib::interaction::{FieldValue};
 
 use std::collections::HashMap;
-use serde_json::Value;
 use crate::CLIENT_DATA;
 
 #[derive(Clone)]

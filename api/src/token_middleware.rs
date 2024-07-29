@@ -1,5 +1,3 @@
-
-use std::pin::Pin;
 use std::rc::Rc;
 
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -14,7 +12,7 @@ use futures_util::future::{LocalBoxFuture, Ready};
 
 use crate::models::token::{CreatedAt};
 use crate::AppState;
-
+use crate::auth_middleware::AuthFuture;
 
 #[derive(Default)]
 pub struct AuthFilter {
@@ -75,8 +73,7 @@ impl<S, B> Service<ServiceRequest> for AuthFilterMiddleware<S>
 
 impl<S, B> AuthFilterMiddleware<S> where B: 'static + MessageBody, S: 'static + Service<ServiceRequest, Response=ServiceResponse<B>, Error=Error>, S::Future: 'static {
 
-    fn handle_no_auth(&self, req: ServiceRequest) ->  Pin<Box<dyn
-    futures_util::Future<Output=Result<ServiceResponse<EitherBody<B>>, Error>>>>{
+    fn handle_no_auth(&self, req: ServiceRequest) ->  AuthFuture<B>{
         let token;
 
         {
@@ -88,7 +85,7 @@ impl<S, B> AuthFilterMiddleware<S> where B: 'static + MessageBody, S: 'static + 
         if now > expires_in {
             let service = Rc::clone(&self.service);
             return async move {
-                let token = crate::utils::connection::RedisConnection::get_token().await.unwrap();
+                let token = crate::utils::connection::MemPrefill::get_token().await.unwrap();
                 let current_time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
                 {
                     let mut extracted_token = req.app_data::<web::Data<AppState>>().unwrap().token.lock().unwrap();

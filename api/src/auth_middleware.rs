@@ -14,7 +14,7 @@ use base64::Engine;
 use base64::engine::general_purpose;
 use futures_util::future::{LocalBoxFuture, Ready};
 
-use crate::constants::constants::{BASIC_AUTH, PASSWORD_BASIC, USERNAME_BASIC};
+use crate::constants::constant_types::{BASIC_AUTH, PASSWORD_BASIC, USERNAME_BASIC};
 
 
 
@@ -56,6 +56,8 @@ impl<S, B> Transform<S, ServiceRequest> for AuthFilter
     }
 }
 
+pub type AuthFuture<B> = Pin<Box<dyn futures_util::Future<Output =
+Result<ServiceResponse<EitherBody<B>>, Error>>>>;
 
 
 impl<S, B> Service<ServiceRequest> for AuthFilterMiddleware<S>
@@ -80,7 +82,7 @@ impl<S, B> Service<ServiceRequest> for AuthFilterMiddleware<S>
     }
     }
 impl<S, B> AuthFilterMiddleware<S> where B: 'static + MessageBody, S: 'static + Service<ServiceRequest, Response=ServiceResponse<B>, Error=Error>, S::Future: 'static {
-    fn handle_basic_auth(&self, req: ServiceRequest) -> Pin<Box<dyn futures_util::Future<Output=Result<ServiceResponse<EitherBody<B>>, Error>>>>  {
+    fn handle_basic_auth(&self, req: ServiceRequest) -> AuthFuture<B> {
         let opt_auth_header = req.headers().get("Authorization");
         if opt_auth_header.is_none() {
             return Box::pin(ok(req.error_response(ErrorUnauthorized("Unauthorized")).map_into_right_body()));
@@ -118,8 +120,7 @@ impl<S, B> AuthFilterMiddleware<S> where B: 'static + MessageBody, S: 'static + 
         }
     }
 
-    fn handle_no_auth(&self, req: ServiceRequest) -> Pin<Box<dyn
-    futures_util::Future<Output=Result<ServiceResponse<EitherBody<B>>, Error>>>>{
+    fn handle_no_auth(&self, req: ServiceRequest) -> AuthFuture<B>{
         let service = Rc::clone(&self.service);
         async move {
             service

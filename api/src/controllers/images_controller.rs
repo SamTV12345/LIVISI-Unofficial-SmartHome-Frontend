@@ -1,10 +1,7 @@
 use std::env::var;
 use actix_web::{get, HttpResponse, HttpResponseBuilder, Responder, web};
-use actix_web::web::Data;
 use kv::Bucket;
-use reqwest::Client;
-use crate::api_lib::home::Home;
-use path_clean::{clean, PathClean};
+use path_clean::clean;
 
 #[get("/images/{tail:.*}")]
 pub async fn get_images(home: web::Path<String>, bucket: web::Data<Bucket<'_, String, String>>) ->
@@ -20,7 +17,7 @@ Responder {
     let str_rep_path = requested_path.to_str().unwrap().to_string();
     let mut shc_path = base_url  + &str_rep_path;
     shc_path = shc_path.replace("\\", "/");
-    return match bucket.get(&str_rep_path) {
+    match bucket.get(&str_rep_path) {
         Ok(value) => {
             match value {
                 Some(data) => {
@@ -69,7 +66,7 @@ pub async fn get_resources(home: web::Path<String>, bucket: web::Data<Bucket<'_,
     let str_rep_path = requested_path.to_str().unwrap().to_string();
     let mut shc_path = base_url  + &str_rep_path;
     shc_path = shc_path.replace("\\", "/");
-    return match bucket.get(&str_rep_path) {
+    match bucket.get(&str_rep_path) {
         Ok(value) => {
             match value {
                 Some(data) => {
@@ -134,5 +131,5 @@ fn handle_http_builder(url: &str) -> HttpResponseBuilder {
             }
         }
     }
-    return builder;
+    builder
 }

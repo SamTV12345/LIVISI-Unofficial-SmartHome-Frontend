@@ -1,18 +1,5 @@
 pub const SERVER_URL: &str = "BASE_URL";
 
-
-/**
-REDIS KEYS
-*/
-pub const CAPABILITIES: &str = "capabilities";
-pub const DEVICES: &str = "devices";
-pub const TOKEN: &str = "token";
-pub const LOCATIONS: &str = "locations";
-pub const USER_STORAGE: &str = "user_storage";
-
-
-pub const LOCATION_URL: &str = "/location/";
-
 pub const USERNAME:&str = "USERNAME";
 pub const PASSWORD:&str = "PASSWORD";
 

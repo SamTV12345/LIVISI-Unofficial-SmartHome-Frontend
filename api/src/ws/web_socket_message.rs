@@ -7,16 +7,6 @@ use crate::ws::broadcast_message::BroadcastMessage;
 
 #[derive(Message)]
 #[rtype(result = "()")]
-pub struct SocketMessage {
-    pub message_type: String,
-    pub message: String,
-    pub timestamp: String,
-}
-
-
-
-#[derive(Message)]
-#[rtype(result = "()")]
 pub struct WsMessage(pub String);
 
 type Socket = Recipient<WsMessage>;
