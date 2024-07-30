@@ -153,7 +153,24 @@ impl Data {
                                                         }
                                                         Properties::CPUUsage(_) => {}
                                                         Properties::Value(_) => {}
-                                                        _ => {}
+                                                        Properties::IsOpen(is_open)=>{
+                                                            let map = cap_s.state.as_mut();
+                                                            if let Some(m) = map {
+                                                                let current_value = Utc::now()
+                                                                    .to_rfc3339();
+                                                                let cap_value = CapValueItem
+                                                                    (capability::CapValueItem{
+                                                                        value: Some
+                                                                            (interaction::FieldValue::BooleanValue(is_open.is_open)),
+                                                                        last_changed: current_value
+                                                                    });
+
+                                                                m.insert("isOpen".to_string(), cap_value);
+                                                            }
+                                                        }
+                                                        Properties::Reachable(_) => {
+
+                                                        }
                                                     }
                                                 }
                                             }

@@ -1,6 +1,5 @@
 mod models;
 mod token_middleware;
-mod mutex;
 mod api_lib;
 mod controllers;
 mod utils;
@@ -46,16 +45,16 @@ use crate::api_lib::hash::Hash;
 use crate::api_lib::status::Status;
 use crate::api_lib::user::User;
 use crate::api_lib::user_storage::UserStorage;
-use crate::constants::constants::{BASIC_AUTH, OIDC_AUTH, OIDC_AUTHORITY};
+use crate::constants::constant_types::{BASIC_AUTH, OIDC_AUTH, OIDC_AUTHORITY};
 use crate::controllers::api_config_controller::{get_api_config, login};
 use crate::models::token::Token;
-use crate::utils::connection::RedisConnection;
+use crate::utils::connection::MemPrefill;
 
 static WINNER: OnceLock<Addr<Lobby>> = OnceLock::new();
 use tungstenite::connect;
 
-pub struct AppState{
-    token: Mutex<Token>
+pub struct AppState {
+    token: Mutex<Token>,
 }
 
 pub static CLIENT_DATA: OnceLock<Mutex<ClientData>> = OnceLock::new();
@@ -75,11 +74,8 @@ async fn index() -> impl Responder {
 }
 
 
-
-
-
 #[actix_web::main]
-async fn main() -> std::io::Result<()>{
+async fn main() -> std::io::Result<()> {
     let cfg = Config::new("./db");
     let store = kv::Store::new(cfg).unwrap();
     let store_images = store.bucket::<String, String>(Some("images")).unwrap();
@@ -94,12 +90,12 @@ async fn main() -> std::io::Result<()>{
             .unwrap());
     }
 
-    let token = RedisConnection::get_token().await.unwrap().access_token;
+    let token = MemPrefill::get_token().await.unwrap().access_token;
 
     init_socket(base_url.clone(), token).await;
 
     //Initialize db at startup
-    RedisConnection::do_db_initialization().await;
+    MemPrefill::do_db_initialization().await;
 
 
     // Init
@@ -110,28 +106,30 @@ async fn main() -> std::io::Result<()>{
     let hash = Hash::new(&base_url);
     let message = api_lib::message::Message::new(&base_url);
     let locations = api_lib::location::Location::new(&base_url);
-    let token = web::Data::new(AppState{ token: Mutex::new(Token::default())});
+    let token = web::Data::new(AppState { token: Mutex::new(Token::default()) });
     let capabilties = api_lib::capability::Capability::new(&base_url);
     let home = api_lib::home::Home::new(&base_url);
     let action = api_lib::action::Action::new(&base_url);
     let relationship = api_lib::relationship::Relationship::new(&base_url);
     let interaction = api_lib::interaction::Interaction::new(&base_url);
-    let jwk_service = web::Data::new(Mutex::new(models::jwkservice::JWKService::new()));
     let unmount_service = api_lib::unmount_service::USBService::new(&base_url);
     let bucket_images = web::Data::new(store_images);
     let email = api_lib::email::Email::new(&base_url);
 
-    spawn(||{
+    spawn(|| {
         log::info!("Starting scheduler");
         let mut scheduler = Scheduler::new();
-        scheduler.every(1.day()).plus(10.minutes())
-            .run(||{
-                log::info!("Fetching data");
-                let _ = async move {
-                    RedisConnection::do_db_initialization().await;
-                };
+        scheduler.every(1.days()).plus(10.minutes())
+            .run(|| {
+                let rt = tokio::runtime::Builder::new_current_thread()
+                    .enable_all()
+                    .build().unwrap();
 
-        });
+                rt.block_on(async {
+                    log::info!("Fetching data");
+                    MemPrefill::do_db_initialization().await;
+                });
+            });
 
 
         loop {
@@ -139,8 +137,6 @@ async fn main() -> std::io::Result<()>{
             thread::sleep(Duration::from_secs(10));
         }
     });
-
-
 
 
     HttpServer::new(move || {
@@ -167,10 +163,9 @@ async fn main() -> std::io::Result<()>{
             .app_data(web::Data::new(capabilties.clone()))
             .app_data(web::Data::new(locations.clone()))
             .app_data(web::Data::new(relationship.clone()))
-            .app_data(jwk_service.clone())
             .app_data(web::Data::new(interaction.clone()))
             .app_data(token.clone())
-            .configure(|cfg|{
+            .configure(|cfg| {
                 if oidc_opt.clone().is_some() {
                     cfg.app_data(oidc_opt.clone().unwrap().clone());
                 }
@@ -181,40 +176,41 @@ async fn main() -> std::io::Result<()>{
         .await
 }
 
-pub fn get_secured_scope() ->Scope<impl ServiceFactory<ServiceRequest, Config = (), Response = ServiceResponse<EitherBody<EitherBody<EitherBody<EitherBody<EitherBody<BoxBody>>>, EitherBody<EitherBody<BoxBody>>>>>, Error = actix_web::Error, InitError = ()>>{
-        let middleware = auth_middleware::AuthFilter::new();
-    let biscuit_validator = OidcBiscuitValidator { options: ValidationOptions {
-        issuer: Validation::Validate(var(OIDC_AUTHORITY).unwrap_or("No authority present".to_string())),
-        ..ValidationOptions::default()
-    }
+pub fn get_secured_scope() -> Scope<impl ServiceFactory<ServiceRequest, Config=(), Response=ServiceResponse<EitherBody<EitherBody<EitherBody<EitherBody<EitherBody<BoxBody>>>, EitherBody<EitherBody<BoxBody>>>>>, Error=actix_web::Error, InitError=()>> {
+    let middleware = auth_middleware::AuthFilter::new();
+    let biscuit_validator = OidcBiscuitValidator {
+        options: ValidationOptions {
+            issuer: Validation::Validate(var(OIDC_AUTHORITY).unwrap_or("No authority present".to_string())),
+            ..ValidationOptions::default()
+        }
     };
-        Scope::new("")
-            .wrap(Condition::new(var(OIDC_AUTH).is_ok(),biscuit_validator))
-            .wrap(Condition::new(var(BASIC_AUTH).is_ok(),middleware))
-            .wrap(token_middleware::AuthFilter::new())
-            .service(get_email_routes())
-            .service(get_capability_routes())
-            .service(get_status)
-            .service(get_users)
-            .service(get_devices)
-            .service(get_hash)
-            .service(get_messages)
-            .service(get_locations)
-            .service(create_location)
-            .service(get_location_by_id)
-            .service(get_capabilties)
-            .service(get_user_storage)
-            .service(get_capability_states)
-            .service(delete_location)
-            .service(update_location)
-            .service(get_home_setup)
-            .service(post_action)
-            .service(get_relationship)
-            .service(get_device_states)
-            .service(get_interactions)
-            .service(get_all_api)
-            .service(unmount_usb_storage)
-            .service(get_usb_status)
+    Scope::new("")
+        .wrap(Condition::new(var(OIDC_AUTH).is_ok(), biscuit_validator))
+        .wrap(Condition::new(var(BASIC_AUTH).is_ok(), middleware))
+        .wrap(token_middleware::AuthFilter::new())
+        .service(get_email_routes())
+        .service(get_capability_routes())
+        .service(get_status)
+        .service(get_users)
+        .service(get_devices)
+        .service(get_hash)
+        .service(get_messages)
+        .service(get_locations)
+        .service(create_location)
+        .service(get_location_by_id)
+        .service(get_capabilties)
+        .service(get_user_storage)
+        .service(get_capability_states)
+        .service(delete_location)
+        .service(update_location)
+        .service(get_home_setup)
+        .service(post_action)
+        .service(get_relationship)
+        .service(get_device_states)
+        .service(get_interactions)
+        .service(get_all_api)
+        .service(unmount_usb_storage)
+        .service(get_usb_status)
 }
 
 pub fn get_ui_config() -> Scope {
@@ -227,7 +223,7 @@ pub fn get_ui_config() -> Scope {
             let path = req.path();
 
             let test = Regex::new(r"/ui/(.*)").unwrap();
-            let rs =  test.captures(path).unwrap().get(1).unwrap().as_str();
+            let rs = test.captures(path).unwrap().get(1).unwrap().as_str();
             let file = NamedFile::open_async(format!("{}/{}",
                                                      "./static", rs)).await?;
             let mut content = String::new();
@@ -236,7 +232,7 @@ pub fn get_ui_config() -> Scope {
             let res = file.file().read_to_string(&mut content);
 
             match res {
-                Ok(_) => {},
+                Ok(_) => {}
                 Err(_) => {
                     return Ok(ServiceResponse::new(req.clone(), file.into_response(&req)))
                 }
@@ -244,8 +240,9 @@ pub fn get_ui_config() -> Scope {
             let res = HttpResponse::Ok()
                 .content_type(type_of)
                 .body(content);
-            Ok(ServiceResponse::new(req, res))}))
-        }
+            Ok(ServiceResponse::new(req, res))
+        }))
+}
 
 use std::thread::spawn;
 use actix::{Actor, Addr};
@@ -258,59 +255,40 @@ use crate::controllers::unmount_controller::{get_usb_status, unmount_usb_storage
 use crate::controllers::websocket_controller::start_connection;
 use crate::models::client_data::ClientData;
 use crate::models::socket_event::Properties::Value;
-use crate::models::socket_event::{Properties, SocketData, SocketEvent};
+use crate::models::socket_event::{SocketData, SocketEvent};
 use crate::store::Store;
 use crate::utils::logging::init_logging;
 use crate::ws::broadcast_message::BroadcastMessage;
 use crate::ws::web_socket_message::Lobby;
 
-pub async fn init_socket(base_url:String, token: String){
-
+pub async fn init_socket(base_url: String, token: String) {
     let token_encoded = urlencoding::encode(token.as_str()).into_owned();
-    spawn(move ||{
-        let mut url = Url::parse(&(base_url.replace("http://","ws://") + "/events?token=" + &token_encoded)).unwrap();
+    spawn(move || {
+        let mut url = Url::parse(&(base_url.replace("http://", "ws://") + "/events?token=" + &token_encoded)).unwrap();
         url.set_port(Some(9090)).unwrap();
         let (mut socket, _response) = connect(url).expect("Can't connect");
-        let mut retries =0;
+        let mut retries = 0;
 
         while retries < 5 {
-            loop {
-                match socket.read() {
-                    Ok(msg) => {
-                        let mut parsed_message = serde_json::from_str::<SocketEvent>(&msg.to_string()).unwrap();
-                        let store_data = STORE_DATA.get().unwrap();
-                        let mut data = store_data.data.lock().unwrap();
-                        data.handle_socket_event(&mut parsed_message);
-                        if let Some(props) = &parsed_message.properties {
-                            match props{
-                                Value(v)=>{
-                                    log::error!("Unknown properties!! {}", v);
-
-                                }
-                                _ => {}
-                            }
-                        }
-
-                        if let Some(data) =  &parsed_message.data {
-                            match data {
-                                SocketData::Value(v)=>{
-                                    log::error!("Unknown data!! {}", v);
-
-                                }
-                                _ => {}
-                            }
-                        }
-
-
-                        let lobby = WINNER.get().unwrap();
-                        lobby.do_send(BroadcastMessage{
-                            message: parsed_message
-                        });
-                    }
-                    Err(_)=>{
-                        break
-                    }
+            while let Ok(msg) = socket.read() {
+                let mut parsed_message = serde_json::from_str::<SocketEvent>(&msg.to_string()).unwrap();
+                let store_data = STORE_DATA.get().unwrap();
+                let mut data = store_data.data.lock().unwrap();
+                println!("Data: {:?}", parsed_message);
+                data.handle_socket_event(&mut parsed_message);
+                if let Some(Value(props)) = &parsed_message.properties {
+                    log::error!("Unknown properties!! {}", props);
                 }
+
+                if let Some(SocketData::Value(data)) = &parsed_message.data {
+                    log::error!("Unknown data!! {}", data);
+                }
+
+
+                let lobby = WINNER.get().unwrap();
+                lobby.do_send(BroadcastMessage {
+                    message: parsed_message
+                });
             }
             retries += 1;
             thread::sleep(Duration::from_secs(5));

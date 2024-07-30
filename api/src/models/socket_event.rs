@@ -87,6 +87,7 @@ pub enum Properties {
     Temperature(Temperature),
     Threshold(Threshold),
     OnState(OnState),
+    IsOpen(IsOpenState),
     ConfigVersion(PropertyConfigVersion),
     ZustandChange(ZustandChange),
     DeviceConfigurationState(DeviceConfigurationState),
@@ -162,4 +163,10 @@ pub struct Threshold {
 #[serde(rename_all = "camelCase")]
 pub struct OnState {
     pub on_state: bool
+}
+
+#[derive(Default,Serialize,Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct IsOpenState {
+    pub is_open: bool
 }
