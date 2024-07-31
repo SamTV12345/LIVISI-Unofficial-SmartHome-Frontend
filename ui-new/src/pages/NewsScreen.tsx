@@ -1,58 +1,36 @@
-import axios, {AxiosResponse} from "axios";
-import {Message} from "@/src/models/Messages.ts";
 import {useContentModel} from "@/src/store.tsx";
-import {useEffect} from "react";
-import {Card} from "@/src/components/layout/Card.tsx";
 import {formatTime} from "@/src/utils/timeUtils.ts";
 import {PageComponent} from "@/src/components/actionComponents/PageComponent.tsx";
+import {PageBox} from "@/src/components/actionComponents/PageBox.tsx";
+import {cn} from "@/src/utils/cn-helper.ts";
+import {determineTitleAndDescription} from "@/src/utils/messageDetermining.ts";
 
 
-type MessageReturnType = {
-    title: string,
-    description: string
-}
 
 export const NewsScreen = ()=>{
-    const messages = useContentModel(state=>state.allThings)
+    const allthings = useContentModel(state=>state.allThings)
 
-    const determineTitleAndDescription = (message: Message):MessageReturnType=>{
-        switch (message.type){
-            case "DeviceUnreachable": return  {description: "Das Gerät "+message.properties.deviceName+" im Raum "+ message.properties.deviceLocation+" ist nicht erreichbar", title: "Gerät nicht erreichbar"}
-            case "ShcRemoteRebooted": return {description: "Die Zentrale wurde neu gestartet", title: "Zentrale neu gestartet"}
-            default: return {description: "Unbekannter Fehler", title: "Unbekannter Fehler"}
-        }
-    }
-    const getMessages = ()=>{
-        axios.get("/message")
-            .then((v:AxiosResponse<Message[]>)=>{
-                useContentModel.getState().setMessages(v.data)
-            })
-    }
 
-    useEffect(()=>{
-        if(useContentModel.getState().messages.length===0){
-            getMessages()
-        }
-    },[])
 
 
     return <PageComponent title="Nachrichten">
-
-        <div className="p-4">
-            {
-                messages?.messages.length===0?<div>Keine Nachrichten vorhanden</div>:null
-            }
-            {messages?.messages.sort((a,b)=>b.timestamp.localeCompare(a.timestamp))
-                .map((message)=>{
+        {
+            allthings?.messages?.length===0?<PageBox title="Keine Nachrichten vorhanden"></PageBox>:null
+        }
+        {allthings?.messages?.sort((a,b)=>b.timestamp.localeCompare(a.timestamp))
+            .map((message,i)=>{
                 const {title, description} = determineTitleAndDescription(message)
-                return <Card key={message.id} className="mt-2 p-5 relative">
-                    <h2 className="text-xl font-bold">{title}</h2>
-                    <div>{description}</div>
-                    <span className="absolute right-5 top-[30%]">{formatTime(message.timestamp)}</span>
-                </Card>
+                console.log(message.read, message.id)
+                return <PageBox key={message.id} className={"relative p-10 " + message.read?'':'text-black'} variant={i%2 == 0 ? 'gray': undefined} to={"/news/"+message.id}>
+                    <div className={cn("pl-10 pr-10", message.read && 'text-gray-400')}>
+                        <h2>{title}</h2>
+                        <p>{description}</p>
+                    <span className="absolute right-5 top-2/3">{formatTime(message.timestamp)}</span>
+                        {!message.read &&<span className="bg-green-green rounded-2xl h-6 w-6 absolute left-2 top-1/3"></span>}
+                    </div>
+                </PageBox>
             })
-            }
-        </div>
+        }
 
     </PageComponent>
 }

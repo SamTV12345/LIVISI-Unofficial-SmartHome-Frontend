@@ -9,13 +9,14 @@ export type PageBoxProps = {
     to?: string,
     variant?: "default"|"gray",
     onClick?: ()=>void,
-    selected?: boolean
+    selected?: boolean,
+    className?: string
 }
 
-export const PageBox: FC<PageBoxProps> = ({description,title, selected, onClick, children, to, variant})=>{
+export const PageBox: FC<PageBoxProps> = ({description,title, className, selected, onClick, children, to, variant})=>{
     const navigate = useNavigate()
 
-    return <div className={`bg-white ${(to||onClick)?'cursor-pointer button-hover':''} box relative ${variant === "gray" && "gray-pagebox"}`} onClick={()=>{
+    return <div className={`bg-white ${(to||onClick)?'cursor-pointer button-hover':''} box relative ${variant === "gray" && "gray-pagebox"} ${className}`} onClick={()=>{
         to && navigate(to)
         onClick && onClick()
     }}>

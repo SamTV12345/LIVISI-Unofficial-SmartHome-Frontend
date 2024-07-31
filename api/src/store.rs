@@ -14,6 +14,7 @@ use crate::api_lib::status::StatusResponse;
 use crate::api_lib::user_storage::UserStorageResponse;
 use crate::models::socket_event::{Properties, SocketEvent, Source};
 use crate::models::token::Token;
+use crate::STORE_DATA;
 
 #[derive(Default,Serialize,Deserialize, Debug,Clone)]
 #[serde(rename_all = "camelCase")]
@@ -192,6 +193,45 @@ impl Data {
             }
             Source::System => {
                 log::info!("system change")
+            }
+            Source::Message =>{
+                let st = STORE_DATA.get().unwrap();
+                let mut data = st.data.lock().unwrap();
+                if let Some(id) = socket_event.id.clone() {
+                    let mut found_item = false;
+                    data.messages.iter_mut().for_each(|m|{
+                        if m.id == id {
+                            found_item = true;
+                            m.class = socket_event.class.clone();
+                            m.read = socket_event.read.unwrap();
+                        }
+                    });
+
+                    if !found_item {
+
+                        //TODO hier weiter:
+
+                        /*
+                        {"id":"21c509371e95491c9684c1d8e64fb421","class":"message","type":"LogLevelChanged","namespace":"core.RWE","desc":"/desc/device/SHCA.RWE/1.0/message/LogLevelChanged","source":"/device/00000000000000000000000000000000","timestamp":"2024-07-28T19:48:04.781511Z","devices":[],"capabilities":[],"read":true,"properties":{"changeReason":"Test","expiresAfterMinutes":120,"module":"","requesterInfo":"Administrator"}}
+                         */
+                        data.messages.push(MessageResponse{
+                            id,
+                            timestamp: socket_event.timestamp.clone(),
+                            read: socket_event.read.unwrap().clone(),
+                            devices: None,
+                            messages: None,
+                            capabilities: None,
+                            properties: None,
+                            class: socket_event.class.clone(),
+                            r#type: socket_event.r#type.clone(),
+                            namespace: Option::from(socket_event.namespace.clone()),
+                            tags: None,
+                        })
+                    }
+
+                }
+
+
             }
         }
     }
