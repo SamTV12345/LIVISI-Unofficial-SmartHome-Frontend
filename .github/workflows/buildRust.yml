@@ -1,0 +1,54 @@
+name: Build release binaries
+
+on:
+  workflow_dispatch:
+
+jobs:
+  release:
+    name: release ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-pc-windows-gnu
+            archive: zip
+          - target: x86_64-unknown-linux-musl
+            archive: tar.gz tar.xz tar.zst
+          - target: x86_64-apple-darwin
+            archive: zip
+    steps:
+      - name: "Create frontend"
+        run: |
+          cd ui-new
+          npm install -g pnpm@latest
+          pnpm run build:copy
+      - name:
+        uses: actions/checkout@master
+      - name: Setup Rust
+        uses: actions/setup-rust@v1
+        with:
+          toolchain: stable
+      - name: Build app
+        run: cargo build --release --target ${{ matrix.target }}
+      - name: Archive
+        working-directory: api
+        run: |
+          mkdir -p dist
+          cp target/${{ matrix.target }}/release/api.exe dist/
+          cp static/* dist/static/
+          cd dist
+          cd ..
+          for ext in ${{ matrix.archive }}; do
+            case $ext in
+              zip) zip -r app-$GITHUB_SHA-${{ matrix.target }}.zip dist ;;
+              tar.gz) tar -czf app-$GITHUB_SHA-${{ matrix.target }}.tar.gz dist ;;
+              tar.xz) tar -cJf app-$GITHUB_SHA-${{ matrix.target }}.tar.xz dist ;;
+              tar.zst) tar -c --zstd -f app-$GITHUB_SHA-${{ matrix.target }}.tar.zst dist ;;
+            esac
+          done
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        working-directory: api
+        with:
+              name: app-$GITHUB_SHA-${{ matrix.target }}
