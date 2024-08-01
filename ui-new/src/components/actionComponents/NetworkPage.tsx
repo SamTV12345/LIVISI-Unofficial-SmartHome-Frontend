@@ -26,7 +26,7 @@ export const NetworkPage = ()=>{
                     </div>
                 </PageBox>
                 <PageBox description="Ihre Zentrale ist mit dem Internet über WLAN verbunden!" variant="gray"/>
-                <PageBox title="WLAN" description="Verbunden" variant="default"/>
+                <PageBox title="WLAN" description="Verbunden" variant="default" to="/settings/wlan"/>
             </>
         }
     </PageComponent>
