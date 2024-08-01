@@ -1,7 +1,10 @@
 name: Build release binaries
 
 on:
-  workflow_dispatch:
+    push:
+        branches:
+        - master
+        - main
 
 jobs:
   release:
@@ -30,6 +33,7 @@ jobs:
         with:
           components: rustfmt
       - name: Build app
+        working-directory: api
         run: cargo build --release --target ${{ matrix.target }}
       - name: Archive
         working-directory: api
