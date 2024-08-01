@@ -42,7 +42,8 @@ jobs:
         run: |
           mkdir -p dist
           cp target/${{ matrix.target }}/release/api* dist/
-          cp static/* dist/static/
+          mkdir dist/static
+          cp -r static/* dist/static/
           cd dist
           cd ..
           for ext in ${{ matrix.archive }}; do
