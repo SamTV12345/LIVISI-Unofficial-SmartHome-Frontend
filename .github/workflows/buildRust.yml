@@ -24,6 +24,7 @@ jobs:
         run: |
           cd ui-new
           npm install -g pnpm@latest
+          pnpm install
           pnpm run build:copy
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
