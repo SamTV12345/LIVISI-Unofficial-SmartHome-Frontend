@@ -3,7 +3,7 @@ use reqwest::{Response};
 use serde_derive::Serialize;
 use serde_derive::Deserialize;
 use crate::CLIENT_DATA;
-
+use crate::controllers::message_controller::MessageRead;
 
 #[derive(Clone)]
 pub struct Message{
@@ -12,23 +12,23 @@ pub struct Message{
 
 #[derive(Default,Serialize,Deserialize, Debug, Clone)]
 pub struct MessageResponse{
-    id: String,
-    r#type: String,
+    pub id: String,
+    pub  r#type: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    class: Option<String>,
-    namespace: Option<String>,
-    timestamp: String,
-    read: bool,
+    pub  class: Option<String>,
+    pub  namespace: Option<String>,
+    pub  timestamp: String,
+    pub  read: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
-    devices: Option<Vec<String>>,
+    pub devices: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    messages: Option<Vec<String>>,
+    pub messages: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    capabilities: Option<Vec<String>>,
+    pub capabilities: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    properties: Option<MessageProperties>,
+    pub properties: Option<MessageProperties>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    tags: Option<HashMap<String,String>>
+    pub tags: Option<HashMap<String,String>>
 }
 
 #[derive(Default,Serialize,Deserialize, Debug, Clone)]
@@ -41,6 +41,9 @@ pub struct MessageProperties{
     pub requester_info: Option<String>,
     pub shc_remote_reboot_reason: Option<String>,
     pub read: Option<bool>,
+    pub change_reason: Option<String>,
+    pub expires_after_minutes: Option<i32>,
+    pub timestamp: Option<String>
 }
 
 impl Message {
@@ -95,8 +98,8 @@ impl Message {
             .unwrap()
     }
 
-    pub async fn update_mesage_read(&self, message_id: String)
-        -> Response {
+    pub async fn update_mesage_read(&self, message_id: String, read: MessageRead)
+                                    -> Response {
         let api_client;
         {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
@@ -104,7 +107,7 @@ impl Message {
         }
 
         api_client.put(self.base_url.clone()+&format!("/{}",message_id))
-            .body("{\"read\":true}")
+            .json(&read)
             .send()
             .await
             .unwrap()

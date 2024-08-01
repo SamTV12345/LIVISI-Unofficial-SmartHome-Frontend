@@ -29,6 +29,8 @@ import {MobileAccessScreen} from "@/src/components/actionComponents/MobileAccess
 import {EmailPage} from "@/src/pages/EmailPage.tsx";
 import {Imprint} from "@/src/pages/Imprint.tsx";
 import {ErrorAdvancedPage} from "@/src/pages/ErrorAdvancedPage.tsx";
+import {DetailedMessageScreen} from "@/src/pages/DetailedMessageScreen.tsx";
+import {WLANPage} from "@/src/pages/WLANPage.tsx";
 
 const router = createBrowserRouter(createRoutesFromElements(
     <Route path="/">
@@ -48,12 +50,16 @@ const router = createBrowserRouter(createRoutesFromElements(
             <Route path="scenarios">
                 <Route index element={<ScenarioScreen/>}/>
             </Route>
-            <Route path="news" element={<NewsScreen/>}/>
+            <Route path="news">
+                <Route index element={<NewsScreen/>}/>
+                <Route path=":id" element={<DetailedMessageScreen/>}/>
+            </Route>
             <Route path="settings">
                 <Route index={true} element={<SettingsPage/>}/>
                 <Route path="deviceDrivers" element={<DeviceDrivers/>}/>
                 <Route path="network" element={<NetworkPage/>}/>
                 <Route path="lan" element={<LANPage/>}/>
+                <Route path="wlan" element={<WLANPage/>}/>
                 <Route path="deviceLocations" element={<DeviceLocations/>}/>
                 <Route path="deviceLocations/:id" element={<LocationUpdateScreen/>}/>
                 <Route path="email" element={<EmailPage/>}/>

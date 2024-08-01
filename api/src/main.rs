@@ -35,7 +35,7 @@ use crate::controllers::hash_controller::get_hash;
 use crate::controllers::home_controller::get_home_setup;
 use crate::controllers::interaction_controller::get_interactions;
 use crate::controllers::location_controller::{create_location, delete_location, get_location_by_id, get_locations, update_location};
-use crate::controllers::message_controller::get_messages;
+use crate::controllers::message_controller::{get_scope_messages};
 use crate::controllers::relationship_controller::get_relationship;
 use crate::controllers::status_controller::get_status;
 use crate::controllers::user_controller::get_users;
@@ -194,7 +194,7 @@ pub fn get_secured_scope() -> Scope<impl ServiceFactory<ServiceRequest, Config=(
         .service(get_users)
         .service(get_devices)
         .service(get_hash)
-        .service(get_messages)
+        .service(get_scope_messages())
         .service(get_locations)
         .service(create_location)
         .service(get_location_by_id)

@@ -3,17 +3,21 @@ use serde_derive::{Deserialize, Serialize};
 use serde_json::Value;
 use crate::api_lib::interaction::{FieldValue, InteractionResponse};
 
+
 #[derive(Serialize,Deserialize, Debug)]
 pub struct SocketEvent {
+    pub id: Option<String>,
     pub r#type: String,
     pub  namespace: String,
     pub  desc: String,
+    pub class: Option<String>,
     pub source: String,
     pub  timestamp: String,
     pub  properties: Option<Properties>,
     pub  context: Option<HashMap<String, FieldValue>>,
     pub data: Option<SocketData>,
-    pub device: Option<String>
+    pub device: Option<String>,
+    pub read: Option<bool>
 }
 
 #[derive(Serialize,Deserialize, Debug)]
@@ -54,24 +58,28 @@ pub enum Source {
     Capability,
     Location,
     User,
-    System
+    System,
+    Message
 }
 
 impl SocketEvent {
     pub fn get_source(&self) -> Source {
-        match self.source.starts_with("/device") {
-            true => Source::Device,
-            false => match self.source.starts_with("/capability") {
-                true => Source::Capability,
-                false => match self.source.starts_with("/location") {
-                    true => Source::Location,
-                    false => match self.source.starts_with("/user") {
-                        true => Source::User,
-                        false => Source::System
-                    }
-                }
+        return if self.source.starts_with("/device") {
+            Source::Device
+        } else if self.source.starts_with("/capability") {
+            Source::Capability
+        } else if self.source.starts_with("/location") {
+            Source::Location
+        } else if self.source.starts_with("/user") {
+            Source::User
+        } else if let Some(m) = self.class.clone(){
+            if m == "message" {
+               return Source::Message
             }
-        }
+            Source::System
+        } else {
+            Source::System
+        };
     }
 
     pub fn get_id(&self) -> Option<String> {
@@ -95,7 +103,17 @@ pub enum Properties {
     CPUUsage(CPUUSage),
     HumidityChange(HumidityChange),
     Reachable(Reachable),
+    ChangeReason(ChangeReason),
     Value(Value)
+}
+
+#[derive(Serialize,Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ChangeReason {
+    pub change_reason: String,
+    pub expires_after_minutes: i32,
+    pub module: String,
+    pub requester_info: String
 }
 
 #[derive(Serialize,Deserialize, Debug)]

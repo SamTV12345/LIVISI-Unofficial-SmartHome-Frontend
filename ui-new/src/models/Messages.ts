@@ -21,6 +21,17 @@ type DeviceUnreachable = MessageType & {
     }
 }
 
+type LogLevelChanged = MessageType & {
+    type: 'LogLevelChanged',
+    timestamp: string
+    properties: {
+        changeReason: string,
+        expiresAfterMinutes: number,
+        requesterInfo: string
+    }
+}
+
+
 type ShcRemoteReboot = MessageType & {
     type: 'ShcRemoteRebooted',
     properties: {
@@ -28,4 +39,6 @@ type ShcRemoteReboot = MessageType & {
     }
 }
 
-export type Message = DeviceUnreachable | ShcRemoteReboot
+export type Message = (DeviceUnreachable | ShcRemoteReboot | LogLevelChanged) & {
+    read: boolean
+}
