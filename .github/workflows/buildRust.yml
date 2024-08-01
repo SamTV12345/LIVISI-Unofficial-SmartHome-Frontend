@@ -55,5 +55,5 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
-              name: app-$GITHUB_SHA-${{ matrix.target }}
+              name: app-${{ matrix.target }}
               path: api/dist
