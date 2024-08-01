@@ -172,6 +172,7 @@ impl Data {
                                                         Properties::Reachable(_) => {
 
                                                         }
+                                                        _ => {}
                                                     }
                                                 }
                                             }
@@ -214,6 +215,11 @@ impl Data {
                         /*
                         {"id":"21c509371e95491c9684c1d8e64fb421","class":"message","type":"LogLevelChanged","namespace":"core.RWE","desc":"/desc/device/SHCA.RWE/1.0/message/LogLevelChanged","source":"/device/00000000000000000000000000000000","timestamp":"2024-07-28T19:48:04.781511Z","devices":[],"capabilities":[],"read":true,"properties":{"changeReason":"Test","expiresAfterMinutes":120,"module":"","requesterInfo":"Administrator"}}
                          */
+
+                        let props = &socket_event.properties;
+                        let serde_serialized = serde_json::to_string(props).unwrap();
+                        let props = serde_json::from_str(&serde_serialized).unwrap();
+
                         data.messages.push(MessageResponse{
                             id,
                             timestamp: socket_event.timestamp.clone(),
@@ -221,7 +227,7 @@ impl Data {
                             devices: None,
                             messages: None,
                             capabilities: None,
-                            properties: None,
+                            properties: props,
                             class: socket_event.class.clone(),
                             r#type: socket_event.r#type.clone(),
                             namespace: Option::from(socket_event.namespace.clone()),

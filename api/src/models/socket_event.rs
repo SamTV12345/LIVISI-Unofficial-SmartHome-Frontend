@@ -4,8 +4,6 @@ use serde_json::Value;
 use crate::api_lib::interaction::{FieldValue, InteractionResponse};
 
 
-
-
 #[derive(Serialize,Deserialize, Debug)]
 pub struct SocketEvent {
     pub id: Option<String>,
@@ -105,7 +103,17 @@ pub enum Properties {
     CPUUsage(CPUUSage),
     HumidityChange(HumidityChange),
     Reachable(Reachable),
+    ChangeReason(ChangeReason),
     Value(Value)
+}
+
+#[derive(Serialize,Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ChangeReason {
+    pub change_reason: String,
+    pub expires_after_minutes: i32,
+    pub module: String,
+    pub requester_info: String
 }
 
 #[derive(Serialize,Deserialize, Debug)]
