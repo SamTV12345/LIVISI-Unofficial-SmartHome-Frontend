@@ -29,19 +29,18 @@ jobs:
           npm install -g pnpm@latest
           pnpm install
           pnpm run build:copy
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - name: Compile and release
+        uses: rust-build/rust-build.action@v1.4.5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          components: rustfmt
-      - name: Add target
-        run: rustup target add ${{ matrix.target }}
-      - name: Build app
-        working-directory: api
-        run: cargo build --release --target ${{ matrix.target }}
+          RUSTTARGET: ${{ matrix.target }}
+          UPLOAD_MODE: none
       - name: Archive
         working-directory: api
         run: |
           mkdir -p dist
-          cp target/${{ matrix.target }}/release/api.exe dist/
+          cp target/${{ matrix.target }}/release/api* dist/
           cp static/* dist/static/
           cd dist
           cd ..
