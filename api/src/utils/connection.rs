@@ -1,5 +1,6 @@
 use std::env::var;
 use std::fs;
+use std::process::exit;
 use std::sync::Mutex;
 use crate::models::token::{Token, TokenRequest};
 use crate::utils::header_utils::HeaderUtils;
@@ -45,7 +46,15 @@ impl MemPrefill {
         let response = result;
         match response {
             Ok(e)=>{
-                return  Ok(e.json::<Token>().await.unwrap());
+                match e.json::<Token>().await {
+                    Ok(e) => {
+                        return Ok(e)
+                    }
+                    Err(e) => {
+                        log::error!("{}" ,e);
+                        exit(1)
+                    }
+                }
             }
             Err(e)=>{
                 log::error!("Error: {}", e);
