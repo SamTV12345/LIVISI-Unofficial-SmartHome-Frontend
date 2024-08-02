@@ -6,11 +6,17 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
+    "sdkVersion": "51.0.0",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#ffffff",
+      "imageSize": {
+        "width": 200,
+        "height": 200
+      },
+      "title": "Livisi Unofficial App"
     },
     "ios": {
       "supportsTablet": true
