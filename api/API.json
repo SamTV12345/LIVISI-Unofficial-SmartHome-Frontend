@@ -1,0 +1,1461 @@
+{
+  "devices": {
+    "3ab75667305a4db88fa62c3944fda20a": {
+      "manufacturer": "RWE",
+      "type": "PSS",
+      "version": "1.0",
+      "product": "CosipDevices.RWE",
+      "serialNumber": "914120002211",
+      "id": "3ab75667305a4db88fa62c3944fda20a",
+      "location": "/location/07a8d67ab1d74b5894d536f056b93cb4",
+      "config": {
+        "name": "Audio+Kamera",
+        "protocolId": "Cosip",
+        "timeOfAcceptance": "2017-05-20T09:50:46.459000+00:00",
+        "timeOfDiscovery": "2017-05-20T09:50:11.293000+00:00",
+        "pairedSince": null
+      },
+      "volatile": null,
+      "capabilities": [
+        "/capability/c4627eb11d574b54bbe5ee8b9f7c3da7"
+      ],
+      "tags": {
+        "type": "TPCId",
+        "typeCategory": "TCEntertainmentId"
+      },
+      "locationData": {
+        "config": {
+          "name": "Büro ",
+          "type": "Office"
+        },
+        "id": "07a8d67ab1d74b5894d536f056b93cb4"
+      },
+      "capabilityState": [
+        {
+          "id": "c4627eb11d574b54bbe5ee8b9f7c3da7",
+          "state": {
+            "onState": {
+              "value": true,
+              "lastChanged": "2024-07-30T02:36:10.038144593+00:00"
+            }
+          }
+        }
+      ]
+    },
+    "12dd5c35de1a4aee898ddd90a6b9959c": {
+      "manufacturer": "RWE",
+      "type": "NotificationSender",
+      "version": "1.0",
+      "product": "NotificationSender.RWE",
+      "serialNumber": "",
+      "id": "12dd5c35de1a4aee898ddd90a6b9959c",
+      "config": {
+        "name": "Notification Sender",
+        "protocolId": "Virtual",
+        "timeOfAcceptance": "2017-05-20T09:45:45.882000+00:00",
+        "pairedSince": null
+      },
+      "volatile": null,
+      "capabilities": [
+        "/capability/2627ec1ca65942a09d0409c9ebb58888",
+        "/capability/785746d9822f4c9fbb81aa695e6924e0",
+        "/capability/f5f8458d68124fab80a6de0b8df8cdce"
+      ],
+      "capabilityState": [
+        {
+          "id": "2627ec1ca65942a09d0409c9ebb58888",
+          "state": null
+        },
+        {
+          "id": "785746d9822f4c9fbb81aa695e6924e0",
+          "state": {
+            "remainingQuota": {
+              "value": 0,
+              "lastChanged": "1970-01-01T00:00:00Z"
+            }
+          }
+        },
+        {
+          "id": "f5f8458d68124fab80a6de0b8df8cdce",
+          "state": null
+        }
+      ]
+    },
+    "d410e082b1454eedb298b248c6eb31f8": {
+      "manufacturer": "RWE",
+      "type": "PSS",
+      "version": "1.0",
+      "product": "CosipDevices.RWE",
+      "serialNumber": "914120036518",
+      "id": "d410e082b1454eedb298b248c6eb31f8",
+      "location": "/location/07a8d67ab1d74b5894d536f056b93cb4",
+      "config": {
+        "name": "PC",
+        "protocolId": "Cosip",
+        "timeOfAcceptance": "2020-04-18T09:40:10.790000+00:00",
+        "timeOfDiscovery": "2020-04-18T09:39:35.025000+00:00",
+        "pairedSince": null
+      },
+      "volatile": null,
+      "capabilities": [
+        "/capability/05afedf563864236b8625d9fb75f6d14"
+      ],
+      "tags": {
+        "type": "TPCId",
+        "typeCategory": "TCEntertainmentId"
+      },
+      "locationData": {
+        "config": {
+          "name": "Büro ",
+          "type": "Office"
+        },
+        "id": "07a8d67ab1d74b5894d536f056b93cb4"
+      },
+      "capabilityState": [
+        {
+          "id": "05afedf563864236b8625d9fb75f6d14",
+          "state": {
+            "onState": {
+              "value": false,
+              "lastChanged": "1970-01-01T00:00:00Z"
+            }
+          }
+        }
+      ]
+    },
+    "ad4ecca5442b41b79ab9ba49cf139507": {
+      "manufacturer": "RWE",
+      "type": "RST",
+      "version": "1.1",
+      "product": "CosipDevices.RWE",
+      "serialNumber": "914110008296",
+      "id": "ad4ecca5442b41b79ab9ba49cf139507",
+      "location": "/location/bdc7d99c4f7c4a27b51205524597f1ad",
+      "config": {
+        "name": "Heizkörperthermostat",
+        "protocolId": "Cosip",
+        "timeOfAcceptance": "2018-12-22T11:43:23.320000+00:00",
+        "timeOfDiscovery": "2018-12-22T11:42:44.252000+00:00",
+        "pairedSince": null
+      },
+      "volatile": null,
+      "capabilities": [
+        "/capability/ca43aa961a794880aa2bc026016fd4fc",
+        "/capability/6a605c933cb644f79a41a072340e3573",
+        "/capability/e1d3f3c13eea46a797144beb439b952f"
+      ],
+      "tags": {
+        "type": "TRadiatorThermostateIdTag",
+        "typeCategory": "TCHeatingId"
+      },
+      "locationData": {
+        "config": {
+          "name": "Schlafzimmer Samuel",
+          "type": "Bedroom"
+        },
+        "id": "bdc7d99c4f7c4a27b51205524597f1ad"
+      },
+      "capabilityState": [
+        {
+          "id": "ca43aa961a794880aa2bc026016fd4fc",
+          "state": {
+            "operationMode": {
+              "value": "Auto",
+              "lastChanged": "1970-01-01T00:00:00Z"
+            },
+            "windowReductionActive": {
+              "value": false,
+              "lastChanged": "1970-01-01T00:00:00Z"
+            },
+            "pointTemperature": {
+              "value": 18,
+              "lastChanged": "2024-08-01T20:00:03.303049Z"
+            }
+          }
+        },
+        {
+          "id": "6a605c933cb644f79a41a072340e3573",
+          "state": {
+            "temperature": {
+              "value": 26.7,
+              "lastChanged": "2024-07-30T00:27:08.632670353+00:00"
+            },
+            "frostWarning": {
+              "value": false,
+              "lastChanged": "1970-01-01T00:00:00Z"
+            }
+          }
+        },
+        {
+          "id": "e1d3f3c13eea46a797144beb439b952f",
+          "state": {
+            "humidity": {
+              "value": 61.5,
+              "lastChanged": "2024-08-01T22:49:02.073806Z"
+            },
+            "moldWarning": {
+              "value": false,
+              "lastChanged": "1970-01-01T00:00:00Z"
+            }
+          }
+        }
+      ]
+    },
+    "dd222ef62ab443219ff439a9fc569d89": {
+      "manufacturer": "RWE",
+      "type": "RST",
+      "version": "1.1",
+      "product": "CosipDevices.RWE",
+      "serialNumber": "914110136964",
+      "id": "dd222ef62ab443219ff439a9fc569d89",
+      "location": "/location/96549b469e8a49b0a35433da743e649c",
+      "config": {
+        "name": "Heizkörperthermostat",
+        "protocolId": "Cosip",
+        "timeOfAcceptance": "2022-09-26T15:01:57.284000+00:00",
+        "timeOfDiscovery": "2022-09-26T15:01:40.076000+00:00",
+        "pairedSince": null
+      },
+      "volatile": null,
+      "capabilities": [
+        "/capability/258c8562ae8d4c06aa72923510e1387b",
+        "/capability/55c5aaee140345c1ae14e99b7c627eda",
+        "/capability/adeb18edb3ba4d53b6d3550c84bf527e"
+      ],
+      "tags": {
+        "type": "TRadiatorThermostateIdTag",
+        "typeCategory": "TCHeatingId"
+      },
+      "locationData": {
+        "config": {
+          "name": "Gästebad",
+          "type": "Bath"
+        },
+        "id": "96549b469e8a49b0a35433da743e649c"
+      },
+      "capabilityState": [
+        {
+          "id": "258c8562ae8d4c06aa72923510e1387b",
+          "state": {
+            "operationMode": {
+              "value": "Auto",
+              "lastChanged": "1970-01-01T00:00:00Z"
+            },
+            "pointTemperature": {
+              "value": 21,
+              "lastChanged": "1970-01-01T00:00:00Z"
+            },
+            "windowReductionActive": {
+              "value": false,
+              "lastChanged": "1970-01-01T00:00:00Z"
+            }
+          }
+        },
+        {
+          "id": "55c5aaee140345c1ae14e99b7c627eda",
+          "state": {
+            "temperature": {
+              "value": 22.6,
+              "lastChanged": "2024-07-30T02:47:32.812794823+00:00"
+            },
+            "frostWarning": {
+              "value": false,
+              "lastChanged": "1970-01-01T00:00:00Z"
+            }
+          }
+        },
+        {
+          "id": "adeb18edb3ba4d53b6d3550c84bf527e",
+          "state": {
+            "moldWarning": {
+              "value": false,
+              "lastChanged": "1970-01-01T00:00:00Z"
+            },
+            "humidity": {
+              "value": 74.5,
+              "lastChanged": "2024-07-30T02:22:37.826009936+00:00"
+            }
+          }
+        }
+      ]
+    },
+    "752ac2801b534645a954afe11e8019f2": {
+      "manufacturer": "RWE",
+      "type": "WSC2",
+      "version": "1.0",
+      "product": "CosipDevices.RWE",
+      "serialNumber": "914130000702",
+      "id": "752ac2801b534645a954afe11e8019f2",
+      "location": "/location/bdc7d99c4f7c4a27b51205524597f1ad",
+      "config": {
+        "name": "Wandsender",
+        "protocolId": "Cosip",
+        "timeOfAcceptance": "2017-05-22T18:29:18.554000+00:00",
+        "timeOfDiscovery": "2017-05-22T18:29:12.519000+00:00",
+        "pairedSince": null
+      },
+      "volatile": null,
+      "capabilities": [
+        "/capability/13f591681f82424d8ce764b649bd8237"
+      ],
+      "tags": {
+        "type": "TTwoButtonSwitchIdTag",
+        "typeCategory": "TCSwitchIdTag"
+      },
+      "locationData": {
+        "config": {
+          "name": "Schlafzimmer Samuel",
+          "type": "Bedroom"
+        },
+        "id": "bdc7d99c4f7c4a27b51205524597f1ad"
+      },
+      "capabilityState": [
+        {
+          "id": "13f591681f82424d8ce764b649bd8237",
+          "state": null
+        }
+      ]
+    },
+    "6d8bbb861c634b009d36827890500f7e": {
+      "manufacturer": "RWE",
+      "type": "VariableActuator",
+      "version": "2.0",
+      "product": "VariableActuator.RWE",
+      "serialNumber": "6d8bbb861c634b009d36827890500f7e",
+      "id": "6d8bbb861c634b009d36827890500f7e",
+      "config": {
+        "name": "Zuhause",
+        "protocolId": "Virtual",
+        "timeOfAcceptance": "2017-05-20T09:47:17.058000+00:00",
+        "pairedSince": null
+      },
+      "volatile": null,
+      "capabilities": [
+        "/capability/5e91522fcb08465db138f26a24a42493"
+      ],
+      "tags": {
+        "internalStateId": "HomeAway"
+      },
+      "capabilityState": [
+        {
+          "id": "5e91522fcb08465db138f26a24a42493",
+          "state": {
+            "value": {
+              "value": false,
+              "lastChanged": "1970-01-01T00:00:00Z"
+            }
+          }
+        }
+      ]
+    },
+    "77ba54809d1249af94245794c0bfccd4": {
+      "manufacturer": "RWE",
+      "type": "RST",
+      "version": "1.1",
+      "product": "CosipDevices.RWE",
+      "serialNumber": "914110076830",
+      "id": "77ba54809d1249af94245794c0bfccd4",
+      "location": "/location/bd3ecc329f3d4bff8d123ac010fa2649",
+      "config": {
+        "name": "Heizkörperthermostat",
+        "protocolId": "Cosip",
+        "timeOfAcceptance": "2022-09-26T14:55:09.334000+00:00",
+        "timeOfDiscovery": "2022-09-26T14:54:35.457000+00:00",
+        "pairedSince": null
+      },
+      "volatile": null,
+      "capabilities": [
+        "/capability/0a3c2707bbcf4163b4715d104bc3d9f2",
+        "/capability/f852f9a2cef24b6f9536b8db916dca83",
+        "/capability/593da80fff674ec99f0d69a6faed11b8"
+      ],
+      "tags": {
+        "type": "TRadiatorThermostateIdTag",
+        "typeCategory": "TCHeatingId"
+      },
+      "locationData": {
+        "config": {
+          "name": "Wohnzimmer Esstisch",
+          "type": "Livingroom"
+        },
+        "id": "bd3ecc329f3d4bff8d123ac010fa2649"
+      },
+      "capabilityState": [
+        {
+          "id": "0a3c2707bbcf4163b4715d104bc3d9f2",
+          "state": {
+            "pointTemperature": {
+              "value": 20,
+              "lastChanged": "1970-01-01T00:00:00Z"
+            },
+            "windowReductionActive": {
+              "value": false,
+              "lastChanged": "1970-01-01T00:00:00Z"
+            },
+            "operationMode": {
+              "value": "Manu",
+              "lastChanged": "1970-01-01T00:00:00Z"
+            }
+          }
+        },
+        {
+          "id": "f852f9a2cef24b6f9536b8db916dca83",
+          "state": {
+            "frostWarning": {
+              "value": false,
+              "lastChanged": "1970-01-01T00:00:00Z"
+            },
+            "temperature": {
+              "value": 24.5,
+              "lastChanged": "2024-07-30T03:03:37.108432665+00:00"
+            }
+          }
+        },
+        {
+          "id": "593da80fff674ec99f0d69a6faed11b8",
+          "state": {
+            "humidity": {
+              "value": 67.5,
+              "lastChanged": "2024-07-30T03:03:37.215827025+00:00"
+            },
+            "moldWarning": {
+              "value": false,
+              "lastChanged": "1970-01-01T00:00:00Z"
+            }
+          }
+        }
+      ]
+    },
+    "f1f89650a282488b8ddf1c06c2d81851": {
+      "manufacturer": "RWE",
+      "type": "VRCC",
+      "version": "2.1",
+      "product": "VRCC.RWE",
+      "serialNumber": "bd3ecc329f3d4bff8d123ac010fa2649",
+      "id": "f1f89650a282488b8ddf1c06c2d81851",
+      "location": "/location/bd3ecc329f3d4bff8d123ac010fa2649",
+      "config": {
+        "name": "Raumklima",
+        "protocolId": "Virtual",
+        "timeOfAcceptance": "2022-09-26T14:55:10.085000+00:00",
+        "timeOfDiscovery": "2022-09-26T14:55:10.085000+00:00",
+        "underlyingDeviceIds": "77ba54809d1249af94245794c0bfccd4",
+        "pairedSince": null
+      },
+      "volatile": null,
+      "capabilities": [
+        "/capability/4792d8a152b64f92a7ad7457422e4fd7",
+        "/capability/c24b35a83a984bafba40ea344608ccb5",
+        "/capability/19ca34ca052844129f6e01d34f8c9889"
+      ],
+      "locationData": {
+        "config": {
+          "name": "Wohnzimmer Esstisch",
+          "type": "Livingroom"
+        },
+        "id": "bd3ecc329f3d4bff8d123ac010fa2649"
+      },
+      "capabilityState": [
+        {
+          "id": "4792d8a152b64f92a7ad7457422e4fd7",
+          "state": {
+            "setpointTemperature": {
+              "value": 20,
+              "lastChanged": "1970-01-01T00:00:00Z"
+            }
+          }
+        },
+        {
+          "id": "c24b35a83a984bafba40ea344608ccb5",
+          "state": {
+            "temperature": {
+              "value": 24.5,
+              "lastChanged": "2024-07-30T03:03:37.216053319+00:00"
+            }
+          }
+        },
+        {
+          "id": "19ca34ca052844129f6e01d34f8c9889",
+          "state": {
+            "humidity": {
+              "value": 67.5,
+              "lastChanged": "2024-07-30T03:03:37.216284608+00:00"
+            }
+          }
+        }
+      ]
+    },
+    "9f1acd5a8f2a48aea35c8ce70474dde5": {
+      "manufacturer": "RWE",
+      "type": "VRCC",
+      "version": "2.1",
+      "product": "VRCC.RWE",
+      "serialNumber": "bdc7d99c4f7c4a27b51205524597f1ad",
+      "id": "9f1acd5a8f2a48aea35c8ce70474dde5",
+      "location": "/location/bdc7d99c4f7c4a27b51205524597f1ad",
+      "config": {
+        "name": "Raumklima",
+        "protocolId": "Virtual",
+        "timeOfAcceptance": "2018-12-22T11:43:23.588000+00:00",
+        "timeOfDiscovery": "2018-12-22T11:43:23.588000+00:00",
+        "underlyingDeviceIds": "ad4ecca5442b41b79ab9ba49cf139507",
+        "pairedSince": null
+      },
+      "volatile": null,
+      "capabilities": [
+        "/capability/c9e2c74c7ecc44aab02dbad0f93b7058",
+        "/capability/388cf77f500e4d32bf8fcf3cd4a09d0c",
+        "/capability/5e1b6f0788db463c805540a25ac5bdb1"
+      ],
+      "locationData": {
+        "config": {
+          "name": "Schlafzimmer Samuel",
+          "type": "Bedroom"
+        },
+        "id": "bdc7d99c4f7c4a27b51205524597f1ad"
+      },
+      "capabilityState": [
+        {
+          "id": "c9e2c74c7ecc44aab02dbad0f93b7058",
+          "state": {
+            "setpointTemperature": {
+              "value": 20,
+              "lastChanged": "2024-07-30T01:42:06.089958003+00:00"
+            }
+          }
+        },
+        {
+          "id": "388cf77f500e4d32bf8fcf3cd4a09d0c",
+          "state": {
+            "temperature": {
+              "value": 26.7,
+              "lastChanged": "2024-07-30T00:27:08.633741076+00:00"
+            }
+          }
+        },
+        {
+          "id": "5e1b6f0788db463c805540a25ac5bdb1",
+          "state": {
+            "humidity": {
+              "value": 61.5,
+              "lastChanged": "2024-08-01T22:49:02.107976Z"
+            }
+          }
+        }
+      ]
+    },
+    "c0d3ea250c9b45bb8d76a16736858211": {
+      "manufacturer": "RWE",
+      "type": "RST",
+      "version": "1.1",
+      "product": "CosipDevices.RWE",
+      "serialNumber": "914110001491",
+      "id": "c0d3ea250c9b45bb8d76a16736858211",
+      "location": "/location/3708d8fa5a8d492f9c834b736bf32265",
+      "config": {
+        "name": "Heizkörperthermostat",
+        "protocolId": "Cosip",
+        "timeOfAcceptance": "2018-12-22T12:15:03.081000+00:00",
+        "timeOfDiscovery": "2018-12-22T12:14:36.319000+00:00",
+        "pairedSince": null
+      },
+      "volatile": null,
+      "capabilities": [
+        "/capability/727d49378f4b49ee97b9c6f8c29124a6",
+        "/capability/d700de0905734c4880be21e88ec200fa",
+        "/capability/35a1d93391fb46d4a9af2f43e9ef9be0"
+      ],
+      "tags": {
+        "type": "TRadiatorThermostateIdTag",
+        "typeCategory": "TCHeatingId"
+      },
+      "locationData": {
+        "config": {
+          "name": "Wintergarten",
+          "type": "Bedroom"
+        },
+        "id": "3708d8fa5a8d492f9c834b736bf32265"
+      },
+      "capabilityState": [
+        {
+          "id": "727d49378f4b49ee97b9c6f8c29124a6",
+          "state": {
+            "windowReductionActive": {
+              "value": false,
+              "lastChanged": "1970-01-01T00:00:00Z"
+            },
+            "operationMode": {
+              "value": "Auto",
+              "lastChanged": "1970-01-01T00:00:00Z"
+            },
+            "pointTemperature": {
+              "value": 21.5,
+              "lastChanged": "1970-01-01T00:00:00Z"
+            }
+          }
+        },
+        {
+          "id": "d700de0905734c4880be21e88ec200fa",
+          "state": {
+            "frostWarning": {
+              "value": false,
+              "lastChanged": "1970-01-01T00:00:00Z"
+            },
+            "temperature": {
+              "value": 25.8,
+              "lastChanged": "2024-07-30T02:33:03.610318981+00:00"
+            }
+          }
+        },
+        {
+          "id": "35a1d93391fb46d4a9af2f43e9ef9be0",
+          "state": {
+            "moldWarning": {
+              "value": false,
+              "lastChanged": "1970-01-01T00:00:00Z"
+            },
+            "humidity": {
+              "value": 66,
+              "lastChanged": "2024-07-30T03:00:32.992841434+00:00"
+            }
+          }
+        }
+      ]
+    },
+    "00000000000000000000000000000000": {
+      "manufacturer": "RWE",
+      "type": "SHCA",
+      "version": "1.0",
+      "product": "core.RWE",
+      "serialNumber": "40156259078520000969",
+      "id": "00000000000000000000000000000000",
+      "config": {
+        "name": "SmartHome Controller",
+        "protocolId": "Virtual",
+        "pairedSince": null
+      },
+      "volatile": null,
+      "capabilities": [
+        "/capability/f51f5774f6974f7e8a94b228df6a4977",
+        "/capability/74a80bc401bf4107b4b02c4900447f1b"
+      ],
+      "capabilityState": [
+        {
+          "id": "f51f5774f6974f7e8a94b228df6a4977",
+          "state": null
+        },
+        {
+          "id": "74a80bc401bf4107b4b02c4900447f1b",
+          "state": null
+        }
+      ]
+    },
+    "316b75c4e9304557b78aa9e2f6917015": {
+      "manufacturer": "RWE",
+      "type": "VariableActuator",
+      "version": "2.0",
+      "product": "VariableActuator.RWE",
+      "serialNumber": "316b75c4e9304557b78aa9e2f6917015",
+      "id": "316b75c4e9304557b78aa9e2f6917015",
+      "config": {
+        "name": "Urlaub",
+        "protocolId": "Virtual",
+        "timeOfAcceptance": "2017-05-20T09:47:20.311000+00:00",
+        "pairedSince": null
+      },
+      "volatile": null,
+      "capabilities": [
+        "/capability/d3266979d4b745d5b392c3199a1bbe20"
+      ],
+      "tags": {
+        "internalStateId": "Vacation"
+      },
+      "capabilityState": [
+        {
+          "id": "d3266979d4b745d5b392c3199a1bbe20",
+          "state": {
+            "value": {
+              "value": false,
+              "lastChanged": "1970-01-01T00:00:00Z"
+            }
+          }
+        }
+      ]
+    },
+    "8ed27df9f4294b04968f8f95aa859868": {
+      "manufacturer": "RWE",
+      "type": "VRCC",
+      "version": "2.1",
+      "product": "VRCC.RWE",
+      "serialNumber": "3708d8fa5a8d492f9c834b736bf32265",
+      "id": "8ed27df9f4294b04968f8f95aa859868",
+      "location": "/location/3708d8fa5a8d492f9c834b736bf32265",
+      "config": {
+        "name": "Raumklima",
+        "protocolId": "Virtual",
+        "timeOfAcceptance": "2018-12-22T12:15:03.108000+00:00",
+        "timeOfDiscovery": "2018-12-22T12:15:03.108000+00:00",
+        "underlyingDeviceIds": "c0d3ea250c9b45bb8d76a16736858211",
+        "pairedSince": null
+      },
+      "volatile": null,
+      "capabilities": [
+        "/capability/7016cd4da6024fcfa55862687d3070d9",
+        "/capability/077eca39416449ab8ad2bc3c90afe50d",
+        "/capability/fbf904d144d84ca6b56ab570f73194ae"
+      ],
+      "locationData": {
+        "config": {
+          "name": "Wintergarten",
+          "type": "Bedroom"
+        },
+        "id": "3708d8fa5a8d492f9c834b736bf32265"
+      },
+      "capabilityState": [
+        {
+          "id": "7016cd4da6024fcfa55862687d3070d9",
+          "state": {
+            "setpointTemperature": {
+              "value": 21.5,
+              "lastChanged": "1970-01-01T00:00:00Z"
+            }
+          }
+        },
+        {
+          "id": "077eca39416449ab8ad2bc3c90afe50d",
+          "state": {
+            "temperature": {
+              "value": 25.8,
+              "lastChanged": "2024-07-30T02:33:03.611424510+00:00"
+            }
+          }
+        },
+        {
+          "id": "fbf904d144d84ca6b56ab570f73194ae",
+          "state": {
+            "humidity": {
+              "value": 66,
+              "lastChanged": "2024-07-30T03:00:32.993630433+00:00"
+            }
+          }
+        }
+      ]
+    },
+    "a94b411309d4475eb03c407cd4b2bb52": {
+      "manufacturer": "RWE",
+      "type": "VRCC",
+      "version": "2.1",
+      "product": "VRCC.RWE",
+      "serialNumber": "96549b469e8a49b0a35433da743e649c",
+      "id": "a94b411309d4475eb03c407cd4b2bb52",
+      "location": "/location/96549b469e8a49b0a35433da743e649c",
+      "config": {
+        "name": "Raumklima2",
+        "protocolId": "Virtual",
+        "timeOfAcceptance": "2022-09-26T15:01:57+00:00",
+        "timeOfDiscovery": "2022-09-26T15:01:57+00:00",
+        "underlyingDeviceIds": "dd222ef62ab443219ff439a9fc569d89",
+        "pairedSince": null
+      },
+      "volatile": null,
+      "capabilities": [
+        "/capability/111f51d57c914850b9fd0c896ed91f8d",
+        "/capability/5207f3f65cae45d1be69719903184669",
+        "/capability/9262f1be8be746d9a90646d56385eaa5"
+      ],
+      "tags": {
+        "type": "TRoomClimateTag",
+        "typeCategory": "TCClimateId"
+      },
+      "locationData": {
+        "config": {
+          "name": "Gästebad",
+          "type": "Bath"
+        },
+        "id": "96549b469e8a49b0a35433da743e649c"
+      },
+      "capabilityState": [
+        {
+          "id": "111f51d57c914850b9fd0c896ed91f8d",
+          "state": {
+            "setpointTemperature": {
+              "value": 21,
+              "lastChanged": "1970-01-01T00:00:00Z"
+            }
+          }
+        },
+        {
+          "id": "5207f3f65cae45d1be69719903184669",
+          "state": {
+            "temperature": {
+              "value": 22.6,
+              "lastChanged": "2024-07-30T02:47:32.813666757+00:00"
+            }
+          }
+        },
+        {
+          "id": "9262f1be8be746d9a90646d56385eaa5",
+          "state": {
+            "humidity": {
+              "value": 74.5,
+              "lastChanged": "2024-07-30T02:22:37.827124232+00:00"
+            }
+          }
+        }
+      ]
+    },
+    "f9d87da05728413799ce73b17ca948de": {
+      "manufacturer": "RWE",
+      "type": "SunriseSunsetSensor",
+      "version": "2.0",
+      "product": "SunriseSunsetSensor.RWE",
+      "serialNumber": "bb575a68-3f07-4a75-aa79-4d2fefe4a7af",
+      "id": "f9d87da05728413799ce73b17ca948de",
+      "config": {
+        "name": "Sunrise Sunset Sensor",
+        "protocolId": "Virtual",
+        "timeOfAcceptance": "2023-07-20T16:10:38+00:00",
+        "timeOfDiscovery": "2023-07-20T16:10:38+00:00",
+        "pairedSince": null
+      },
+      "volatile": null,
+      "capabilities": [
+        "/capability/4b9d22c3573c4c8bbf189c83e200d2f4"
+      ],
+      "capabilityState": [
+        {
+          "id": "4b9d22c3573c4c8bbf189c83e200d2f4",
+          "state": {
+            "isDay": {
+              "value": false,
+              "lastChanged": "2024-08-01T19:13:51.009023Z"
+            },
+            "nextTimeEvent": {
+              "value": "2024-08-02T04:05:38+00:00",
+              "lastChanged": "2024-08-01T19:13:51.009854Z"
+            },
+            "nextSunset": {
+              "value": "2024-08-02T19:12:21+00:00",
+              "lastChanged": "2024-08-01T19:13:51.009457Z"
+            },
+            "nextSunrise": {
+              "value": "2024-08-02T04:05:38+00:00",
+              "lastChanged": "1970-01-01T00:00:00Z"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "status": {
+    "appVersion": "1.2.44.498",
+    "configVersion": 498,
+    "connected": true,
+    "controllerType": "Avatar",
+    "network": {
+      "backendAvailable": false,
+      "bluetoothHotspotName": "",
+      "ethCableAttached": true,
+      "ethIpAddress": "192.168.1.183",
+      "ethMacAddress": "94:c6:91:36:a3:47",
+      "hostname": "SHCONTROLLER01",
+      "hotspotActive": false,
+      "inUseAdapter": "eth",
+      "wifiActiveSsid": "",
+      "wifiIpAddress": "",
+      "wifiMacAddress": "d0:c5:d3:4c:2d:c7",
+      "wifiSignalStrength": 0,
+      "wpsActive": false
+    },
+    "osVersion": "8.17",
+    "serialNumber": "40156259078520000969",
+    "operationStatus": "active"
+  },
+  "user_storage": [
+    {
+      "partition": "HomepageDeviceVisibility",
+      "key": "LightingId",
+      "value": "{\"Show\":[]}",
+      "modifiedTime": "2024-07-28T18:44:30.661Z"
+    },
+    {
+      "partition": "HomepageDeviceVisibility",
+      "key": "ClimateId",
+      "value": "{\"Show\":[\"ad4ecca5442b41b79ab9ba49cf139507\",\"c0d3ea250c9b45bb8d76a16736858211\",\"77ba54809d1249af94245794c0bfccd4\",\"dd222ef62ab443219ff439a9fc569d89\",\"a94b411309d4475eb03c407cd4b2bb52\"]}",
+      "modifiedTime": "2024-07-28T18:44:30.661Z"
+    },
+    {
+      "partition": "HomepageDeviceVisibility",
+      "key": "SecurityId",
+      "value": "{\"Show\":[]}",
+      "modifiedTime": "2024-07-28T18:44:30.661Z"
+    },
+    {
+      "partition": "HomepageDeviceVisibility",
+      "key": "DoorsId",
+      "value": "{\"Show\":[]}",
+      "modifiedTime": "2024-07-28T18:44:30.661Z"
+    },
+    {
+      "partition": "HomepageDeviceVisibility",
+      "key": "OutsideId",
+      "value": "{\"Show\":[]}",
+      "modifiedTime": "2024-07-28T18:44:30.661Z"
+    },
+    {
+      "partition": "HomepageDeviceVisibility",
+      "key": "EnergyId",
+      "value": "{\"Show\":[]}",
+      "modifiedTime": "2024-07-28T18:44:30.661Z"
+    },
+    {
+      "partition": "HomepageDeviceVisibility",
+      "key": "HouseholdId",
+      "value": "{\"Show\":[]}",
+      "modifiedTime": "2024-07-28T18:44:30.661Z"
+    },
+    {
+      "partition": "HomepageDeviceVisibility",
+      "key": "HealthId",
+      "value": "{\"Show\":[]}",
+      "modifiedTime": "2024-07-28T18:44:30.661Z"
+    },
+    {
+      "partition": "HomepageDeviceVisibility",
+      "key": "EntertainmentId",
+      "value": "{\"Show\":[\"3ab75667305a4db88fa62c3944fda20a\",\"d410e082b1454eedb298b248c6eb31f8\"]}",
+      "modifiedTime": "2024-07-28T18:44:30.661Z"
+    },
+    {
+      "partition": "HomepageDeviceVisibility",
+      "key": "StatesId",
+      "value": "{\"Show\":[\"6d8bbb861c634b009d36827890500f7e\",\"316b75c4e9304557b78aa9e2f6917015\"]}",
+      "modifiedTime": "2024-07-28T18:44:35.678Z"
+    },
+    {
+      "partition": "Version",
+      "key": "UserData",
+      "value": "2",
+      "modifiedTime": "2024-07-28T18:44:35.678Z"
+    }
+  ],
+  "locations": [
+    {
+      "config": {
+        "name": "Schlafzimmer Samuel",
+        "type": "Bedroom"
+      },
+      "id": "bdc7d99c4f7c4a27b51205524597f1ad",
+      "devices": [
+        "ad4ecca5442b41b79ab9ba49cf139507",
+        "752ac2801b534645a954afe11e8019f2",
+        "9f1acd5a8f2a48aea35c8ce70474dde5"
+      ]
+    },
+    {
+      "config": {
+        "name": "Büro ",
+        "type": "Office"
+      },
+      "id": "07a8d67ab1d74b5894d536f056b93cb4",
+      "devices": [
+        "3ab75667305a4db88fa62c3944fda20a",
+        "d410e082b1454eedb298b248c6eb31f8"
+      ]
+    },
+    {
+      "config": {
+        "name": "Wintergarten",
+        "type": "Bedroom"
+      },
+      "id": "3708d8fa5a8d492f9c834b736bf32265",
+      "devices": [
+        "c0d3ea250c9b45bb8d76a16736858211",
+        "8ed27df9f4294b04968f8f95aa859868"
+      ]
+    },
+    {
+      "config": {
+        "name": "Dachgeschoss",
+        "type": "Hobby"
+      },
+      "id": "98eb0f8b361e40b4b11b6ecef726313c"
+    },
+    {
+      "config": {
+        "name": "Wohnzimmer Esstisch",
+        "type": "Livingroom"
+      },
+      "id": "bd3ecc329f3d4bff8d123ac010fa2649",
+      "devices": [
+        "77ba54809d1249af94245794c0bfccd4",
+        "f1f89650a282488b8ddf1c06c2d81851"
+      ]
+    },
+    {
+      "config": {
+        "name": "Gästebad",
+        "type": "Bath"
+      },
+      "id": "96549b469e8a49b0a35433da743e649c",
+      "devices": [
+        "dd222ef62ab443219ff439a9fc569d89",
+        "a94b411309d4475eb03c407cd4b2bb52"
+      ]
+    },
+    {
+      "config": {
+        "name": "Test Location 5",
+        "type": "Other"
+      },
+      "id": "22e1fdaa19bf499aa86ba3fdd3c6779f",
+      "tags": {
+        "numeDeTag": "valoareDeTag"
+      }
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "2627ec1ca65942a09d0409c9ebb58888",
+      "type": "PushNotificationActuator",
+      "device": "/device/12dd5c35de1a4aee898ddd90a6b9959c",
+      "config": {
+        "activityLogActive": false,
+        "name": "Push Notification Actuator"
+      }
+    },
+    {
+      "id": "785746d9822f4c9fbb81aa695e6924e0",
+      "type": "SmsActuator",
+      "device": "/device/12dd5c35de1a4aee898ddd90a6b9959c",
+      "config": {
+        "activityLogActive": false,
+        "name": "SMS Actuator"
+      }
+    },
+    {
+      "id": "f5f8458d68124fab80a6de0b8df8cdce",
+      "type": "EmailActuator",
+      "device": "/device/12dd5c35de1a4aee898ddd90a6b9959c",
+      "config": {
+        "activityLogActive": false,
+        "name": "Email Actuator"
+      }
+    },
+    {
+      "id": "f51f5774f6974f7e8a94b228df6a4977",
+      "type": "VirtualResident",
+      "device": "/device/00000000000000000000000000000000",
+      "config": {
+        "activityLogActive": true,
+        "name": "Virtual Resident"
+      }
+    },
+    {
+      "id": "74a80bc401bf4107b4b02c4900447f1b",
+      "type": "Calendar",
+      "device": "/device/00000000000000000000000000000000",
+      "config": {
+        "activityLogActive": false,
+        "name": "Calendar"
+      }
+    },
+    {
+      "id": "5e91522fcb08465db138f26a24a42493",
+      "type": "BooleanStateActuator",
+      "device": "/device/6d8bbb861c634b009d36827890500f7e",
+      "config": {
+        "activityLogActive": true,
+        "name": "Boolean State Actuator"
+      }
+    },
+    {
+      "id": "d3266979d4b745d5b392c3199a1bbe20",
+      "type": "BooleanStateActuator",
+      "device": "/device/316b75c4e9304557b78aa9e2f6917015",
+      "config": {
+        "activityLogActive": true,
+        "name": "Boolean State Actuator"
+      }
+    },
+    {
+      "id": "c4627eb11d574b54bbe5ee8b9f7c3da7",
+      "type": "SwitchActuator",
+      "device": "/device/3ab75667305a4db88fa62c3944fda20a",
+      "config": {
+        "activityLogActive": true,
+        "name": "Switch"
+      }
+    },
+    {
+      "id": "13f591681f82424d8ce764b649bd8237",
+      "type": "PushButtonSensor",
+      "device": "/device/752ac2801b534645a954afe11e8019f2",
+      "config": {
+        "activityLogActive": true,
+        "name": "WSC2"
+      }
+    },
+    {
+      "id": "ca43aa961a794880aa2bc026016fd4fc",
+      "type": "ThermostatActuator",
+      "device": "/device/ad4ecca5442b41b79ab9ba49cf139507",
+      "config": {
+        "activityLogActive": true,
+        "name": "Target Temperature"
+      }
+    },
+    {
+      "id": "6a605c933cb644f79a41a072340e3573",
+      "type": "TemperatureSensor",
+      "device": "/device/ad4ecca5442b41b79ab9ba49cf139507",
+      "config": {
+        "activityLogActive": true,
+        "name": "Actual Temperature"
+      }
+    },
+    {
+      "id": "e1d3f3c13eea46a797144beb439b952f",
+      "type": "HumiditySensor",
+      "device": "/device/ad4ecca5442b41b79ab9ba49cf139507",
+      "config": {
+        "activityLogActive": true,
+        "name": "Humidity Level"
+      }
+    },
+    {
+      "id": "c9e2c74c7ecc44aab02dbad0f93b7058",
+      "type": "RoomSetpoint",
+      "device": "/device/9f1acd5a8f2a48aea35c8ce70474dde5",
+      "config": {
+        "activityLogActive": true,
+        "name": "Room Setpoint"
+      }
+    },
+    {
+      "id": "388cf77f500e4d32bf8fcf3cd4a09d0c",
+      "type": "RoomTemperature",
+      "device": "/device/9f1acd5a8f2a48aea35c8ce70474dde5",
+      "config": {
+        "activityLogActive": true,
+        "name": "Actual Temperature"
+      }
+    },
+    {
+      "id": "5e1b6f0788db463c805540a25ac5bdb1",
+      "type": "RoomHumidity",
+      "device": "/device/9f1acd5a8f2a48aea35c8ce70474dde5",
+      "config": {
+        "activityLogActive": true,
+        "name": "Humidity Level"
+      }
+    },
+    {
+      "id": "727d49378f4b49ee97b9c6f8c29124a6",
+      "type": "ThermostatActuator",
+      "device": "/device/c0d3ea250c9b45bb8d76a16736858211",
+      "config": {
+        "activityLogActive": true,
+        "name": "Target Temperature"
+      }
+    },
+    {
+      "id": "d700de0905734c4880be21e88ec200fa",
+      "type": "TemperatureSensor",
+      "device": "/device/c0d3ea250c9b45bb8d76a16736858211",
+      "config": {
+        "activityLogActive": true,
+        "name": "Actual Temperature"
+      }
+    },
+    {
+      "id": "35a1d93391fb46d4a9af2f43e9ef9be0",
+      "type": "HumiditySensor",
+      "device": "/device/c0d3ea250c9b45bb8d76a16736858211",
+      "config": {
+        "activityLogActive": true,
+        "name": "Humidity Level"
+      }
+    },
+    {
+      "id": "7016cd4da6024fcfa55862687d3070d9",
+      "type": "RoomSetpoint",
+      "device": "/device/8ed27df9f4294b04968f8f95aa859868",
+      "config": {
+        "activityLogActive": true,
+        "name": "Room Setpoint"
+      }
+    },
+    {
+      "id": "077eca39416449ab8ad2bc3c90afe50d",
+      "type": "RoomTemperature",
+      "device": "/device/8ed27df9f4294b04968f8f95aa859868",
+      "config": {
+        "activityLogActive": true,
+        "name": "Actual Temperature"
+      }
+    },
+    {
+      "id": "fbf904d144d84ca6b56ab570f73194ae",
+      "type": "RoomHumidity",
+      "device": "/device/8ed27df9f4294b04968f8f95aa859868",
+      "config": {
+        "activityLogActive": true,
+        "name": "Humidity Level"
+      }
+    },
+    {
+      "id": "05afedf563864236b8625d9fb75f6d14",
+      "type": "SwitchActuator",
+      "device": "/device/d410e082b1454eedb298b248c6eb31f8",
+      "config": {
+        "activityLogActive": true,
+        "name": "Switch"
+      }
+    },
+    {
+      "id": "0a3c2707bbcf4163b4715d104bc3d9f2",
+      "type": "ThermostatActuator",
+      "device": "/device/77ba54809d1249af94245794c0bfccd4",
+      "config": {
+        "activityLogActive": true,
+        "name": "Target Temperature"
+      }
+    },
+    {
+      "id": "f852f9a2cef24b6f9536b8db916dca83",
+      "type": "TemperatureSensor",
+      "device": "/device/77ba54809d1249af94245794c0bfccd4",
+      "config": {
+        "activityLogActive": true,
+        "name": "Actual Temperature"
+      }
+    },
+    {
+      "id": "593da80fff674ec99f0d69a6faed11b8",
+      "type": "HumiditySensor",
+      "device": "/device/77ba54809d1249af94245794c0bfccd4",
+      "config": {
+        "activityLogActive": true,
+        "name": "Humidity Level"
+      }
+    },
+    {
+      "id": "4792d8a152b64f92a7ad7457422e4fd7",
+      "type": "RoomSetpoint",
+      "device": "/device/f1f89650a282488b8ddf1c06c2d81851",
+      "config": {
+        "activityLogActive": true,
+        "name": "Room Setpoint"
+      }
+    },
+    {
+      "id": "c24b35a83a984bafba40ea344608ccb5",
+      "type": "RoomTemperature",
+      "device": "/device/f1f89650a282488b8ddf1c06c2d81851",
+      "config": {
+        "activityLogActive": true,
+        "name": "Actual Temperature"
+      }
+    },
+    {
+      "id": "19ca34ca052844129f6e01d34f8c9889",
+      "type": "RoomHumidity",
+      "device": "/device/f1f89650a282488b8ddf1c06c2d81851",
+      "config": {
+        "activityLogActive": true,
+        "name": "Humidity Level"
+      }
+    },
+    {
+      "id": "258c8562ae8d4c06aa72923510e1387b",
+      "type": "ThermostatActuator",
+      "device": "/device/dd222ef62ab443219ff439a9fc569d89",
+      "config": {
+        "activityLogActive": true,
+        "name": "Target Temperature"
+      }
+    },
+    {
+      "id": "55c5aaee140345c1ae14e99b7c627eda",
+      "type": "TemperatureSensor",
+      "device": "/device/dd222ef62ab443219ff439a9fc569d89",
+      "config": {
+        "activityLogActive": true,
+        "name": "Actual Temperature"
+      }
+    },
+    {
+      "id": "adeb18edb3ba4d53b6d3550c84bf527e",
+      "type": "HumiditySensor",
+      "device": "/device/dd222ef62ab443219ff439a9fc569d89",
+      "config": {
+        "activityLogActive": true,
+        "name": "Humidity Level"
+      }
+    },
+    {
+      "id": "111f51d57c914850b9fd0c896ed91f8d",
+      "type": "RoomSetpoint",
+      "device": "/device/a94b411309d4475eb03c407cd4b2bb52",
+      "config": {
+        "activityLogActive": true,
+        "name": "Room Setpoint"
+      }
+    },
+    {
+      "id": "5207f3f65cae45d1be69719903184669",
+      "type": "RoomTemperature",
+      "device": "/device/a94b411309d4475eb03c407cd4b2bb52",
+      "config": {
+        "activityLogActive": true,
+        "name": "Actual Temperature"
+      }
+    },
+    {
+      "id": "9262f1be8be746d9a90646d56385eaa5",
+      "type": "RoomHumidity",
+      "device": "/device/a94b411309d4475eb03c407cd4b2bb52",
+      "config": {
+        "activityLogActive": true,
+        "name": "Humidity Level"
+      }
+    },
+    {
+      "id": "4b9d22c3573c4c8bbf189c83e200d2f4",
+      "type": "SunriseSunsetSensor",
+      "device": "/device/f9d87da05728413799ce73b17ca948de",
+      "config": {
+        "activityLogActive": true,
+        "name": "SunriseSunsetSensor"
+      }
+    }
+  ],
+  "messages": [
+    {
+      "id": "21c509371e95491c9684c1d8e64fb421",
+      "type": "LogLevelChanged",
+      "class": "message",
+      "namespace": "core.RWE",
+      "timestamp": "2024-07-28T19:48:04.781511Z",
+      "read": true,
+      "devices": [],
+      "capabilities": [],
+      "properties": {
+        "deviceLocation": null,
+        "deviceName": null,
+        "deviceSerial": null,
+        "namespace": null,
+        "requesterInfo": "Administrator",
+        "shcRemoteRebootReason": null,
+        "read": null
+      }
+    },
+    {
+      "id": "6f04712dec6746839a2a5af419c83ce8",
+      "type": "LogLevelChanged",
+      "class": "message",
+      "namespace": "core.RWE",
+      "timestamp": "2024-07-28T20:40:07.091301Z",
+      "read": true,
+      "devices": [],
+      "capabilities": [],
+      "properties": {
+        "deviceLocation": null,
+        "deviceName": null,
+        "deviceSerial": null,
+        "namespace": null,
+        "requesterInfo": "Administrator",
+        "shcRemoteRebootReason": null,
+        "read": null
+      }
+    },
+    {
+      "id": "8525d4a61ece486495bc0849c185cd7a",
+      "type": "LogLevelChanged",
+      "class": "message",
+      "namespace": "core.RWE",
+      "timestamp": "2024-07-28T20:44:26.822334Z",
+      "read": true,
+      "devices": [],
+      "capabilities": [],
+      "properties": {
+        "deviceLocation": null,
+        "deviceName": null,
+        "deviceSerial": null,
+        "namespace": null,
+        "requesterInfo": "Administrator",
+        "shcRemoteRebootReason": null,
+        "read": null
+      }
+    },
+    {
+      "id": "1f958d82d3bc42f8950f8cd2b636e118",
+      "type": "LogLevelChanged",
+      "class": "message",
+      "namespace": "core.RWE",
+      "timestamp": "2024-07-28T20:56:41.377427Z",
+      "read": true,
+      "devices": [],
+      "capabilities": [],
+      "properties": {
+        "deviceLocation": null,
+        "deviceName": null,
+        "deviceSerial": null,
+        "namespace": null,
+        "requesterInfo": "Administrator",
+        "shcRemoteRebootReason": null,
+        "read": null
+      }
+    },
+    {
+      "id": "9900c6746f4e4196ba9af989841d98eb",
+      "type": "LogLevelChanged",
+      "class": "message",
+      "namespace": "core.RWE",
+      "timestamp": "2024-07-28T20:58:12.513143Z",
+      "read": true,
+      "devices": [],
+      "capabilities": [],
+      "properties": {
+        "deviceLocation": null,
+        "deviceName": null,
+        "deviceSerial": null,
+        "namespace": null,
+        "requesterInfo": "Administrator",
+        "shcRemoteRebootReason": null,
+        "read": null
+      }
+    },
+    {
+      "id": "0e6842dfcb994426bd400bb48acd37ab",
+      "type": "LogLevelChanged",
+      "class": "message",
+      "namespace": "core.RWE",
+      "timestamp": "2024-07-28T20:58:31.697346Z",
+      "read": true,
+      "devices": [],
+      "capabilities": [],
+      "properties": {
+        "deviceLocation": null,
+        "deviceName": null,
+        "deviceSerial": null,
+        "namespace": null,
+        "requesterInfo": "Administrator",
+        "shcRemoteRebootReason": null,
+        "read": null
+      }
+    }
+  ],
+  "email": {
+    "server_address": "smtp.gmail.com",
+    "server_port_number": 587,
+    "email_username": "samuelsemailtestsender@gmail.com",
+    "email_password": "pbyo nboa roca hnka",
+    "recipient_list": [
+      "samuel.name.-@hotmail.de"
+    ],
+    "notifications_device_unreachable": true,
+    "notification_device_low_battery": true
+  }
+}
