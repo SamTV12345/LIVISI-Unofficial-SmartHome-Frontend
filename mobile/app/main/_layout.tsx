@@ -41,6 +41,7 @@ export default function RootLayout() {
 
     useEffect(() => {
         if(baseURL == undefined) return
+        console.log("Fetching data", baseURL)
         fetchAPIAll(baseURL)
             .then(c=>{
                 resp(c)
@@ -66,7 +67,16 @@ export default function RootLayout() {
                             ...DrawerStyle,
                             drawerLabel: 'Geräte',
                             title: 'Geräte',
-                            drawerIcon: ()=><FontAwesome style={{color: 'white', fontSize: 25}} name="mobile-phone" />
+                            drawerIcon: ()=><FontAwesome style={{color: 'white', fontSize: 30}} name="mobile-phone" />
+                        }}
+                    />
+                    <DDrawer.Screen
+                        name="settings/index"
+                        options={{
+                            ...DrawerStyle,
+                            drawerLabel: 'Einstellungen',
+                            title: 'Einstellungen',
+                            drawerIcon: ()=><FontAwesome style={{color: 'white', fontSize: 25}} name="cog" />
                         }}
                     />
                 </Drawer>

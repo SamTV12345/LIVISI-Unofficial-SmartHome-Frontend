@@ -9,6 +9,7 @@ import {OnOffDeviceLayout} from "@/components/Heatingdevice";
 import {ThemedText} from "@/components/ThemedText";
 import {Pressable, View} from "react-native";
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import {Colors} from "@/constants/Colors";
 
 type OnOffDeviceProps = {
     device: Device,
@@ -76,17 +77,34 @@ export const SmokeDetector:FC<OnOffDeviceProps> = ({
             .then(e=>console.log(e))
     },200,[isAlarming])
 
-    return <ThemedView style={OnOffDeviceLayout.box}>
+    return <ThemedView style={[OnOffDeviceLayout.box, {
+        flexDirection: 'column',
+        backgroundColor: Colors.background
+    }]}>
+        <ThemedView style={{
+            display: 'flex',
+            flexDirection: 'row',
+            backgroundColor: Colors.background
+        }}>
         <ThemedText style={{alignSelf: 'center'}}>{device.config.name}</ThemedText>
         <View style={OnOffDeviceLayout.pusher}></View>
         <Pressable style={[OnOffDeviceLayout.button, isAlarming&&OnOffDeviceLayout.buttonActive]} onPress={()=>{
             setAlarming(!isAlarming)
         }}>
             {
-                isAlarming? <MaterialCommunityIcons name="alarm-light" size={24} color="black" />:
-                    <MaterialCommunityIcons name="alarm-light-off" size={24} color="black" />
+                isAlarming? <MaterialCommunityIcons name="alarm-light" size={24} color="red" style={{
+                    alignSelf: 'center',
+                    marginLeft: 'auto',
+                    marginRight: 'auto'
+                    }} />:
+                    <MaterialCommunityIcons style={{
+                        alignSelf: 'center',
+                        marginLeft: 'auto',
+                        marginRight: 'auto'
+                    }} name="alarm-light-off" size={24} color="white" />
             }
         </Pressable>
+        </ThemedView>
         <View>
             {
                 isSmokeDetected?

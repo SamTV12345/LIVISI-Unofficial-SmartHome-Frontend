@@ -22,6 +22,7 @@ const styles = StyleSheet.create({
         borderRadius: 200,
         alignItems: 'center',
         backgroundColor: Colors.color.green,
+        width: '100%',
     },
     buttonText: {
         padding: 7,

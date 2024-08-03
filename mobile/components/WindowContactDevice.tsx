@@ -6,6 +6,7 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 import {ThemedText} from "@/components/ThemedText";
 import {ThemedView} from "@/components/ThemedView";
 import {Colors} from "@/constants/Colors";
+import {OnOffDeviceLayout} from "@/components/Heatingdevice";
 
 type OnOffDeviceProps = {
     device: Device,
@@ -22,46 +23,23 @@ export const  WindowContactDevice:FC<OnOffDeviceProps> =  ({device,showRoom})=> 
         return false
     })
 
-    return <ThemedView style={OnOffDeviceLayout.box}>
-        <ThemedText style={{alignSelf: 'center'}}>{device.config.name}</ThemedText>
-        <View style={OnOffDeviceLayout.pusher}></View>
+    return <ThemedView style={[OnOffDeviceLayout.box, {
+         flexDirection: 'column',
+    }]}>
+        <View style={{flexDirection: 'row', gap: 30}}>
         {
             isOpen?
-                <MaterialCommunityIcons name="window-open" size={24} color="black" />:
-                <MaterialCommunityIcons name="window-closed" size={24} color="black" />
+                <MaterialCommunityIcons name="window-open" size={24} color="white" />:
+                <MaterialCommunityIcons name="window-closed" size={24} color="white" />
         }
+        <ThemedText>{device.config.name}</ThemedText>
+        </View>
         <View >
             {
                 isOpen?
-                    <Text>Geöffnet</Text>:
-                    <Text>Geschlossen</Text>
+                    <Text style={{color: 'white'}}>Geöffnet</Text>:
+                    <Text style={{color: 'white'}}>Geschlossen</Text>
             }
         </View>
     </ThemedView>
 }
-
-const OnOffDeviceLayout = StyleSheet.create({
-    box: {
-        display: 'flex',
-        flexDirection: 'row',
-        padding: 20,
-        gap: 20
-    },
-
-    pusher: {
-        flexGrow: 1
-    },
-    button: {
-        justifyContent: 'center',
-        alignContent: 'center',
-        borderColor: Colors.color.black,
-        borderWidth: 1,
-        borderRadius: 200,
-        padding: 5,
-        width: 50,
-        height: 50
-    },
-    buttonActive: {
-        backgroundColor: Colors.color.green
-    }
-})

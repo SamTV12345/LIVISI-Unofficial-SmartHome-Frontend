@@ -9,7 +9,7 @@ export const init = async () => {
     db = await SQLite.openDatabaseAsync('databaseName');
     await db.execAsync(`
 PRAGMA journal_mode = WAL;
-CREATE TABLE IF NOT EXISTS appconfig (id TEXT PRIMARY KEY NOT NULL);
+CREATE TABLE IF NOT EXISTS appconfig (id TEXT PRIMARY KEY NOT NULL, active BOOLEAN NOT NULL);
 CREATE TABLE IF NOT EXISTS serverconfig(id TEXT PRIMARY KEY NOT NULL, basicAuth BOOLEAN NOT NULL, oidcConfig TEXT, oidcConfigured BOOLEAN NOT NULL); 
 `);
 }
@@ -20,7 +20,7 @@ export const getBaseURL = async (): Promise<{ id: string | null; } | null> => {
         await init()
     }
 
-    const result:{ id: string | null; } | null = await db.getFirstSync("SELECT * FROM appconfig")
+    const result:{ id: string | null; } | null = await db.getFirstSync("SELECT * FROM appconfig WHERE active=1")
 
     if (result == null) {
         return null
@@ -34,14 +34,24 @@ export const getByBaseURL =  (baseUrl: string) => {
     return db.getFirstSync("SELECT * FROM appconfig WHERE id=?",baseUrl) as  { id: string | null; } | null
 }
 
-export const updateServerConfig = (c: ConfigData, baseURL: string)=>{
-    const res = getByBaseURL(baseURL)
-    if (res == null) {
-        db.runSync("INSERT INTO appconfig (id) VALUES (?)", baseURL)
-        db.runSync("INSERT INTO serverconfig (id, basicAuth, oidcConfig, oidcConfigured) VALUES (?,?,?,?)", baseURL,c.basicAuth, c.oidcConfig, c.oidcConfigured)
-    } else {
-        db.runSync("UPDATE serverconfig  SET basicAuth = ?, oidcConfig = ?, oidcConfigured = ? WHERE id=?",c.basicAuth, c.oidcConfig, c.oidcConfigured, baseURL)
+
+export const getAllBaseURLs =  () => {
+    return (db.getAllSync("SELECT * FROM appconfig")||[]) as string[]
+}
+
+
+export const saveBaseURL = (baseURL: string) => {
+    db.runSync("UPDATE appconfig SET active=0")
+    if(getByBaseURL(baseURL) != null) {
+        db.runSync("UPDATE appconfig SET active=1 WHERE id=?", baseURL)
     }
+
+
+    db.runSync("INSERT INTO appconfig (id, active) VALUES (?,1)", baseURL)
+}
+
+export const updateServerConfig = (c: ConfigData, baseURL: string)=>{
+    db.runSync("INSERT OR REPLACE INTO serverconfig (id, basicAuth, oidcConfig, oidcConfigured) VALUES (?,?,?,?)", baseURL, c.basicAuth, c.oidcConfig, c.oidcConfigured)
 }
 
 type ConfigDataDB = {
@@ -61,6 +71,7 @@ const convertToBoolean = (num: number)=>{
 
 export const getServerConfig = (baseUrl: string)=>{
     const res = getByBaseURL(baseUrl)
+    console.log(res)
     if (res == null) {
         throw new Error("Somehow the baseurl is not present")
     } else {
@@ -68,7 +79,10 @@ export const getServerConfig = (baseUrl: string)=>{
         let dataToReturn: ConfigData = {
 
         }
-        const data = db.getFirstSync("SELECT * FROM serverconfig WHERE id=?", baseUrl) as ConfigDataDB
+        const data = db.getFirstSync("SELECT * FROM serverconfig WHERE id=?", baseUrl) as ConfigDataDB||null
+        if (data === null) {
+            throw new Error("Somehow the baseurl is not present")
+        }
         dataToReturn.basicAuth = convertToBoolean(data.basicAuth)
         dataToReturn.oidcConfigured = convertToBoolean(data.oidcConfigured)
         dataToReturn.oidcConfig = data.oidcConfig

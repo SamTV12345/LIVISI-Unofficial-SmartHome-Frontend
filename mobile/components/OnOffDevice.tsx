@@ -58,9 +58,9 @@ export const OnOffDevice:FC<OnOffDeviceProps> = ({device, showRoom})=>{
         }
     }
 
-    return <ThemedView style={OnOffDeviceLayout.box}>
+    return <ThemedView style={ [OnOffDeviceLayout.box, {paddingTop: 10, paddingBottom: 10}]}>
         <AntDesign name="switcher" style={{alignSelf: 'center', color: 'white'}} size={30} />
-        <ThemedText style={{alignSelf: 'center'}}>{device.config.name}</ThemedText>
+        <ThemedText style={{alignSelf: 'center', flexWrap: "wrap", flexShrink: 1}}>{device.config.name}</ThemedText>
         <View style={OnOffDeviceLayout.pusher}></View>
         <Pressable style={[OnOffDeviceLayout.button, turnedOn&&OnOffDeviceLayout.buttonActive]} onPress={()=>{
             setTurnedOn(!turnedOn)

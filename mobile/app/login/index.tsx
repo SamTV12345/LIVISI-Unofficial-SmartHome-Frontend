@@ -1,60 +1,66 @@
 import {ThemedView} from "@/components/ThemedView";
 import {ThemedText} from "@/components/ThemedText";
 import {SafeAreaView} from "react-native-safe-area-context";
-import {Button, Pressable, StyleSheet, TextInput, Text} from "react-native";
-import {useState} from "react";
+import {StyleSheet, TextInput, Text} from "react-native";
 import {Colors} from "@/constants/Colors";
 import {PrimaryButton} from "@/components/PrimaryButton";
-import {ConfigData} from "@/models/ConfigData";
-import {updateServerConfig} from "@/utils/sqlite";
 import {useContentModel} from "@/store/store";
-
-
-
+import {InputField} from "@/components/InputField";
+import {fetchAPIConfig} from "@/lib/api";
+import {getBaseURL, getByBaseURL, updateServerConfig} from "@/utils/sqlite";
+import {router} from "expo-router";
 
 
 export default function LoginScreen() {
     const baseURL = useContentModel(state=>state.baseURL)
     const setBaseURL = useContentModel(state=>state.setBaseURL)
 
-    return <SafeAreaView>
+    return <SafeAreaView style={{flex: 1}}>
         <ThemedView style={styles.view}>
-        <ThemedView>
-            <ThemedText style={{
-                textAlign: 'center',
-                fontSize: 20
-            }}>
-                Login zu Livisi Smarthome Unofficial
-            </ThemedText>
+            <ThemedView style={{
+            backgroundColor: Colors.background,
+                width: '80%'
+        }}>
+            <InputField placeholder="Smarthome-URL" value={baseURL!} onChange={(e)=>{
+                setBaseURL(e)
+            }}  />
             <TextInput style={styles.input} value={baseURL} onChangeText={(e)=>{
               setBaseURL(e.toLowerCase())
             }}/>
             <PrimaryButton  title="Login" onClick={()=>{
-
+                const isBaseURLPresent = getByBaseURL(baseURL!)
+                if (isBaseURLPresent!= null) {
+                    fetchAPIConfig(baseURL!)
+                        .then(r => {
+                            updateServerConfig(r, baseURL!)
+                            useContentModel.getState().setConfig(r)
+                        })
+                }
+                setBaseURL(baseURL!)
+                router.replace('/main/home')
             }}/>
         </ThemedView>
-    </ThemedView></SafeAreaView>
+    </ThemedView>
+    </SafeAreaView>
 }
 
-const styles = StyleSheet.create({
+export const styles = StyleSheet.create({
     input: {
-        height: 40,
-        margin: 12,
         borderWidth: 1,
-        padding: 10,
-        borderRadius: 200
+        borderRadius: 200,
+        width: '60%'
     },
     button:{
-        borderRadius: 200,
+        borderRadius: 20,
         alignItems: 'center',
         backgroundColor: Colors.color.green,
         color: '#fff'
     },
-
     view: {
+        backgroundColor: Colors.background,
         justifyContent: 'center', //Centered vertically
         alignItems: 'center', //Centered horizontally
         flexDirection: 'row',
-        height: '100%'
+        flexGrow: 1
     }
 });
