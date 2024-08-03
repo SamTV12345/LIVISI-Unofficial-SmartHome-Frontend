@@ -9,7 +9,7 @@ mod ws;
 mod store;
 
 use std::{env, thread};
-use std::env::var;
+use std::env::{var};
 
 use std::io::Read;
 
@@ -48,7 +48,7 @@ use crate::api_lib::user_storage::UserStorage;
 use crate::constants::constant_types::{BASIC_AUTH, OIDC_AUTH, OIDC_AUTHORITY};
 use crate::controllers::api_config_controller::{get_api_config, login};
 use crate::models::token::Token;
-use crate::utils::connection::MemPrefill;
+use crate::utils::connection::{Args, MemPrefill};
 
 static WINNER: OnceLock<Addr<Lobby>> = OnceLock::new();
 use tungstenite::connect;
@@ -90,12 +90,12 @@ async fn main() -> std::io::Result<()> {
             .unwrap());
     }
 
-    let token = MemPrefill::get_token().await.unwrap().access_token;
+    let args = Args::parse();
 
-    init_socket(base_url.clone(), token).await;
+    init_socket(base_url.clone(), &args).await;
 
     //Initialize db at startup
-    MemPrefill::do_db_initialization().await;
+    MemPrefill::do_db_initialization(&args).await;
 
 
     // Init
@@ -117,17 +117,18 @@ async fn main() -> std::io::Result<()> {
     let email = api_lib::email::Email::new(&base_url);
 
     spawn(|| {
+        let args = Args::parse();
         log::info!("Starting scheduler");
         let mut scheduler = Scheduler::new();
         scheduler.every(1.days()).plus(10.minutes())
-            .run(|| {
+            .run(move || {
                 let rt = tokio::runtime::Builder::new_current_thread()
                     .enable_all()
                     .build().unwrap();
 
                 rt.block_on(async {
                     log::info!("Fetching data");
-                    MemPrefill::do_db_initialization().await;
+                    MemPrefill::do_db_initialization(&args).await;
                 });
             });
 
@@ -176,7 +177,7 @@ async fn main() -> std::io::Result<()> {
         .await
 }
 
-pub fn get_secured_scope() -> Scope<impl ServiceFactory<ServiceRequest, Config=(), Response=ServiceResponse<EitherBody<EitherBody<EitherBody<EitherBody<EitherBody<BoxBody>>>, EitherBody<EitherBody<BoxBody>>>>>, Error=actix_web::Error, InitError=()>> {
+pub fn get_secured_scope() -> Scope<impl ServiceFactory<ServiceRequest, Config=(), Response=ServiceResponse<EitherBody<EitherBody<EitherBody<EitherBody<BoxBody>>>, EitherBody<EitherBody<BoxBody>>>>, Error=actix_web::Error, InitError=()>> {
     let middleware = auth_middleware::AuthFilter::new();
     let biscuit_validator = OidcBiscuitValidator {
         options: ValidationOptions {
@@ -187,7 +188,6 @@ pub fn get_secured_scope() -> Scope<impl ServiceFactory<ServiceRequest, Config=(
     Scope::new("")
         .wrap(Condition::new(var(OIDC_AUTH).is_ok(), biscuit_validator))
         .wrap(Condition::new(var(BASIC_AUTH).is_ok(), middleware))
-        .wrap(token_middleware::AuthFilter::new())
         .service(get_email_routes())
         .service(get_capability_routes())
         .service(get_status)
@@ -246,6 +246,7 @@ pub fn get_ui_config() -> Scope {
 
 use std::thread::spawn;
 use actix::{Actor, Addr};
+use clap::Parser;
 use kv::Config;
 use crate::controllers::all_api::get_all_api;
 use crate::controllers::data_controller::get_capability_routes;
@@ -261,38 +262,46 @@ use crate::utils::logging::init_logging;
 use crate::ws::broadcast_message::BroadcastMessage;
 use crate::ws::web_socket_message::Lobby;
 
-pub async fn init_socket(base_url: String, token: String) {
-    let token_encoded = urlencoding::encode(token.as_str()).into_owned();
-    spawn(move || {
-        let mut url = Url::parse(&(base_url.replace("http://", "ws://") + "/events?token=" + &token_encoded)).unwrap();
-        url.set_port(Some(9090)).unwrap();
-        let (mut socket, _response) = connect(url).expect("Can't connect");
-        let mut retries = 0;
+pub async fn init_socket(base_url: String, x: &Args) {
 
-        while retries < 5 {
-            while let Ok(msg) = socket.read() {
-                let mut parsed_message = serde_json::from_str::<SocketEvent>(&msg.to_string()).unwrap();
-                let store_data = STORE_DATA.get().unwrap();
-                let mut data = store_data.data.lock().unwrap();
-                println!("Data: {:?}", parsed_message);
-                data.handle_socket_event(&mut parsed_message);
-                if let Some(Value(props)) = &parsed_message.properties {
-                    log::error!("Unknown properties!! {}", props);
+    if x.file.is_some() {
+        return
+    }
+
+    let token = MemPrefill::get_token().await;
+    if let Ok(token) = token {
+        let token_encoded = urlencoding::encode(token.access_token.as_str()).into_owned();
+        spawn(move || {
+            let mut url = Url::parse(&(base_url.replace("http://", "ws://") + "/events?token=" + &token_encoded)).unwrap();
+            url.set_port(Some(9090)).unwrap();
+            let (mut socket, _response) = connect(url).expect("Can't connect");
+            let mut retries = 0;
+
+            while retries < 5 {
+                while let Ok(msg) = socket.read() {
+                    let mut parsed_message = serde_json::from_str::<SocketEvent>(&msg.to_string()).unwrap();
+                    let store_data = STORE_DATA.get().unwrap();
+                    let mut data = store_data.data.lock().unwrap();
+                    println!("Data: {:?}", parsed_message);
+                    data.handle_socket_event(&mut parsed_message);
+                    if let Some(Value(props)) = &parsed_message.properties {
+                        log::error!("Unknown properties!! {}", props);
+                    }
+
+                    if let Some(SocketData::Value(data)) = &parsed_message.data {
+                        log::error!("Unknown data!! {}", data);
+                    }
+
+
+                    let lobby = WINNER.get().unwrap();
+                    lobby.do_send(BroadcastMessage {
+                        message: parsed_message
+                    });
                 }
-
-                if let Some(SocketData::Value(data)) = &parsed_message.data {
-                    log::error!("Unknown data!! {}", data);
-                }
-
-
-                let lobby = WINNER.get().unwrap();
-                lobby.do_send(BroadcastMessage {
-                    message: parsed_message
-                });
+                retries += 1;
+                thread::sleep(Duration::from_secs(5));
             }
-            retries += 1;
-            thread::sleep(Duration::from_secs(5));
-        }
-        log::info!("Socket connection failed");
-    });
+            log::info!("Socket connection failed");
+        });
+    }
 }

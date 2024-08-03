@@ -1,5 +1,6 @@
 use std::env::var;
 use std::fs;
+use std::process::exit;
 use std::sync::Mutex;
 use crate::models::token::{Token, TokenRequest};
 use crate::utils::header_utils::HeaderUtils;
@@ -25,10 +26,10 @@ use clap::Parser;
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
-struct Args {
+pub struct Args {
     /// Name of the person to greet
     #[arg(short, long)]
-    file: Option<String>,
+    pub file: Option<String>,
 }
 
 impl MemPrefill {
@@ -45,7 +46,15 @@ impl MemPrefill {
         let response = result;
         match response {
             Ok(e)=>{
-                return  Ok(e.json::<Token>().await.unwrap());
+                match e.json::<Token>().await {
+                    Ok(e) => {
+                        return Ok(e)
+                    }
+                    Err(e) => {
+                        log::error!("{}" ,e);
+                        exit(1)
+                    }
+                }
             }
             Err(e)=>{
                 log::error!("Error: {}", e);
@@ -55,48 +64,15 @@ impl MemPrefill {
     }
 
 
-    pub async fn do_db_initialization(){
-        let args = Args::parse();
-
-
+    pub async fn do_db_initialization(args: &Args){
         log::info!("Doing db initialization");
 
-        let token = Self::get_token().await.unwrap();
         let base_url = var(SERVER_URL).unwrap();
 
-        match STORE_DATA.get() {
-            Some(e) => {
-                let mut store = e.token.lock();
-                let st = store.as_mut().unwrap();
-                st.clone_from(&token.clone());
-            }
-            None => {
-                let e = STORE_DATA.set(Store::new(token.clone()));
-                if e.is_err(){
-                    log::error!("Error setting store data");
-                }
-            }
-        }
 
-
-        match CLIENT_DATA.get() {
-            Some(e) => {
-                let data = ClientData::new(token.clone().access_token);
-                let mut res = e.lock().unwrap();
-                res.client.clone_from(&data.client);
-                res.token.clone_from(&data.token);
-            }
-            None => {
-                let e = CLIENT_DATA.set(Mutex::new(ClientData::new(token.clone().access_token)));
-                if e.is_err(){
-                    log::error!("Error setting client data");
-                }
-            }
-        }
-
-
-        match args.file {
-            Some(e) => {
+        match args.file.clone() {
+            Some(e)=>{
+                let _ = STORE_DATA.set(Store::new(Token::default()));
                 log::info!("Reading from file: {}", e);
                 match fs::read_to_string(e) {
                     Ok(e) => {
@@ -117,43 +93,76 @@ impl MemPrefill {
                     }
                 }
             }
-            None => {
-                let message = message::Message::new(&base_url);
+            None=>{
+                let token = Self::get_token().await;
 
-                let devices = Device::new(&base_url);
-                let capabilities = Capability::new(&base_url);
-                let locations = Location::new(&base_url);
-                let status = Status::new(&base_url);
-                let user_storage = UserStorage::new(&base_url);
-                let email = Email::new(&base_url);
+                if let Ok(t) = token {
+                    match STORE_DATA.get() {
+                        Some(e) => {
+                            let mut store = e.token.lock();
+                            let st = store.as_mut().unwrap();
+                            st.clone_from(&t.clone());
+                        }
+                        None => {
+                            let e = STORE_DATA.set(Store::new(t.clone()));
+                            if e.is_err(){
+                                log::error!("Error setting store data");
+                            }
+                        }
+                    }
 
-                let mut store_tmp = STORE_DATA.get();
-                let store = store_tmp.as_mut().unwrap();
 
-                let found_devices = devices.get_devices().await;
-                lock_and_call!(store, set_devices, found_devices);
+                    match CLIENT_DATA.get() {
+                        Some(e) => {
+                            let data = ClientData::new(t.clone().access_token);
+                            let mut res = e.lock().unwrap();
+                            res.client.clone_from(&data.client);
+                            res.token.clone_from(&data.token);
+                        }
+                        None => {
+                            let e = CLIENT_DATA.set(Mutex::new(ClientData::new(t.clone().access_token)));
+                            if e.is_err(){
+                                log::error!("Error setting client data");
+                            }
+                        }
+                    }
+                    let message = message::Message::new(&base_url);
 
-                let capabilities_found = capabilities.get_capabilities()
-                    .await;
-                lock_and_call!(store, set_capabilities, capabilities_found);
+                    let devices = Device::new(&base_url);
+                    let capabilities = Capability::new(&base_url);
+                    let locations = Location::new(&base_url);
+                    let status = Status::new(&base_url);
+                    let user_storage = UserStorage::new(&base_url);
+                    let email = Email::new(&base_url);
 
-                let locations = locations.get_locations().await;
-                lock_and_call!(store, set_locations, locations);
-                let cap_state  = capabilities.get_all_capability_states().await;
-                lock_and_call!(store, set_capabilities_state, cap_state);
+                    let mut store_tmp = STORE_DATA.get();
+                    let store = store_tmp.as_mut().unwrap();
 
-                let user_storage_data = user_storage.get_user_storage()
-                    .await;
-                let status = status.get_status().await;
-                lock_and_call!(store, set_status, status);
-                lock_and_call!(store, set_user_storage, user_storage_data);
+                    let found_devices = devices.get_devices().await;
+                    lock_and_call!(store, set_devices, found_devices);
 
-                let message_data = message.get_messages().await;
-                lock_and_call!(store, set_messages, message_data);
+                    let capabilities_found = capabilities.get_capabilities()
+                        .await;
+                    lock_and_call!(store, set_capabilities, capabilities_found);
 
-                let email_data = email.get_email_settings().await;
+                    let locations = locations.get_locations().await;
+                    lock_and_call!(store, set_locations, locations);
+                    let cap_state  = capabilities.get_all_capability_states().await;
+                    lock_and_call!(store, set_capabilities_state, cap_state);
 
-                lock_and_call!(store, set_email, email_data);
+                    let user_storage_data = user_storage.get_user_storage()
+                        .await;
+                    let status = status.get_status().await;
+                    lock_and_call!(store, set_status, status);
+                    lock_and_call!(store, set_user_storage, user_storage_data);
+
+                    let message_data = message.get_messages().await;
+                    lock_and_call!(store, set_messages, message_data);
+
+                    let email_data = email.get_email_settings().await;
+
+                    lock_and_call!(store, set_email, email_data);
+                }
             }
         }
     }

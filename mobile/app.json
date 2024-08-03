@@ -1,0 +1,53 @@
+{
+  "expo": {
+    "name": "livisi-unofficial-app",
+    "slug": "samtv1998livisi-unofficial-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "myapp",
+    "sdkVersion": "51.0.0",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff",
+      "imageSize": {
+        "width": 200,
+        "height": 200
+      },
+      "title": "Livisi Unofficial App"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.samtv1998.livisiunofficialapp"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-localization"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "8b958b57-8252-48db-aa51-fcfdc7ebf3c3"
+      }
+    },
+    "owner": "samtv1998"
+  }
+}
