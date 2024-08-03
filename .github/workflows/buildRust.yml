@@ -39,7 +39,8 @@ jobs:
         working-directory: api
         run: |
           mkdir -p dist
-          cp target/${{ matrix.target }}/release/api* dist/
+          ls -lisa target/${{ matrix.target }}/release
+          mv target/${{ matrix.target }}/release/api* dist/
           mkdir dist/static
           cp -r static/* dist/static/
           cd dist
