@@ -7,6 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      ANDROID_APPLICATION_ID: "com.samtv12345.smarthome"
     steps:
       - uses: actions/checkout@v2
       - name: Install Expo CLI
