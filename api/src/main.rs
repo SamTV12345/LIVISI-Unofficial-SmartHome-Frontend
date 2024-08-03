@@ -81,7 +81,7 @@ async fn main() -> std::io::Result<()> {
     let store_images = store.bucket::<String, String>(Some("images")).unwrap();
 
     init_logging();
-    let base_url = var("BASE_URL").unwrap();
+    let base_url = var("BASE_URL").expect("BASE_URL must be set");
 
     WINNER.get_or_init(|| Lobby::default().start());
     let mut oidc_opt: Option<Oidc> = None;
