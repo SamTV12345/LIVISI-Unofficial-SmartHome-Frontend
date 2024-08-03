@@ -4,9 +4,17 @@ import {SafeAreaView} from "react-native-safe-area-context";
 import {ListItem} from "@/components/ListItem";
 import {Colors} from "@/constants/Colors";
 import {PrimaryButton} from "@/components/PrimaryButton";
+import {setAllInactive} from "@/utils/sqlite";
+import {router} from "expo-router";
 
 export default function SettingsPage() {
     const allthings = useContentModel(state=>state.allThings)
+
+
+    const logout = ()=>{
+        setAllInactive()
+        router.replace('/login')
+    }
 
     return <SafeAreaView style={{backgroundColor: Colors.background}}>
         <ScrollView overScrollMode="never">
@@ -23,9 +31,7 @@ export default function SettingsPage() {
             <PrimaryButton title="USB-Stick auswerfen" onClick={function (): void {
                 throw new Error("Function not implemented.");
             }}/>
-            <PrimaryButton title="Abmelden" onClick={function (): void {
-                throw new Error("Function not implemented.");
-            }}/>
+            <PrimaryButton title="Abmelden" onClick={logout}/>
         </View>
         </ScrollView>
     </SafeAreaView>

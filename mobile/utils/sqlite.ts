@@ -3,7 +3,10 @@ import {ConfigData} from "@/models/ConfigData";
 
 export let db: SQLite.SQLiteDatabase
 
-
+export type AppconfigData = {
+    id: string
+    active: number
+}
 
 export const init = async () => {
     db = await SQLite.openDatabaseAsync('databaseName');
@@ -36,7 +39,7 @@ export const getByBaseURL =  (baseUrl: string) => {
 
 
 export const getAllBaseURLs =  () => {
-    return (db.getAllSync("SELECT * FROM appconfig")||[]) as string[]
+    return (db.getAllSync("SELECT * FROM appconfig")||[]) as AppconfigData[]
 }
 
 
@@ -48,6 +51,22 @@ export const saveBaseURL = (baseURL: string) => {
 
 
     db.runSync("INSERT INTO appconfig (id, active) VALUES (?,1)", baseURL)
+}
+
+
+
+export const setAllInactive = ()=>{
+    db.runSync("UPDATE appconfig SET active=0")
+}
+
+
+export const setActive = (baseURL: string)=>{
+    setAllInactive()
+    db.runSync("UPDATE appconfig SET active=1 WHERE id=?", baseURL)
+}
+
+export const deleteBaseURL = (baseURL: string)=>{
+    db.runSync("DELETE FROM appconfig WHERE id=?", baseURL)
 }
 
 export const updateServerConfig = (c: ConfigData, baseURL: string)=>{

@@ -23,7 +23,7 @@ export default function Login() {
                 title: 'Smarthome auswählen',
                 headerTitleAlign: 'center',
                 headerLeft: ()=><AntDesign onPress={()=>{
-
+                    router.replace("/login")
                 }} color="white" size={20} name="arrowleft"/>,
                 headerRight: ()=><AntDesign onPress={()=>{
                     router.replace("/login/SmarthomeDetailAdd")
