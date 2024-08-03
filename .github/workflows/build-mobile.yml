@@ -1,0 +1,19 @@
+on:
+  push:
+
+
+jobs:
+  build-expo:
+    runs-on: ubuntu-latest
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Expo CLI
+        run: npm install -g eas-cli
+      - name: Install dependencies
+        working-directory: mobile
+        run: npm install
+      - name: Build
+        working-directory: mobile
+        run: eas build --platform android --local
