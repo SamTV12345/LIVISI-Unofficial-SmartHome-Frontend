@@ -20,6 +20,7 @@ jobs:
           pnpm install
           pnpm run build:copy
       - name: Compile
+        working-directory: api
         run: |
             sudo apt-get update
             sudo apt-get install -y gcc-multilib
