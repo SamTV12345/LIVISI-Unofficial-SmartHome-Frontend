@@ -7,17 +7,9 @@ on:
         - main
 
 jobs:
-  release:
-    name: release ${{ matrix.target }}
+  release-windows:
+    name: release x86_64-pc-windows-gnu
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - target: x86_64-pc-windows-gnu
-            archive: zip
-          - target: x86_64-unknown-linux-musl
-            archive: tar.gz tar.xz tar.zst
     steps:
       - name: Checkout
         uses: actions/checkout@master
@@ -27,34 +19,23 @@ jobs:
           npm install -g pnpm@latest
           pnpm install
           pnpm run build:copy
-      - name: Compile and release
-        uses: rust-build/rust-build.action@v1.4.5
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          SRC_DIR: api
-          RUSTTARGET: ${{ matrix.target }}
-          UPLOAD_MODE: none
+      - name: Compile
+        run: |
+            sudo apt-get update
+            sudo apt-get install -y gcc-multilib
+            rustup target add x86_64-pc-windows-gnu
+            cargo build --release --target x86_64-pc-windows-gnu
       - name: Archive
         working-directory: api
         run: |
           mkdir -p dist
-          ls -lisa target/${{ matrix.target }}/release
-          mv target/${{ matrix.target }}/release/api* dist/
+          ls -lisa target/x86_64-pc-windows-gnu/release
+          mv target/x86_64-pc-windows-gnu/release/api* dist/
           mkdir dist/static
           cp -r static/* dist/static/
           cd dist
-          cd ..
-          for ext in ${{ matrix.archive }}; do
-            case $ext in
-              zip) zip -r app-${{ matrix.target }}.zip dist ;;
-              tar.gz) tar -czf app-${{ matrix.target }}.tar.gz dist ;;
-              tar.xz) tar -cJf app-${{ matrix.target }}.tar.xz dist ;;
-              tar.zst) tar -c --zstd -f app-${{ matrix.target }}.tar.zst dist ;;
-            esac
-          done
+          zip -r app-x86_64-pc-windows-gnu.zip .
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
-              name: app-${{ matrix.target }}
-              path: api/dist
+              name: app-x86_64-pc-windows-gnu
