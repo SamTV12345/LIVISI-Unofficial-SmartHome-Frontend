@@ -23,3 +23,11 @@ jobs:
       - name: Build
         working-directory: mobile
         run: eas build --platform android --local
+      - name: Rename artifact
+        working-directory: mobile
+        run: mv *.aab app-release.aab
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          path: mobile/app-release.aab
+          name: android-aab
