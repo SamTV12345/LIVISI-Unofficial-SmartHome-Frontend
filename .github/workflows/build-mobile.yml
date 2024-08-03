@@ -22,7 +22,7 @@ jobs:
         run: npm install
       - name: Build
         working-directory: mobile
-        run: eas build --platform android --local
+        run: eas build --profile production --platform android --local
       - name: Rename artifact
         working-directory: mobile
         run: mv *.aab app-release.aab
