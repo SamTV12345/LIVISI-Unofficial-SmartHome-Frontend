@@ -9,6 +9,11 @@ jobs:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       ANDROID_APPLICATION_ID: "com.samtv12345.smarthome"
     steps:
+      - name: install-jdk17
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: '17'
       - uses: actions/checkout@v2
       - name: Install Expo CLI
         run: npm install -g eas-cli
