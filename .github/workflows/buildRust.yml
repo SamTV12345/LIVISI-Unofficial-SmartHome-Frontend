@@ -34,10 +34,10 @@ jobs:
           mv target/x86_64-pc-windows-gnu/release/api* dist/
           mkdir dist/static
           cp -r static/* dist/static/
+          cp -r ../run.bat dist/
           cd dist
-          zip -r app-x86_64-pc-windows-gnu.zip .
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-           path: api/dist/app-x86_64-pc-windows-gnu.zip
+           path: api/dist
            name: app-x86_64-pc-windows-gnu

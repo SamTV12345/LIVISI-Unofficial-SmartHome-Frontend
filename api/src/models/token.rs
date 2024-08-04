@@ -29,8 +29,8 @@ impl Default for TokenRequest {
     fn default() -> Self {
         Self {
             grant_type: "password".to_string(),
-            password: std::env::var(PASSWORD).expect("Password for Livisi API is not set"),
-            username: std::env::var(USERNAME).unwrap_or("admin".to_string())
+            password: std::env::var(PASSWORD).expect("Password for Livisi API is not set").trim().to_string(),
+            username: std::env::var(USERNAME).unwrap_or("admin".to_string()).trim().to_string()
         }
     }
 }
