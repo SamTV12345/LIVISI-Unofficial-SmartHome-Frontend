@@ -11,6 +11,7 @@ import {useContentModel} from "@/store/store";
 import {Colors} from "@/constants/Colors";
 import {FontAwesome, FontAwesome6} from "@expo/vector-icons";
 import {DrawerNavigationOptions} from "@react-navigation/drawer";
+import {StatusBar} from "expo-status-bar";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -18,7 +19,7 @@ SplashScreen.preventAutoHideAsync();
 
 const DrawerStyle = {
     drawerStyle: {
-        backgroundColor: Colors.background,
+        backgroundColor: Colors.color.black,
     },
     drawerLabelStyle: {
         color: 'white'
@@ -52,7 +53,7 @@ export default function RootLayout() {
     }, [baseURL]);
 
     return (
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <ThemeProvider value={DarkTheme}>
             <GestureHandlerRootView style={{ flex: 1 }} >
                 <Drawer>
                     <DDrawer.Screen

@@ -77,11 +77,11 @@ export const SmokeDetector:FC<OnOffDeviceProps> = ({
             .then(e=>console.log(e))
     },200,[isAlarming])
 
-    return <ThemedView style={[OnOffDeviceLayout.box, {
+    return <View style={[OnOffDeviceLayout.box, {
         flexDirection: 'column',
         backgroundColor: Colors.background
     }]}>
-        <ThemedView style={{
+        <View style={{
             display: 'flex',
             flexDirection: 'row',
             backgroundColor: Colors.background
@@ -104,7 +104,7 @@ export const SmokeDetector:FC<OnOffDeviceProps> = ({
                     }} name="alarm-light-off" size={24} color="white" />
             }
         </Pressable>
-        </ThemedView>
+        </View>
         <View>
             {
                 isSmokeDetected?
@@ -112,5 +112,5 @@ export const SmokeDetector:FC<OnOffDeviceProps> = ({
                     <ThemedText>Kein Rauch erkannt</ThemedText>
             }
         </View>
-    </ThemedView>
+    </View>
 }

@@ -6,6 +6,8 @@ import {ThemedText} from "@/components/ThemedText";
 import AntDesign from '@expo/vector-icons/AntDesign';
 import {GestureHandlerRootView, Swipeable} from "react-native-gesture-handler";
 import AnimatedInterpolation = Animated.AnimatedInterpolation;
+import {useContentModel} from "@/store/store";
+import {router} from "expo-router";
 
 export default function SmartHomeSelection() {
     const [baseURLs, setBaseURLs] = useState<AppconfigData[]>(() => {
@@ -59,6 +61,8 @@ export default function SmartHomeSelection() {
                         <Pressable onPress={()=>{
                             setActive(item.id)
                             setBaseURLs(getAllBaseURLs())
+                            useContentModel.getState().setBaseURL(item.id)
+                            router.replace('/login')
                         }} style={{width: '100%', flexDirection: 'row'}}>
                             <ThemedText style={{width: '10%'}}>{item.active == 1 &&
                                 <AntDesign name="check" size={24} color="#0385FF"/>}</ThemedText>

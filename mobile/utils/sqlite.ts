@@ -47,10 +47,10 @@ export const saveBaseURL = (baseURL: string) => {
     db.runSync("UPDATE appconfig SET active=0")
     if(getByBaseURL(baseURL) != null) {
         db.runSync("UPDATE appconfig SET active=1 WHERE id=?", baseURL)
+    } else {
+        db.runSync("INSERT INTO appconfig (id, active) VALUES (?,1)", baseURL)
+
     }
-
-
-    db.runSync("INSERT INTO appconfig (id, active) VALUES (?,1)", baseURL)
 }
 
 

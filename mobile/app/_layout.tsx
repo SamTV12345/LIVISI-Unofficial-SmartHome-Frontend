@@ -4,7 +4,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import {useEffect, useState} from 'react';
 import 'react-native-reanimated';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import {View} from "react-native";
+import { StatusBar } from 'expo-status-bar';
 import {getBaseURL, getServerConfig, updateServerConfig} from "@/utils/sqlite";
 import {Redirect, Slot, Stack, useNavigationContainerRef, useRootNavigationState, useRouter} from 'expo-router';
 import {SafeAreaView} from "react-native-safe-area-context";
@@ -54,7 +54,8 @@ export default function RootLayout() {
                     }
                     useContentModel.getState().setConfig(r)
                 }).catch((reason) => {
-                console.log(reason)
+                SplashScreen.hideAsync();
+                return router.replace('/login');
             })
       }
     })

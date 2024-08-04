@@ -8,6 +8,7 @@ import {useState} from "react";
 import {isValidHttpUrl} from "@/utils/url";
 import {fetchAPIConfig} from "@/lib/api";
 import {saveBaseURL} from "@/utils/sqlite";
+import {Href, router} from "expo-router";
 
 export default function SmarthomeDetailAdd() {
     const [baseURL, setBaseURL] = useState<string>('')
@@ -39,6 +40,7 @@ export default function SmarthomeDetailAdd() {
                     .then((_)=>{
                         console.log("Saving data")
                         saveBaseURL(newBase)
+                        return router.replace("/login/smarthomeSelection" as Href)
                     }).catch((reason)=>{
                         if (reason instanceof TypeError) {
                             setError('Server nicht erreichbar')

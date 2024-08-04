@@ -1,10 +1,12 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import {Image, StyleSheet, Platform, View} from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import {StatusBar} from "expo-status-bar";
 
 export default function HomeScreen() {
   return (
-      <ThemedView style={styles.stepContainer}>
+      <View style={styles.stepContainer}>
+        <StatusBar style="dark" />
         <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
         <ThemedText>
           When you're ready, run{' '}
@@ -13,7 +15,7 @@ export default function HomeScreen() {
           <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
           <ThemedText type="defaultSemiBold">app-example</ThemedText>.
         </ThemedText>
-      </ThemedView>
+      </View>
   );
 }
 

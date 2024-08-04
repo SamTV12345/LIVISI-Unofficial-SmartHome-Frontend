@@ -9,6 +9,7 @@ import { List } from 'react-native-paper';
 import i18n from "@/i18n/i18n";
 import {DeviceDecider} from "@/components/DeviceDecider";
 import {Colors} from "@/constants/Colors";
+import {StatusBar} from "expo-status-bar";
 
 export default function HomeScreen() {
     const allthings = useContentModel(state=>state.allThings)
@@ -36,6 +37,7 @@ export default function HomeScreen() {
 
     return (
         <View style={styles.stepContainer}>
+            <StatusBar style="auto" />
             <ScrollView style={{backgroundColor: 'black'}} overScrollMode="never" indicatorStyle="white" contentContainerStyle={
                 {
                     backgroundColor: 'black'
