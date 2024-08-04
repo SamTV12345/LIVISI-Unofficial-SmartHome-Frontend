@@ -34,6 +34,7 @@ jobs:
           mv target/x86_64-pc-windows-gnu/release/api* dist/
           mkdir dist/static
           cp -r static/* dist/static/
+          cp -r ../run.bat dist/
           cd dist
           zip -r app-x86_64-pc-windows-gnu.zip .
       - name: Upload
