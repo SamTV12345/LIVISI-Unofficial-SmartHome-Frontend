@@ -1,9 +1,12 @@
 @echo off
 
-REM Reminder: If your password contains a percentage sign, escape it with another percentage sign
 
 set BASE_URL=<your-base-url-to-livisi-shc>
+REM Reminder: If your password contains a percentage sign, escape it with another percentage sign
 set PASSWORD=<your-password>
+
+REM Important otherwise windows username will be taken
+set USERNAME=<your-username>
 
 
 REM set BASIC_USERNAME=login-username
