@@ -1,4 +1,4 @@
-import {router, Stack} from "expo-router";
+import {Href, router, Stack} from "expo-router";
 import {FontAwesome} from "@expo/vector-icons";
 import AntDesign from '@expo/vector-icons/AntDesign';
 
@@ -16,7 +16,7 @@ export default function Login() {
             <Stack.Screen name="index" options={{
                 title: 'Livisi Smarthome',
                 headerRight: ()=><FontAwesome onPress={()=>{
-                    router.replace("/login/smarthomeSelection")
+                    router.replace("/login/smarthomeSelection" as  Href<string | object>)
                 }} color="white" size={20} name="cog"/>,
             }} />
             <Stack.Screen name="smarthomeSelection" options={{
@@ -26,14 +26,14 @@ export default function Login() {
                     router.replace("/login")
                 }} color="white" size={20} name="arrowleft"/>,
                 headerRight: ()=><AntDesign onPress={()=>{
-                    router.replace("/login/SmarthomeDetailAdd")
+                    router.replace("/login/SmarthomeDetailAdd"  as  Href<string | object>)
                 }} color="white" size={20} name="plus"/>,
             }} />
             <Stack.Screen name="SmarthomeDetailAdd" options={{
                 title: 'Smarthome hinzufügen',
                 headerTitleAlign: 'center',
                 headerLeft: ()=><AntDesign onPress={()=>{
-                    router.replace("/login/smarthomeSelection")
+                    router.replace("/login/smarthomeSelection"  as  Href<string | object>)
                 }} color="white" size={20} name="arrowleft"/>,
             }} />
         </Stack>

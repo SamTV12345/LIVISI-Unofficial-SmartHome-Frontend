@@ -1,4 +1,4 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import {DarkTheme, DefaultTheme, ParamListBase, RouteProp, ThemeProvider} from '@react-navigation/native';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
@@ -10,6 +10,7 @@ import {fetchAPIAll} from "@/lib/api";
 import {useContentModel} from "@/store/store";
 import {Colors} from "@/constants/Colors";
 import {FontAwesome, FontAwesome6} from "@expo/vector-icons";
+import {DrawerNavigationOptions} from "@react-navigation/drawer";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -22,6 +23,7 @@ const DrawerStyle = {
     drawerLabelStyle: {
         color: 'white'
     },
+    headerTitleAlign: 'center',
     headerStyle: {
         backgroundColor: Colors.background,
         borderBottomWidth: 3,
@@ -29,10 +31,11 @@ const DrawerStyle = {
     },
     headerTintColor: 'white',
     headerTitleStyle: {
-        color: 'white'
+        color: 'white',
+
     },
     drawerActiveTintColor: 'white',
-}
+}  satisfies DrawerNavigationOptions
 
 export default function RootLayout() {
     const colorScheme = useColorScheme();
@@ -56,7 +59,6 @@ export default function RootLayout() {
                         name="home/index"
                         options={{
                             ...DrawerStyle,
-
                             title: 'Home',
                             drawerIcon: ()=><FontAwesome style={{color: 'white', fontSize: 20}} name="home" />
                         }}
