@@ -6,6 +6,8 @@ import {Colors} from "@/constants/Colors";
 import {PrimaryButton} from "@/components/PrimaryButton";
 import {setAllInactive} from "@/utils/sqlite";
 import {router} from "expo-router";
+import {ListItemIsland} from "@/components/ListItemIsland";
+import {ListSeparator} from "@/components/ListSeparator";
 
 export default function SettingsPage() {
     const allthings = useContentModel(state=>state.allThings)
@@ -16,23 +18,42 @@ export default function SettingsPage() {
         router.replace('/login')
     }
 
-    return <SafeAreaView style={{backgroundColor: Colors.background}}>
-        <ScrollView overScrollMode="never">
-        <ListItem title="Gerätetreiber"/>
-        <ListItem title="Gerätestandorte"/>
-        <ListItem title="Lokales Zuhause"/>
-        <ListItem title="Zentrale"/>
-        <ListItem title="Softwareinformationen"/>
-        <ListItem title="Geräteaktivitäten"/>
-        <ListItem title="Impressum"/>
-        <ListItem title="Netzwerk verwalten"/>
-        <ListItem title="E-Mail"/>
-        <View style={{display: 'flex', gap: 20, paddingLeft: 20, paddingRight: 20, paddingTop: 20, paddingBottom: 20}}>
-            <PrimaryButton title="USB-Stick auswerfen" onClick={function (): void {
-                throw new Error("Function not implemented.");
-            }}/>
-            <PrimaryButton title="Abmelden" onClick={logout}/>
-        </View>
+    return <SafeAreaView style={{backgroundColor: Colors.background, minHeight: '100%'}}>
+        <ScrollView overScrollMode="never" style={{}}>
+            <View style={{display: 'flex', gap: 20, flexDirection: 'column'}}>
+                <ListItemIsland>
+                    <ListItem title="Gerätetreiber"/>
+                    <ListSeparator/>
+                    <ListItem title="Gerätestandorte"/>
+                </ListItemIsland>
+
+
+                <ListItemIsland>
+                    <ListItem title="Lokales Zuhause"/>
+                    <ListSeparator/>
+                    <ListItem title="Zentrale"/>
+                    <ListSeparator/>
+                    <ListItem title="Softwareinformationen"/>
+                </ListItemIsland>
+
+                <ListItemIsland>
+                    <ListItem title="Geräteaktivitäten"/>
+                    <ListSeparator/>
+                    <ListItem title="Impressum"/>
+                    <ListSeparator/>
+                    <ListItem title="Netzwerk verwalten"/>
+                    <ListSeparator/>
+                    <ListItem title="E-Mail"/>
+                </ListItemIsland>
+
+                <ListItemIsland>
+                    <ListItem title="USB-Stick auswerfen" type="action" onClick={function (): void {
+                        throw new Error("Function not implemented.");
+                    }}  />
+                    <ListItem  title="Abmelden" onClick={logout} type="action"/>
+                </ListItemIsland>
+
+            </View>
         </ScrollView>
     </SafeAreaView>
 }
