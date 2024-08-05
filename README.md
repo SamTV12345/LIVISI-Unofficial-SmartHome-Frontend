@@ -39,7 +39,8 @@ The username is currently hardcoded in every LIVISI product admin. The password 
 4. Enter the base url e.g. `http://192.168.1.20:8080`
 5. Enter the username, normally `admin`
 6. Enter your livisi shc password
-7. Visit the ip address of your computer on port 8000. You will be redirected to /ui.
+7. Run the script with `.\run.bat`
+8. Visit the ip address of your computer on port 8000. You will be redirected to /ui.
 
 # UI
 
