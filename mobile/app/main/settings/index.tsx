@@ -21,16 +21,15 @@ export default function SettingsPage() {
 
     return <SafeAreaView style={{backgroundColor: Colors.background, minHeight: '100%'}}>
         <StatusBar style="light" />
-        <ScrollView overScrollMode="never" style={{}}>
-            <View style={{display: 'flex', gap: 20, flexDirection: 'column', marginTop: 20}}>
-                <ListItemIsland>
+        <ScrollView overScrollMode="auto" style={{marginTop: 20, display: 'flex', gap: 20, flexDirection: 'column'}}>
+                <ListItemIsland style={{marginBottom: 20}}>
                     <ListItem title="Gerätetreiber"/>
                     <ListSeparator/>
                     <ListItem title="Gerätestandorte"/>
                 </ListItemIsland>
 
 
-                <ListItemIsland>
+                <ListItemIsland style={{marginBottom: 20}}>
                     <ListItem title="Lokales Zuhause"/>
                     <ListSeparator/>
                     <ListItem title="Zentrale"/>
@@ -38,7 +37,7 @@ export default function SettingsPage() {
                     <ListItem title="Softwareinformationen"/>
                 </ListItemIsland>
 
-                <ListItemIsland>
+                <ListItemIsland style={{marginBottom: 20}}>
                     <ListItem title="Geräteaktivitäten"/>
                     <ListSeparator/>
                     <ListItem title="Impressum"/>
@@ -48,14 +47,12 @@ export default function SettingsPage() {
                     <ListItem title="E-Mail"/>
                 </ListItemIsland>
 
-                <ListItemIsland>
+                <ListItemIsland style={{marginBottom: 20}}>
                     <ListItem title="USB-Stick auswerfen" type="action" onClick={function (): void {
                         throw new Error("Function not implemented.");
                     }}  />
                     <ListItem  title="Abmelden" onClick={logout} type="action"/>
                 </ListItemIsland>
-
-            </View>
         </ScrollView>
     </SafeAreaView>
 }

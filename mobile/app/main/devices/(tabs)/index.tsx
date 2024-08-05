@@ -10,6 +10,10 @@ import i18n from "@/i18n/i18n";
 import {DeviceDecider} from "@/components/DeviceDecider";
 import {Colors} from "@/constants/Colors";
 import {StatusBar} from "expo-status-bar";
+import {ListItemIsland} from "@/components/ListItemIsland";
+import {ListItem} from "@/components/ListItem";
+import {ListSeparator} from "@/components/ListSeparator";
+import {Href, router} from "expo-router";
 
 export default function HomeScreen() {
     const allthings = useContentModel(state=>state.allThings)
@@ -43,28 +47,26 @@ export default function HomeScreen() {
                     backgroundColor: 'black'
                 }
             }>
-            <List.AccordionGroup>
+            <ListItemIsland style={{marginTop: 20}}>
                 {
                     mappedDevicesToType && [...mappedDevicesToType.entries()]
                         .filter(([k,v])=>v.length>0)
-                        .map(([key, dev])=>{
-                            return <List.Accordion title={i18n.t(key)} id={key} key={key+"list"} style={{backgroundColor: Colors.background,
-                            borderBottomWidth: 1,
-                                borderColor: Colors.borderColor
-                            }} titleStyle={
-                                {
-                                    color: 'white'
-                                }
-                            }>
-                                {
-                                    dev!.map(device=>{
-                                        return <DeviceDecider device={device} key={device.id+"decider"}/>
+                        .map(([key, dev], i)=> {
+                            return <>
+                            {(i!=0 && i!=dev.length) && <ListSeparator key={key+"sep"}/>}
+                                <ListItem title={i18n.t(key)+" ("+dev.length+")"} key={key} onClick={()=>{
+                                    router.push({
+                                        // @ts-ignore
+                                        pathname: "/main/devices/(tabs)/devices/[deviceTypeList]",
+                                        params: {
+                                            deviceTypeList: key
+                                        }
                                     })
-                                }
-                            </List.Accordion>
+                                }}  />
+                            </>
                         })
                 }
-            </List.AccordionGroup>
+            </ListItemIsland>
             </ScrollView>
         </View>
 );

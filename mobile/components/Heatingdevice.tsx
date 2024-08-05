@@ -108,8 +108,6 @@ export const OnOffDeviceLayout = StyleSheet.create({
         paddingBottom: 5,
         paddingTop: 5,
         gap: 20,
-        borderBottomColor:  Colors.color.white,
-        borderWidth: 1,
     },
     description: {
         fontSize: 12,

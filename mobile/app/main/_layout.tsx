@@ -12,6 +12,7 @@ import {Colors} from "@/constants/Colors";
 import {FontAwesome, FontAwesome6} from "@expo/vector-icons";
 import {DrawerNavigationOptions} from "@react-navigation/drawer";
 import {StatusBar} from "expo-status-bar";
+import {Tabs} from "expo-router";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -45,7 +46,6 @@ export default function RootLayout() {
 
     useEffect(() => {
         if(baseURL == undefined) return
-        console.log("Fetching data", baseURL)
         fetchAPIAll(baseURL)
             .then(c=>{
                 resp(c)
@@ -55,34 +55,37 @@ export default function RootLayout() {
     return (
         <ThemeProvider value={DarkTheme}>
             <GestureHandlerRootView style={{ flex: 1 }} >
-                <Drawer>
-                    <DDrawer.Screen
-                        name="home/index"
+                <Tabs screenOptions={{ tabBarActiveTintColor: 'white', tabBarInactiveBackgroundColor: Colors.background,
+                    tabBarActiveBackgroundColor: Colors.background, tabBarStyle: {
+                        borderTopColor: Colors.borderColor,
+                        borderTopWidth: 2
+                    },
+                }}>
+                    <Tabs.Screen
+                        name="devices/(tabs)/index"
                         options={{
-                            ...DrawerStyle,
-                            title: 'Home',
-                            drawerIcon: ()=><FontAwesome style={{color: 'white', fontSize: 20}} name="home" />
-                        }}
-                    />
-                    <DDrawer.Screen
-                        name="devices/(tabs)"
-                        options={{
-                            ...DrawerStyle,
-                            drawerLabel: 'Geräte',
+                            headerShown: false,
                             title: 'Geräte',
-                            drawerIcon: ()=><FontAwesome style={{color: 'white', fontSize: 30}} name="mobile-phone" />
+                            tabBarIcon: ({ color }) => <FontAwesome size={28} name="mobile-phone" color={color} />,
                         }}
                     />
-                    <DDrawer.Screen
-                        name="settings/index"
+                    <Tabs.Screen
+                        name="devices/(tabs)/rooms"
                         options={{
-                            ...DrawerStyle,
-                            drawerLabel: 'Einstellungen',
-                            title: 'Einstellungen',
-                            drawerIcon: ()=><FontAwesome style={{color: 'white', fontSize: 25}} name="cog" />
+                            headerShown: false,
+                            title: 'Bereiche',
+                            tabBarIcon: ({ color }) => <FontAwesome size={28} name="cog" color={color} />,
                         }}
                     />
-                </Drawer>
+                    <Tabs.Screen
+                        name="devices/(tabs)/devices"
+                        options={{
+                            headerShown: false,
+                            title: 'Bereiche',
+                            tabBarIcon: ({ color }) => <FontAwesome size={28} name="cog" color={color} />,
+                        }}
+                    />
+                </Tabs>
             </GestureHandlerRootView>
         </ThemeProvider>
     );
