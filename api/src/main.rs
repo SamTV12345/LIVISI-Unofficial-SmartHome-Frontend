@@ -140,6 +140,7 @@ async fn main() -> std::io::Result<()> {
     });
 
 
+    log::info!("Starting server at port 8000. The ui is at /");
     HttpServer::new(move || {
         App::new()
             .service(start_connection)
