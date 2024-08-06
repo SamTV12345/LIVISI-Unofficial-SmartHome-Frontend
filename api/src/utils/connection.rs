@@ -22,6 +22,7 @@ pub struct MemPrefill {
 
 
 use clap::Parser;
+use crate::api_lib::livisi_response_type::LivisResponseType;
 
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
@@ -46,9 +47,17 @@ impl MemPrefill {
         let response = result;
         match response {
             Ok(e)=>{
-                match e.json::<Token>().await {
+                match e.json::<LivisResponseType<Token>>().await {
                     Ok(e) => {
-                        return Ok(e)
+                        match e {
+                            LivisResponseType::Ok(e) => {
+                                return Ok(e)
+                            }
+                            LivisResponseType::Err(e) => {
+                                log::error!("Error: {}", e);
+                                exit(1)
+                            }
+                        }
                     }
                     Err(e) => {
                         log::error!("{}" ,e);
