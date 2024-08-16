@@ -3,7 +3,6 @@ import {useContentModel} from "@/store/store";
 import {SafeAreaView} from "react-native-safe-area-context";
 import {ListItem} from "@/components/ListItem";
 import {Colors} from "@/constants/Colors";
-import {PrimaryButton} from "@/components/PrimaryButton";
 import {setAllInactive} from "@/utils/sqlite";
 import {router} from "expo-router";
 import {ListItemIsland} from "@/components/ListItemIsland";
@@ -21,7 +20,7 @@ export default function SettingsPage() {
 
     return <SafeAreaView style={{backgroundColor: Colors.background, minHeight: '100%'}}>
         <StatusBar style="light" />
-        <ScrollView overScrollMode="auto" style={{marginTop: 20, display: 'flex', gap: 20, flexDirection: 'column'}}>
+        <ScrollView overScrollMode="always" style={{marginTop: 20, display: 'flex', gap: 20, flexDirection: 'column'}}>
                 <ListItemIsland style={{marginBottom: 20}}>
                     <ListItem title="Gerätetreiber"/>
                     <ListSeparator/>

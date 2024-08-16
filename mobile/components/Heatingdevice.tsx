@@ -4,12 +4,14 @@ import {CapabilityState} from "@/models/CapabilityState";
 import {ACTION_ENDPOINT, CAPABILITY_PREFIX} from "@/constants/FieldConstants";
 import {useDebounce} from "@/utils/useDebounce";
 import {useContentModel} from "@/store/store";
-import {StyleSheet, View} from "react-native";
-import {FontAwesome,FontAwesome6} from "@expo/vector-icons";
-import {ThemedView} from "@/components/ThemedView";
+import {StyleSheet, View, Text, Modal, TouchableOpacity} from "react-native";
+import {FontAwesome} from "@expo/vector-icons";
 import {ThemedText} from "@/components/ThemedText";
 import {Colors} from "@/constants/Colors";
-import {OnOffDevice} from "@/components/OnOffDevice";
+import {ImageBackground} from "react-native";
+import {RadialSlider} from "react-native-radial-slider";
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+
 
 type HeatingdeviceProps = {
     device: Device
@@ -41,6 +43,8 @@ export const Heatingdevice: FC<HeatingdeviceProps> = ({
         return devMap.get(HEATING_TEMPERATURE)!.state!.setpointTemperature.value as number
     })
 
+    const [modal, setModalOpen] = useState<boolean>(false)
+
     const constructHeatingModel = (newState: CapabilityState) => {
         return {
             target: CAPABILITY_PREFIX+newState.id,
@@ -66,8 +70,10 @@ export const Heatingdevice: FC<HeatingdeviceProps> = ({
             },
         })
             .then(() => {
+                console.log("Changed temp")
                 //mapOfStates.get(CAPABILITY_PREFIX + state.id).state.setpointTemperature.value = currentTemperature
-                device.capabilityState!.find(state => state.id === devMap.get(HEATING_TEMPERATURE)!.id)!.state.setpointTemperature.value = currentTemperature
+                device.capabilityState!
+                    .find(state => state.id === devMap.get(HEATING_TEMPERATURE)!.id)!.state.setpointTemperature.value = currentTemperature
             })
     }
 
@@ -75,39 +81,75 @@ export const Heatingdevice: FC<HeatingdeviceProps> = ({
         updatePointTemperature()
     }, 2000, [currentTemperature])
 
-    return <ThemedView style={OnOffDeviceLayout.box}>
-        <FontAwesome6 style={OnOffDeviceLayout.iconMiddle} name="temperature-empty" size={40} />
-        <View>
-        <ThemedText style={OnOffDeviceLayout.text}>{device.config.name}</ThemedText>
-        <ThemedText  style={OnOffDeviceLayout.description}>{device.locationData?.config.name}</ThemedText>
-            <View style={OnOffDeviceLayout.row}>
-                <ThemedText style={OnOffDeviceLayout.text}>Zieltemperatur: </ThemedText>
-                <ThemedText style={OnOffDeviceLayout.text}>{currentTemperature} °C</ThemedText>
-            </View>
-            <View style={OnOffDeviceLayout.row}>
-                <ThemedText style={OnOffDeviceLayout.text}>Temperatur:</ThemedText>
-                <ThemedText style={OnOffDeviceLayout.text}>{devMap.get(CURRENT_TEMPERATURE)?.state!.temperature.value}°C</ThemedText>
-            </View>
-            <View style={OnOffDeviceLayout.row}>
-                <ThemedText style={OnOffDeviceLayout.text}>Luftfeuchtigkeit:</ThemedText>
-                <ThemedText style={OnOffDeviceLayout.text}>{devMap.get(HUMIDITY)?.state!.humidity.value}%</ThemedText>
-            </View>
-            <ThemedText></ThemedText>
+    return <TouchableOpacity style={[OnOffDeviceLayout.box, OnOffDeviceLayout.boxSelected]} onPress={()=>{
+        setModalOpen(true)
+    }}>
+        <Modal visible={modal} transparent>
+        <ImageBackground
+                style={{flex: 1}}
+                resizeMode="cover"
+                source={require('../assets/images/caucasus.jpg')}
+                blurRadius={10}
+            >
+            <TouchableOpacity style={{flex: 1}} onPress={()=>{
+                setModalOpen(false)
+            }}>
+                <View style={{display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1}}>
+                    <View  onStartShouldSetResponder={(event) => true}
+                           onTouchEnd={(e) => {
+                               e.stopPropagation();
+                           }}>
+
+                    <ThemedText style={{textAlign: 'center'}}>Zieltemperatur</ThemedText>
+                    <RadialSlider value={currentTemperature} onChange={(v)=>{
+                        setTemperature(v)
+                    }} isHideTitle={true} unitStyle={{color: 'white'}} linearGradient={[ { offset: '0%', color:'blue' }, { offset: '100%', color: 'red' }]} unit={"°C"} min={0} max={30} isHideSubtitle={true} />
+                    </View>
+                </View>
+                <FontAwesome name={"cog"} size={24} style={{position: 'absolute', right: 10, top: 10}}/>
+
+
+            </TouchableOpacity>
+
+            </ImageBackground>
+        </Modal>
+        <View style={{backgroundColor: 'orange', borderRadius: 2000, position: 'relative', width: 35, height: 35, marginLeft: 10, marginTop: 5}}>
+            <ThemedText style={{position: 'absolute', left: '20%', top: '15%', fontSize: 10}}>{devMap.get(CURRENT_TEMPERATURE)?.state!.temperature.value}°</ThemedText>
         </View>
-    </ThemedView>
+        <View style={{justifyContent: 'center', display: 'flex'}}>
+            <Text style={[OnOffDeviceLayout.boxSelected, OnOffDeviceLayout.boxText]}>{device.config.name}</Text>
+        </View>
+        <View>
+            <Text style={{fontSize: 10, textAlign: 'center' }}>Heizen auf {currentTemperature}°</Text>
+        </View>
+    </TouchableOpacity>
 }
 
 export const OnOffDeviceLayout = StyleSheet.create({
     box: {
         backgroundColor:'rgb(24 24 27)',
         position: 'relative',
-        display: 'flex',
-        flexDirection: 'row',
-        paddingLeft: 20,
-        paddingRight: 20,
-        paddingBottom: 5,
-        paddingTop: 5,
-        gap: 20,
+        borderRadius: 20,
+        width: 80,
+        display: undefined,
+        height: 80
+    },
+    contentWrap: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    boxText: {
+        fontWeight: 'bold',
+        textAlign: 'center',
+        flexWrap: 'wrap'
+    },
+    boxSelected: {
+        color: 'black',
+      backgroundColor: 'white'
+    },
+    boxNotSelected: {
+      backgroundColor: '#80888c'
     },
     description: {
         fontSize: 12,

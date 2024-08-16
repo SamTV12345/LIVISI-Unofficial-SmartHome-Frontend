@@ -65,8 +65,8 @@ export default function RootLayout() {
                         name="devices/(tabs)/index"
                         options={{
                             headerShown: false,
-                            title: 'Geräte',
-                            tabBarIcon: ({ color }) => <FontAwesome size={28} name="mobile-phone" color={color} />,
+                            title: 'Zuhause',
+                            tabBarIcon: ({ color }) => <FontAwesome size={28} name="home" color={color} />,
                         }}
                     />
                     <Tabs.Screen
@@ -81,10 +81,17 @@ export default function RootLayout() {
                         name="devices/(tabs)/devices"
                         options={{
                             headerShown: false,
+                            href: null,
                             title: 'Bereiche',
                             tabBarIcon: ({ color }) => <FontAwesome size={28} name="cog" color={color} />,
                         }}
                     />
+                    <Tabs.Screen name="settings/index"
+                                 options={{
+                                     headerShown: false,
+                                     title: 'Einstellungen',
+                                     tabBarIcon: ({ color }) => <FontAwesome size={28} name="cog" color={color} />,
+                                 }}/>
                 </Tabs>
             </GestureHandlerRootView>
         </ThemeProvider>
