@@ -41,9 +41,9 @@ export default function SettingsPage() {
                     <ListSeparator/>
                     <ListItem title="Impressum"/>
                     <ListSeparator/>
-                    <ListItem title="Netzwerk verwalten"/>
+                    <ListItem title="Netzwerk verwalten" to="/main/settings/network"/>
                     <ListSeparator/>
-                    <ListItem title="E-Mail"/>
+                    <ListItem title="E-Mail" to="/main/settings/email"/>
                 </ListItemIsland>
 
                 <ListItemIsland style={{marginBottom: 20}}>
