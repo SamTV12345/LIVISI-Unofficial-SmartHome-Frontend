@@ -98,7 +98,7 @@ export default function RootLayout() {
                     <Tabs.Screen name="home/index" options={{href: null}}/>
                     <Tabs.Screen name="settings/network" options={{href: null, headerShown: true, title: "Netzwerk"}}/>
                     <Tabs.Screen name="settings/email" options={{href: null, headerShown: true, title: "E-Mail", headerRight:()=>{
-                            return <Text style={{color: '#0385FF', marginRight: 20}} onPress={()=>{
+                            return <Text style={{color: '#0385FF', marginRight: 20, fontSize: 17, lineHeight: 22}} onPress={()=>{
                                 saveEmailSettings(baseURL!, allthings!.email!)
                             }}>Speichern</Text>
                         }}}/>
