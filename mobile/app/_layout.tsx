@@ -43,13 +43,13 @@ export default function RootLayout() {
                     if (JSON.stringify(oldConfig) === JSON.stringify(r)) {
                         setImmediate(() => {
                             SplashScreen.hideAsync();
-                            return router.replace('/main/home');
+                            return router.replace('/main/devices/(tabs)');
                         })
                     } else {
                         updateServerConfig(r, c.id!)
                         setImmediate(() => {
                             SplashScreen.hideAsync();
-                            return router.replace('/main/home');
+                            return router.replace('/main/devices/(tabs)');
                         })
                     }
                     useContentModel.getState().setConfig(r)

@@ -28,6 +28,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import Entypo from '@expo/vector-icons/Entypo';
 import {DeviceDecider} from "@/components/DeviceDecider";
+import {LocationResponse} from "@/models/Location";
 
 export default function HomeScreen() {
     const allthings = useContentModel(state=>state.allThings)
@@ -51,6 +52,30 @@ export default function HomeScreen() {
         }
         return map
     }, [allthings?.devices]);
+
+
+    const mappedLocations = useMemo(()=>{
+        if (selectedDeviceTypes === undefined||selectedDeviceTypes?.length == 0) {
+            return allthings?.locations
+        } else {
+            const locations: LocationResponse[] = []
+            for (let location of allthings?.locations!) {
+                const newLocation = {...location}
+                newLocation.devices = []
+
+                if (location.devices) {
+                    for (let deviceInLocation of location.devices!) {
+                        if (allthings?.devices[deviceInLocation].type === selectedDeviceTypes) {
+                            console.log("Found")
+                            newLocation.devices.push(allthings?.devices[deviceInLocation].id)
+                        }
+                    }
+                }
+                locations.push(newLocation)
+            }
+            return locations
+        }
+    }, [allthings?.locations, selectedDeviceTypes])
 
 
     const colorChecker = (key: string)=>{
@@ -88,14 +113,20 @@ export default function HomeScreen() {
                 <ListSeparator/>
                 <View style={{display: 'flex', flexDirection: 'row', gap: 10, marginLeft: 20, flexWrap: "wrap", marginTop: 10}}>
                     {[...mappedDevicesToType.keys()].filter(key=>mappedDevicesToType.get(key).length>0).map(k=>{
-                        return <Chip key={k} icon={getIcon(k)} text={i18n.t(k)} selected={selectedDeviceTypes == k} onClick={()=>setSelectedDeviceTypes(k)}/>
+                        return <Chip key={k} icon={getIcon(k)} text={i18n.t(k)} selected={selectedDeviceTypes == k} onClick={()=>{
+                            if(selectedDeviceTypes === k) {
+                                setSelectedDeviceTypes(undefined)
+                            } else {
+                                setSelectedDeviceTypes(k)
+                            }
+                        }}/>
                     })}
                 </View>
 
 
                 <View style={{display: 'flex', flexDirection: 'column', gap: 20, marginTop: 20}}>
                     {
-                        allthings?.locations&& Object.entries(allthings?.locations!).map(([_,location])=>{
+                        mappedLocations&& Object.entries(mappedLocations).filter(([_,l])=>l.devices&&l.devices.length>0).map(([_,location])=>{
                             return <ListItemIsland key={location.id}>
                                 <View style={{display: 'flex', flexDirection: 'row', padding: 10}}>
                                     <ThemedText type="subtitle">{location.config.name}</ThemedText>
