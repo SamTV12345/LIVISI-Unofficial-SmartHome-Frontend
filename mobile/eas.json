@@ -1,12 +1,19 @@
 {
   "build": {
     "development": {
+      "autoIncrement": true,
       "developmentClient": true,
       "distribution": "internal"
     },
     "preview": {
+      "autoIncrement": true,
       "distribution": "internal"
     },
-    "production": {}
+    "production": {
+      "autoIncrement": true
+    }
+  },
+  "cli": {
+    "appVersionSource": "remote"
   }
 }

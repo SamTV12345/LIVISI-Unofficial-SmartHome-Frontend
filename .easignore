@@ -1,0 +1,22 @@
+node_modules/
+api/
+ui-new/
+db/
+docs
+.expo/*
+npm-debug.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
+web-report/
+
+# macOS
+.DS_Store
+
+# Project
+.tmp/*
+dist
