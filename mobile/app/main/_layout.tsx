@@ -1,17 +1,19 @@
 import {DarkTheme, DefaultTheme, ParamListBase, RouteProp, ThemeProvider} from '@react-navigation/native';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import {Text} from 'react-native'
 import 'react-native-reanimated';
 import { Drawer } from '@/components/CustomDrawer';
 import {Drawer as DDrawer} from 'expo-router/drawer'
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import {fetchAPIAll} from "@/lib/api";
+import {fetchAPIAll, saveEmailSettings} from "@/lib/api";
 import {useContentModel} from "@/store/store";
 import {Colors} from "@/constants/Colors";
 import {FontAwesome, FontAwesome6} from "@expo/vector-icons";
 import {DrawerNavigationOptions} from "@react-navigation/drawer";
 import {StatusBar} from "expo-status-bar";
+import {Tabs} from "expo-router";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -40,12 +42,12 @@ const DrawerStyle = {
 
 export default function RootLayout() {
     const colorScheme = useColorScheme();
-    const baseURL = useContentModel(state=>state.baseURL)
     const resp = useContentModel(state=>state.setAllThings)
+    const baseURL = useContentModel(state=>state.baseURL)
+    const allthings = useContentModel(state=>state.allThings)
 
     useEffect(() => {
         if(baseURL == undefined) return
-        console.log("Fetching data", baseURL)
         fetchAPIAll(baseURL)
             .then(c=>{
                 resp(c)
@@ -55,34 +57,52 @@ export default function RootLayout() {
     return (
         <ThemeProvider value={DarkTheme}>
             <GestureHandlerRootView style={{ flex: 1 }} >
-                <Drawer>
-                    <DDrawer.Screen
-                        name="home/index"
+                <Tabs screenOptions={{ tabBarActiveTintColor: 'white', tabBarInactiveBackgroundColor: Colors.background,
+                    tabBarActiveBackgroundColor: Colors.background, tabBarStyle: {
+                        borderTopColor: Colors.borderColor,
+                        borderTopWidth: 2
+                    },
+                    tabBarHideOnKeyboard: true
+                }}>
+                    <Tabs.Screen
+                        name="devices/(tabs)/index"
                         options={{
-                            ...DrawerStyle,
-                            title: 'Home',
-                            drawerIcon: ()=><FontAwesome style={{color: 'white', fontSize: 20}} name="home" />
+                            headerShown: false,
+                            title: 'Zuhause',
+                            tabBarIcon: ({ color }) => <FontAwesome size={28} name="home" color={color} />,
                         }}
                     />
-                    <DDrawer.Screen
-                        name="devices/(tabs)"
+                    <Tabs.Screen
+                        name="devices/(tabs)/rooms"
                         options={{
-                            ...DrawerStyle,
-                            drawerLabel: 'Geräte',
-                            title: 'Geräte',
-                            drawerIcon: ()=><FontAwesome style={{color: 'white', fontSize: 30}} name="mobile-phone" />
+                            headerShown: false,
+                            title: 'Bereiche',
+                            tabBarIcon: ({ color }) => <FontAwesome size={28} name="cog" color={color} />,
                         }}
                     />
-                    <DDrawer.Screen
-                        name="settings/index"
+                    <Tabs.Screen
+                        name="devices/(tabs)/devices"
                         options={{
-                            ...DrawerStyle,
-                            drawerLabel: 'Einstellungen',
-                            title: 'Einstellungen',
-                            drawerIcon: ()=><FontAwesome style={{color: 'white', fontSize: 25}} name="cog" />
+                            headerShown: false,
+                            href: null,
+                            title: 'Bereiche',
+                            tabBarIcon: ({ color }) => <FontAwesome size={28} name="cog" color={color} />,
                         }}
                     />
-                </Drawer>
+                    <Tabs.Screen name="settings/index"
+                                 options={{
+                                     headerShown: false,
+                                     title: 'Einstellungen',
+                                     tabBarIcon: ({ color }) => <FontAwesome size={28} name="cog" color={color} />,
+                                 }}/>
+                    <Tabs.Screen name="home/index" options={{href: null}}/>
+                    <Tabs.Screen name="settings/network" options={{href: null, headerShown: true, title: "Netzwerk"}}/>
+                    <Tabs.Screen name="settings/email" options={{href: null, headerShown: true, title: "E-Mail", headerRight:()=>{
+                            return <Text style={{color: '#0385FF', marginRight: 20, fontSize: 17, lineHeight: 22}} onPress={()=>{
+                                saveEmailSettings(baseURL!, allthings!.email!)
+                            }}>Speichern</Text>
+                        }}}/>
+                </Tabs>
             </GestureHandlerRootView>
         </ThemeProvider>
     );

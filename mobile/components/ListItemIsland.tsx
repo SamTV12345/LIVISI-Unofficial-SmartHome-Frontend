@@ -1,11 +1,14 @@
-import {StyleSheet, View} from "react-native"
+import {StyleProp, StyleSheet, View, ViewStyle} from "react-native"
 import {FC, PropsWithChildren} from "react";
 
+type ListItemIslandProp = {
+    children:any,
+    style?:  StyleProp<ViewStyle>
+}
 
+export const ListItemIsland: FC<ListItemIslandProp> = ({children, style})=>{
 
-export const ListItemIsland:FC<PropsWithChildren> = ({children})=>{
-
-    return <View style={styles.container}>
+    return <View style={[styles.container, style]}>
         {children}
     </View>
 }

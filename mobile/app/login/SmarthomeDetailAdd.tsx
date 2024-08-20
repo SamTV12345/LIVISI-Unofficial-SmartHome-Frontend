@@ -47,8 +47,6 @@ export default function SmarthomeDetailAdd() {
                             return
                         }
 
-                        console.log(reason)
-
                         if (reason === "Error retrieving data") {
                             setError('URL ist nicht erreichbar')
                             return
