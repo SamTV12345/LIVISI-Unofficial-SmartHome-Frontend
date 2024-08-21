@@ -9,11 +9,22 @@ import {InputField} from "@/components/InputField";
 import {fetchAPIConfig} from "@/lib/api";
 import {getBaseURL, getByBaseURL, updateServerConfig} from "@/utils/sqlite";
 import {router} from "expo-router";
+import {ConfigData} from "@/models/ConfigData";
 
 
 export default function LoginScreen() {
     const baseURL = useContentModel(state=>state.baseURL)
     const setBaseURL = useContentModel(state=>state.setBaseURL)
+
+    const handleAuth = (r: ConfigData)=>{
+        if (r.basicAuth) {
+            // @ts-ignore
+            router.replace('/login/basic')
+        } else if (r.oidcConfigured) {
+            // @ts-ignore
+            router.replace('/login/oidc')
+        }
+    }
 
     return <SafeAreaView style={{flex: 1}}>
         <ThemedView style={styles.view}>
@@ -34,9 +45,22 @@ export default function LoginScreen() {
                         .then(r => {
                             updateServerConfig(r, baseURL!)
                             useContentModel.getState().setConfig(r)
+                            setBaseURL(baseURL!)
+                            handleAuth(r)
+                            return
+                        })
+                } else {
+                    fetchAPIConfig(baseURL!)
+                        .then(r => {
+                            updateServerConfig(r, baseURL!)
+                            useContentModel.getState().setConfig(r)
+                            setBaseURL(baseURL!)
+                            handleAuth(r)
+                            return
                         })
                 }
-                setBaseURL(baseURL!)
+
+                // @ts-ignore
                 router.replace('/main/home')
             }}/>
         </ThemedView>

@@ -36,6 +36,9 @@ export default function Login() {
                     router.replace("/login/smarthomeSelection"  as  Href<string | object>)
                 }} color="white" size={20} name="arrowleft"/>,
             }} />
+            <Stack.Screen name="basic" options={{
+                title: 'Login Smarthome',
+            }} />
         </Stack>
     );
 }

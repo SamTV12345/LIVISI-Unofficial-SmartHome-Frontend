@@ -14,7 +14,27 @@ export const init = async () => {
 PRAGMA journal_mode = WAL;
 CREATE TABLE IF NOT EXISTS appconfig (id TEXT PRIMARY KEY NOT NULL, active BOOLEAN NOT NULL);
 CREATE TABLE IF NOT EXISTS serverconfig(id TEXT PRIMARY KEY NOT NULL, basicAuth BOOLEAN NOT NULL, oidcConfig TEXT, oidcConfigured BOOLEAN NOT NULL); 
+CREATE TABLE IF NOT EXISTS auth(id TEXT PRIMARY KEY NOT NULL, token TEXT NULL, basicAuth TEXT NULL);
 `);
+}
+
+
+export const updateAuth = (id: string, token?: string, basicAuth?: string)=>{
+    if (token) {
+        db.runSync("INSERT OR REPLACE INTO auth (id, token) VALUES (?,?)", id, token)
+    }
+    if (basicAuth) {
+        db.runSync("INSERT OR REPLACE INTO auth (id, basicAuth) VALUES (?,?)", id, basicAuth)
+    }
+}
+
+
+export const getAuth = (id: string)=>{
+    return db.getFirstSync<{
+        id: string,
+        token: string,
+        basicAuth: string
+    }>("SELECT * FROM auth WHERE id=?", id)
 }
 
 

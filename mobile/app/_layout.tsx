@@ -5,7 +5,7 @@ import {useEffect, useState} from 'react';
 import 'react-native-reanimated';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { StatusBar } from 'expo-status-bar';
-import {getBaseURL, getServerConfig, updateServerConfig} from "@/utils/sqlite";
+import {getAuth, getBaseURL, getServerConfig, updateServerConfig} from "@/utils/sqlite";
 import {Redirect, Slot, Stack, useNavigationContainerRef, useRootNavigationState, useRouter} from 'expo-router';
 import {SafeAreaView} from "react-native-safe-area-context";
 import {useContentModel} from "@/store/store";
@@ -39,8 +39,25 @@ export default function RootLayout() {
                 console.log("Error getting config")
             }
             fetchAPIConfig(c.id!)
-                .then(r => {
+                .then(async r => {
                     if (JSON.stringify(oldConfig) === JSON.stringify(r)) {
+                        const authEntry = getAuth(c.id!)
+                        if (!authEntry && r.basicAuth) {
+                            // @ts-ignore
+                            setImmediate(() => {
+                                SplashScreen.hideAsync();
+                                return router.replace('/login/basic')
+                            })
+                        }
+
+                        if (!authEntry && r.oidcConfigured) {
+                            // @ts-ignore
+                            setImmediate(() => {
+                                SplashScreen.hideAsync();
+                                return router.replace('/login/oidc')
+                            })
+                        }
+
                         setImmediate(() => {
                             SplashScreen.hideAsync();
                             return router.replace('/main/devices/(tabs)');
