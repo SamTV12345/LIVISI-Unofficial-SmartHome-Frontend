@@ -17,11 +17,15 @@ export const Heatingdevice: FC<HeatingdeviceProps> = ({device}) => {
     const devMap = useMemo(()=>{
         const devMap = new Map<string, CapabilityState>()
         for (const devState of device.capabilityState!) {
-            if (devState.state.setpointTemperature) {
+            if (!devState.state) {
+                continue
+            }
+
+            if ("setpointTemperature" in devState.state && devState.state.setpointTemperature) {
                 devMap.set(HEATING_TEMPERATURE, devState)
-            } else if (devState.state.temperature) {
+            } else if ("temperature" in devState.state && devState.state.temperature) {
                 devMap.set(CURRENT_TEMPERATURE, devState)
-            } else if (devState.state.humidity) {
+            } else if ("humidity" in devState.state && devState.state.humidity) {
                 devMap.set(HUMIDITY, devState)
             }
         }
