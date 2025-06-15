@@ -35,7 +35,7 @@ export const HomeScreen = ()=>{
         deviceArrays = Object.values(allthings?.devices).filter((d)=>{
             return d.type === "VRCC"
         })
-        return deviceArrays!
+        return deviceArrays || []
     }, [allthings?.devices])
 
 
@@ -83,16 +83,16 @@ export const HomeScreen = ()=>{
         <Accordion type="single" collapsible className="rounded-3xl" key={"Räume"}>
             {
                 roomsClimate.map(r=>{
-                   return <AccordionItem value={r.locationData?.config.name!} className="text-black rounded" key={r.locationData?.config.name}>
+                   return <AccordionItem value={r.locationData?.config.name ?? ''} className="text-black rounded" key={r.locationData?.config.name}>
                         <AccordionTrigger className="text-center ml-2" onClick={()=>{
                             loadDeviceData(r)
                         }}>{r.locationData?.config.name}</AccordionTrigger>
                         <AccordionContent>
                             {
-                                deviceDataStore.has(r.id+'temp')&&<TimeSeriesChart chartTitle={"Temperatur in "+r.locationData?.config.name} ytitle="Temperatur in Grad" data={deviceDataStore.get(r.id+"temp")!} />
+                                deviceDataStore.has(r.id+'temp')&&<TimeSeriesChart chartTitle={"Temperatur in "+r.locationData?.config.name} ytitle="Temperatur in Grad" data={deviceDataStore.get(r.id+"temp") ||[]} />
                             }
                             {
-                                deviceDataStore.has(r.id+'humidity')&&<TimeSeriesChart chartTitle={"Feuchtigkeit in "+r.locationData?.config.name} ytitle="Temperatur in Grad" data={deviceDataStore.get(r.id+"humidity")!} />
+                                deviceDataStore.has(r.id+'humidity')&&<TimeSeriesChart chartTitle={"Feuchtigkeit in "+r.locationData?.config.name} ytitle="Temperatur in Grad" data={deviceDataStore.get(r.id+"humidity") || []} />
                             }
                         </AccordionContent>
                     </AccordionItem>

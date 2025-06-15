@@ -22,7 +22,7 @@ export const DeviceScreen = ()=>{
             map.set(type,[])
         })
         for (const devDevice of Object.entries(allDevices?.devices!)) {
-            if(devDevice[1].type! === ZWISCHENSTECKER_OUTDOOR) {
+            if(devDevice[1].type === ZWISCHENSTECKER_OUTDOOR) {
                 map.get(ZWISCHENSTECKER)?.push(devDevice[1])
                 continue
             }

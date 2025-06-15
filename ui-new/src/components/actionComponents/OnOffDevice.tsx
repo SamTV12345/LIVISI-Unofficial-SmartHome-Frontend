@@ -16,7 +16,7 @@ type HeatingdeviceProps = {
 
 export const OnOffDevice:FC<HeatingdeviceProps> = ({device, showRoom=false}) => {
     const [turnedOn, setTurnedOn] = useState<boolean>(()=>{
-        for (const dev of device.capabilityState!){
+        for (const dev of device.capabilityState || []){
             if (dev.state.onState.value){
                 return true
             }
@@ -41,11 +41,13 @@ export const OnOffDevice:FC<HeatingdeviceProps> = ({device, showRoom=false}) => 
     }
 
     useDebounce(()=>{
-            const switchModel = constructSwitchPostModel(device.capabilityState![0])
+        if (device.capabilityState && device.capabilityState?.length >= 1) {
+            const switchModel = constructSwitchPostModel(device.capabilityState[0])
             axios.post(ACTION_ENDPOINT,switchModel)
                 .then(()=>{
                     console.log('Switched')
                 })
+        }
     },200,[turnedOn])
 
     return <Card key={device.id} onClick={()=>{

@@ -43,7 +43,7 @@ export const DetailedMessageScreen = ()=>{
     }, [allthings]);
 
 
-    return <PageComponent title={message?.title!} to="/news">
+    return <PageComponent title={message?.title ||''} to="/news">
         <PageBox>
             {message?.description}
         </PageBox>

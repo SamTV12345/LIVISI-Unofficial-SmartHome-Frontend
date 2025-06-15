@@ -17,7 +17,7 @@ type WindowDeviceProps = {
 
 export const SmokeDetector: FC<WindowDeviceProps> = ({device, showRoom}) => {
     const [isAlarming, setAlarming] = useState<boolean>(() => {
-        for (const dev of device.capabilityState!) {
+        for (const dev of device.capabilityState ||[]) {
             if (dev.state && dev.state.onState && dev.state.onState.value) {
                 return true
             }
@@ -25,7 +25,7 @@ export const SmokeDetector: FC<WindowDeviceProps> = ({device, showRoom}) => {
         return false
     })
     const [isSmokeDetected] = useState<boolean>(() => {
-        for (const dev of device.capabilityState!) {
+        for (const dev of device.capabilityState || []) {
             if (dev.state && dev.state.isSmokeAlarm && dev.state.isSmokeAlarm.value) {
                 return true
             }

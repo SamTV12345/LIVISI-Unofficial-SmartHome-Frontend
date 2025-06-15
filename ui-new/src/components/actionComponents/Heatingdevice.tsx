@@ -16,7 +16,7 @@ type HeatingdeviceProps = {
 export const Heatingdevice: FC<HeatingdeviceProps> = ({device}) => {
     const devMap = useMemo(()=>{
         const devMap = new Map<string, CapabilityState>()
-        for (const devState of device.capabilityState!) {
+        for (const devState of device.capabilityState ||[]) {
             if (!devState.state) {
                 continue
             }
@@ -33,7 +33,7 @@ export const Heatingdevice: FC<HeatingdeviceProps> = ({device}) => {
     }, [device])
 
     const [currentTemperature, setTemperature] = useState<number>(()=>{
-        return devMap.get(HEATING_TEMPERATURE)!.state!.setpointTemperature.value as number
+        return devMap.get(HEATING_TEMPERATURE)?.state?.setpointTemperature.value as number ?? 20
     })
 
 
@@ -52,11 +52,18 @@ export const Heatingdevice: FC<HeatingdeviceProps> = ({device}) => {
     }
 
     const updatePointTemperature = async () => {
+        if (!devMap.has(HEATING_TEMPERATURE)) {
+            console.warn("No heating temperature capability found for device", device.id)
+            return
+        }
         const heatingModel = constructHeatingModel(devMap.get(HEATING_TEMPERATURE)!)
         axios.post(ACTION_ENDPOINT, heatingModel)
             .then(() => {
                 //mapOfStates.get(CAPABILITY_PREFIX + state.id).state.setpointTemperature.value = currentTemperature
-                 device.capabilityState!.find(state => state.id === devMap.get(HEATING_TEMPERATURE)!.id)!.state.setpointTemperature.value = currentTemperature
+
+                if (device.capabilityState) {
+                    device.capabilityState.find(state => state.id === devMap.get(HEATING_TEMPERATURE)!.id)!.state.setpointTemperature.value = currentTemperature
+                }
             })
     }
 
@@ -83,9 +90,9 @@ export const Heatingdevice: FC<HeatingdeviceProps> = ({device}) => {
                                         <div>Zieltemperatur:</div>
                                         <div>{currentTemperature}°C</div>
                                         <div>Temperatur:</div>
-                                        <div>{devMap.get(CURRENT_TEMPERATURE)?.state!.temperature.value}°C</div>
+                                        <div>{devMap.get(CURRENT_TEMPERATURE)?.state?.temperature.value}°C</div>
                                         <div>Luftfeuchtigkeit:</div>
-                                        <div>{devMap.get(HUMIDITY)?.state!.humidity.value}%</div>
+                                        <div>{devMap.get(HUMIDITY)?.state?.humidity.value}%</div>
                                     </>
                                 }
                             </div>
