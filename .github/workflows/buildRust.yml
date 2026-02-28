@@ -12,12 +12,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@master
+        uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.11.0
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+          cache-dependency-path: ui-new/pnpm-lock.yaml
       - name: "Create frontend"
+        working-directory: ui-new
         run: |
-          cd ui-new
-          npm install -g pnpm@latest
-          pnpm install
+          pnpm install --frozen-lockfile
           pnpm run build:copy
       - name: Compile
         working-directory: api

@@ -9,20 +9,30 @@ jobs:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       ANDROID_APPLICATION_ID: "com.samtv12345.smarthome"
     steps:
-      - name: install-jdk17
-        uses: actions/setup-java@v2
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
         with:
-          distribution: 'adopt'
-          java-version: '17'
-      - uses: actions/checkout@v2
-      - name: Install Expo CLI
-        run: npm install -g eas-cli
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.11.0
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+          cache-dependency-path: mobile/pnpm-lock.yaml
       - name: Install dependencies
         working-directory: mobile
-        run: npm install
+        run: pnpm install --frozen-lockfile
       - name: Build
         working-directory: mobile
-        run: eas build --profile production --platform android --local
+        run: pnpm dlx eas-cli@latest build --profile production --platform android --local
       - name: Rename artifact
         working-directory: mobile
         run: mv *.aab app-release.aab
