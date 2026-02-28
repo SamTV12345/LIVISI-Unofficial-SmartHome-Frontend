@@ -11,6 +11,7 @@ use crate::api_lib::location::{Location};
 use crate::api_lib::user_storage::UserStorage;
 use crate::{CLIENT_DATA, lock_and_call, STORE_DATA};
 use crate::api_lib::email::Email;
+use crate::api_lib::interaction::Interaction;
 use crate::api_lib::message;
 use crate::api_lib::status::Status;
 use crate::models::client_data::ClientData;
@@ -136,6 +137,7 @@ impl MemPrefill {
                         }
                     }
                     let message = message::Message::new(&base_url);
+                    let interaction = Interaction::new(&base_url);
 
                     let devices = Device::new(&base_url);
                     let capabilities = Capability::new(&base_url);
@@ -169,8 +171,9 @@ impl MemPrefill {
                     lock_and_call!(store, set_messages, message_data);
 
                     let email_data = email.get_email_settings().await;
-
+                    let interaction_data = interaction.get_interaction().await;
                     lock_and_call!(store, set_email, email_data);
+                    lock_and_call!(store, set_interactions, interaction_data);
                 }
             }
         }

@@ -3,11 +3,15 @@ use reqwest::{Response};
 use serde_derive::Serialize;
 use serde_derive::Deserialize;
 use crate::CLIENT_DATA;
-use crate::controllers::message_controller::MessageRead;
 
 #[derive(Clone)]
 pub struct Message{
     pub base_url: String,
+}
+
+#[derive(Deserialize, Serialize, Clone)]
+pub struct MessageRead {
+    pub read: bool
 }
 
 #[derive(Default,Serialize,Deserialize, Debug, Clone)]

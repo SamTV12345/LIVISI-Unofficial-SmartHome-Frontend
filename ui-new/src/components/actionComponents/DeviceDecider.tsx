@@ -3,7 +3,9 @@ import {OnOffDevice} from "@/src/components/actionComponents/OnOffDevice.tsx";
 import {
     FENSTERKONTAKT,
     HEATING,
+    RADIATOR_THERMOSTAT,
     RAUCHMELDER,
+    WANDSENDER,
     ZWISCHENSTECKER,
     ZWISCHENSTECKER_OUTDOOR
 } from "@/src/constants/FieldConstants.ts";
@@ -17,6 +19,10 @@ type DeviceDeciderProps = {
     device: Device
 }
 export const DeviceDecider:FC<DeviceDeciderProps> = ({ device }) => {
+    if (device.type === RADIATOR_THERMOSTAT) {
+        return null;
+    }
+
     if (device.type === ZWISCHENSTECKER) {
         return <OnOffDevice device={device} key={device.id} showRoom={false}/>;
     }
@@ -36,5 +42,10 @@ export const DeviceDecider:FC<DeviceDeciderProps> = ({ device }) => {
     if (device.type === HEATING) {
         return <Heatingdevice device={device} key={device.id}/>;
     }
-    return <WandSender device={device} key={device.id}/>;
+
+    if (device.type === WANDSENDER) {
+        return <WandSender device={device} key={device.id}/>;
+    }
+
+    return null;
 }

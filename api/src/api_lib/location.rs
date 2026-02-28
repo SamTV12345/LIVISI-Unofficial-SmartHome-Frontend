@@ -23,8 +23,8 @@ pub struct LocationResponse{
 #[derive(Default,Serialize,Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct LocationConfig{
-    name: String,
-    r#type: String
+    pub name: String,
+    pub r#type: String
 }
 
 impl Location {

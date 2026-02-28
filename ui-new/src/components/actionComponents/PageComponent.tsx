@@ -12,14 +12,26 @@ type PageComponentProps = {
 export const PageComponent: FC<PageComponentProps> = ( {children, to, title, actionButton})=>{
     const navigate = useNavigate()
 
-    return <div className="">
-        <div className="flex gap-5 md:bg-white p-3 text-text-muted ml-10 md:ml-0 pt-4">
-            {to&&<button  onClick={()=>to&&navigate(to)}><ArrowLeft className="self-center mt-1"/></button>}
-            <h2 className="text-xl text-black">{title}</h2>
-            {actionButton&&<><div className="flex-1"></div>
-            <div className="self-center">{actionButton}</div></>}
+    return <div className="pb-6">
+        <div className="flex items-center gap-3 border-b border-gray-200 bg-white/80 px-4 py-4 backdrop-blur md:px-6">
+            {to && (
+                <button
+                    type="button"
+                    className="rounded-full border border-gray-200 bg-white p-2 text-gray-600 transition hover:bg-gray-50"
+                    onClick={() => navigate(to)}
+                    aria-label="Zurück"
+                >
+                    <ArrowLeft className="h-4 w-4"/>
+                </button>
+            )}
+            <h2 className="text-xl font-semibold text-slate-900">{title}</h2>
+            {actionButton && (
+                <>
+                    <div className="flex-1"></div>
+                    <div className="self-center">{actionButton}</div>
+                </>
+            )}
         </div>
-        <hr className="w-full navbar-separator"/>
         {children}
     </div>
 }

@@ -13,6 +13,7 @@ export const CATEGORY = 'CategoryOrderAndVisibility'
 
 
 export const HEATING = 'VRCC'
+export const RADIATOR_THERMOSTAT = "RST"
 
 export const WANDSENDER = "WSC2"
 

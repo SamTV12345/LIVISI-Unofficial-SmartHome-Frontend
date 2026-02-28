@@ -24,7 +24,7 @@ export default function Login() {
                 headerTitleAlign: 'center',
                 headerLeft: ()=><AntDesign onPress={()=>{
                     router.replace("/login")
-                }} color="white" size={20} name="arrowleft"/>,
+                }} color="white" size={20} name="arrow-left"/>,
                 headerRight: ()=><AntDesign onPress={()=>{
                     router.replace("/login/SmarthomeDetailAdd"  as  Href<string | object>)
                 }} color="white" size={20} name="plus"/>,
@@ -34,7 +34,7 @@ export default function Login() {
                 headerTitleAlign: 'center',
                 headerLeft: ()=><AntDesign onPress={()=>{
                     router.replace("/login/smarthomeSelection"  as  Href<string | object>)
-                }} color="white" size={20} name="arrowleft"/>,
+                }} color="white" size={20} name="arrow-left"/>,
             }} />
         </Stack>
     );

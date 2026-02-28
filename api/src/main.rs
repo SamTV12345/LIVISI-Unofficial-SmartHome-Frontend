@@ -1,137 +1,188 @@
 mod models;
-mod token_middleware;
 mod api_lib;
-mod controllers;
 mod utils;
 mod constants;
-mod auth_middleware;
-mod ws;
 mod store;
 
-use std::{env, thread};
-use std::env::{var};
-
-use std::io::Read;
-
+use std::cmp::Ordering;
+use std::collections::HashMap;
+use std::env::var;
+use std::path::PathBuf;
 use std::sync::{Mutex, OnceLock};
+use std::thread;
+use std::thread::spawn;
 use std::time::Duration;
-use actix_web::middleware::{Condition};
-use actix_4_jwt_auth::{Oidc, OidcBiscuitValidator, OidcConfig};
-use actix_4_jwt_auth::biscuit::{Validation, ValidationOptions};
-use actix_files::NamedFile;
-use actix_web::{App, HttpResponse, HttpServer, Responder, Scope, web};
-use actix_web::body::{BoxBody, EitherBody};
-use actix_web::dev::{fn_service, ServiceFactory, ServiceRequest, ServiceResponse};
-use actix_web::web::redirect;
+use chrono::{DateTime, Days, NaiveDate, Utc};
+use axum::extract::ws::{Message as WsMessage, WebSocket, WebSocketUpgrade};
+use axum::extract::{Path, Request, State};
+use axum::http::{header, StatusCode, Uri};
+use axum::middleware::{self, Next};
+use axum::response::{IntoResponse, Redirect, Response};
+use axum::routing::{get, post};
+use axum::{Json, Router};
+use base64::engine::general_purpose;
+use base64::Engine;
+use clap::Parser;
 use clokwerk::{Job, Scheduler, TimeUnits};
-
-use regex::Regex;
-use reqwest::{Url};
-
-use crate::controllers::action_controller::post_action;
-use crate::controllers::capabilty_controller::{get_capability_states, get_capabilties};
-use crate::controllers::device_controller::{get_device_states, get_devices};
-use crate::controllers::hash_controller::get_hash;
-use crate::controllers::home_controller::get_home_setup;
-use crate::controllers::interaction_controller::get_interactions;
-use crate::controllers::location_controller::{create_location, delete_location, get_location_by_id, get_locations, update_location};
-use crate::controllers::message_controller::{get_scope_messages};
-use crate::controllers::relationship_controller::get_relationship;
-use crate::controllers::status_controller::get_status;
-use crate::controllers::user_controller::get_users;
-use crate::controllers::user_storage_controller::get_user_storage;
-use crate::api_lib::device::Device;
-use crate::api_lib::hash::Hash;
-use crate::api_lib::status::Status;
-use crate::api_lib::user::User;
-use crate::api_lib::user_storage::UserStorage;
-use crate::constants::constant_types::{BASIC_AUTH, OIDC_AUTH, OIDC_AUTHORITY};
-use crate::controllers::api_config_controller::{get_api_config, login};
-use crate::models::token::Token;
-use crate::utils::connection::{Args, MemPrefill};
-
-static WINNER: OnceLock<Addr<Lobby>> = OnceLock::new();
+use kv::Config;
+use path_clean::clean;
+use reqwest::Url;
+use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
+use sunrise::{Coordinates, SolarDay, SolarEvent};
+use tokio::fs;
+use tokio::sync::broadcast;
 use tungstenite::connect;
 
-pub struct AppState {
-    token: Mutex<Token>,
-}
+use crate::api_lib::action::{Action, ActionPost};
+use crate::api_lib::capability::Capability;
+use crate::api_lib::device::Device;
+use crate::api_lib::email::{Email, EmailAPI};
+use crate::api_lib::hash::Hash;
+use crate::api_lib::home::Home;
+use crate::api_lib::interaction::{Interaction, InteractionResponse};
+use crate::api_lib::livisi_response_type::{ErrorConstruct, LivisResponseType};
+use crate::api_lib::location::{Location, LocationResponse};
+use crate::api_lib::message::{Message, MessageRead};
+use crate::api_lib::relationship::Relationship;
+use crate::api_lib::status::Status;
+use crate::api_lib::unmount_service::USBService;
+use crate::api_lib::user::User;
+use crate::api_lib::user_storage::UserStorage;
+use crate::constants::constant_types::{
+    BASIC_AUTH, OIDC_AUTH, OIDC_AUTHORITY, OIDC_CLIENT_ID, OIDC_REDIRECT_URI, OIDC_SCOPE,
+    PASSWORD_BASIC, USERNAME_BASIC,
+};
+use crate::models::client_data::ClientData;
+use crate::models::socket_event::Properties::Value as SocketValue;
+use crate::models::socket_event::{SocketData, SocketEvent};
+use crate::store::{Data, DeviceStore, Store};
+use crate::utils::connection::{Args, MemPrefill};
+use crate::utils::logging::init_logging;
+static WS_BROADCAST: OnceLock<broadcast::Sender<String>> = OnceLock::new();
 
 pub static CLIENT_DATA: OnceLock<Mutex<ClientData>> = OnceLock::new();
-
 pub static STORE_DATA: OnceLock<Store> = OnceLock::new();
 
-async fn index() -> impl Responder {
-    let index_html = include_str!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/static/index.html"
-    ));
-
-
-    HttpResponse::Ok()
-        .content_type("text/html")
-        .body(index_html)
+#[derive(Clone)]
+struct AxumState {
+    status: Status,
+    users: User,
+    devices: Device,
+    hash: Hash,
+    messages: Message,
+    locations: Location,
+    capabilities: Capability,
+    home: Home,
+    action: Action,
+    relationship: Relationship,
+    interaction: Interaction,
+    usb_service: USBService,
+    email: Email,
+    kv_store: kv::Store,
+    resource_base_url: String,
 }
 
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ConfigModel {
+    basic_auth: bool,
+    oidc_configured: bool,
+    oidc_config: Option<OidcConfigModel>,
+}
 
-#[actix_web::main]
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+struct OidcConfigModel {
+    authority: String,
+    client_id: String,
+    redirect_uri: String,
+    scope: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+struct LoginRequest {
+    username: String,
+    password: String,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct SunTimesResponse {
+    geo_location: String,
+    latitude: f64,
+    longitude: f64,
+    sunrise: Option<String>,
+    sunset: Option<String>,
+    next_sunrise: Option<String>,
+    next_sunset: Option<String>,
+    next_event_name: Option<String>,
+    next_event_at: Option<String>,
+}
+
+#[tokio::main]
 async fn main() -> std::io::Result<()> {
-    let cfg = Config::new("./db");
-    let store = kv::Store::new(cfg).unwrap();
-    let store_images = store.bucket::<String, String>(Some("images")).unwrap();
-
     init_logging();
     let base_url = var("BASE_URL").expect("BASE_URL must be set");
+    let cfg = Config::new("./db");
+    let kv_store = kv::Store::new(cfg).unwrap();
 
-    WINNER.get_or_init(|| Lobby::default().start());
-    let mut oidc_opt: Option<Oidc> = None;
-    if var(OIDC_AUTH).is_ok() {
-        oidc_opt = Some(Oidc::new(OidcConfig::Issuer(var(OIDC_AUTHORITY).unwrap().into())).await
-            .unwrap());
-    }
+    WS_BROADCAST.get_or_init(|| {
+        let (sender, _) = broadcast::channel(512);
+        sender
+    });
 
     let args = Args::parse();
-
     init_socket(base_url.clone(), &args).await;
-
-    //Initialize db at startup
     MemPrefill::do_db_initialization(&args).await;
 
-
-    // Init
     let status = Status::new(&base_url);
     let users = User::new(&base_url);
     let devices = Device::new(&base_url);
-    let user_storage = UserStorage::new(&base_url);
+    let _user_storage = UserStorage::new(&base_url);
     let hash = Hash::new(&base_url);
-    let message = api_lib::message::Message::new(&base_url);
-    let locations = api_lib::location::Location::new(&base_url);
-    let token = web::Data::new(AppState { token: Mutex::new(Token::default()) });
-    let capabilties = api_lib::capability::Capability::new(&base_url);
-    let home = api_lib::home::Home::new(&base_url);
-    let action = api_lib::action::Action::new(&base_url);
-    let relationship = api_lib::relationship::Relationship::new(&base_url);
-    let interaction = api_lib::interaction::Interaction::new(&base_url);
-    let unmount_service = api_lib::unmount_service::USBService::new(&base_url);
-    let bucket_images = web::Data::new(store_images);
-    let email = api_lib::email::Email::new(&base_url);
+    let message = Message::new(&base_url);
+    let locations = Location::new(&base_url);
+    let capabilities = Capability::new(&base_url);
+    let home = Home::new(&base_url);
+    let action = Action::new(&base_url);
+    let relationship = Relationship::new(&base_url);
+    let interaction = Interaction::new(&base_url);
+    let usb_service = USBService::new(&base_url);
+    let email = Email::new(&base_url);
+
+    let state = AxumState {
+        status,
+        users,
+        devices,
+        hash,
+        messages: message,
+        locations,
+        capabilities,
+        home,
+        action,
+        relationship,
+        interaction,
+        usb_service,
+        email,
+        kv_store,
+        resource_base_url: base_url.replace(":8080", ""),
+    };
 
     spawn(|| {
         let args = Args::parse();
         log::info!("Starting scheduler");
         let mut scheduler = Scheduler::new();
-        scheduler.every(1.days()).plus(10.minutes())
-            .run(move || {
-                let rt = tokio::runtime::Builder::new_current_thread()
-                    .enable_all()
-                    .build().unwrap();
-
-                rt.block_on(async {
-                    log::info!("Fetching data");
-                    MemPrefill::do_db_initialization(&args).await;
-                });
+        scheduler.every(1.days()).plus(10.minutes()).run(move || {
+            let rt = tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .unwrap();
+            rt.block_on(async {
+                log::info!("Fetching data");
+                MemPrefill::do_db_initialization(&args).await;
             });
-
+        });
 
         loop {
             scheduler.run_pending();
@@ -139,170 +190,1007 @@ async fn main() -> std::io::Result<()> {
         }
     });
 
+    let secured_router = Router::new()
+        .route("/email/settings", get(get_email_settings).put(update_email_settings))
+        .route("/email/test", get(test_email))
+        .route("/data/capability", get(get_capabilities_temperature))
+        .route("/status", get(get_status))
+        .route("/users", get(get_users))
+        .route("/device", get(get_devices))
+        .route("/device/states", get(get_device_states))
+        .route("/product/hash", get(get_hash))
+        .route("/message", get(get_messages))
+        .route(
+            "/message/:message_id",
+            get(get_message_by_id)
+                .put(update_message_by_id)
+                .delete(delete_message_by_id),
+        )
+        .route("/location", get(get_locations).post(create_location))
+        .route(
+            "/location/:id",
+            get(get_location_by_id)
+                .put(update_location)
+                .delete(delete_location),
+        )
+        .route("/capability", get(get_capabilities))
+        .route("/capability/states", get(get_capability_states))
+        .route("/userstorage", get(get_user_storage))
+        .route("/home/setup", get(get_home_setup))
+        .route("/service/sun-times", get(get_sun_times))
+        .route("/action", post(post_action))
+        .route("/relationship", get(get_relationship))
+        .route("/interaction", get(get_interactions))
+        .route(
+            "/interaction/:id",
+            get(get_interaction_by_id).put(update_interaction_by_id),
+        )
+        .route("/interaction/:id/trigger", post(trigger_interaction))
+        .route("/api/all", get(get_all_api))
+        .route("/unmount", get(unmount_usb_storage))
+        .route("/usb_storage", get(get_usb_status))
+        .route_layer(middleware::from_fn(basic_auth_middleware));
 
-    log::info!("Starting server at port 8000. The ui is at /");
-    HttpServer::new(move || {
-        App::new()
-            .service(start_connection)
-            .service(get_images)
-            .service(get_resources)
-            .service(redirect("/", "/ui/"))
-            .service(get_ui_config())
-            .service(login)
-            .service(get_api_config)
-            .service(get_secured_scope())
-            .app_data(bucket_images.clone())
-            .app_data(web::Data::new(action.clone()))
-            .app_data(web::Data::new(unmount_service.clone()))
-            .app_data(web::Data::new(email.clone()))
-            .app_data(web::Data::new(home.clone()))
-            .app_data(web::Data::new(status.clone()))
-            .app_data(web::Data::new(users.clone()))
-            .app_data(web::Data::new(devices.clone()))
-            .app_data(web::Data::new(hash.clone()))
-            .app_data(web::Data::new(user_storage.clone()))
-            .app_data(web::Data::new(message.clone()))
-            .app_data(web::Data::new(capabilties.clone()))
-            .app_data(web::Data::new(locations.clone()))
-            .app_data(web::Data::new(relationship.clone()))
-            .app_data(web::Data::new(interaction.clone()))
-            .app_data(token.clone())
-            .configure(|cfg| {
-                if oidc_opt.clone().is_some() {
-                    cfg.app_data(oidc_opt.clone().unwrap().clone());
-                }
-            })
-    }).workers(4)
-        .bind(("0.0.0.0", 8000))?
-        .run()
-        .await
+    let app = Router::new()
+        .route("/", get(root_redirect))
+        .route("/api/server", get(get_api_config))
+        .route("/login", post(login))
+        .route("/websocket", get(start_connection))
+        .route("/images/*tail", get(get_images))
+        .route("/resources/*tail", get(get_resources))
+        .route("/ui", get(index))
+        .route("/ui/", get(index))
+        .route("/ui/*path", get(get_ui_file))
+        .merge(secured_router)
+        .with_state(state);
+
+    log::info!("Starting Axum server at port 8000. The ui is at /");
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:8000").await?;
+    axum::serve(listener, app).await
 }
 
-pub fn get_secured_scope() -> Scope<impl ServiceFactory<ServiceRequest, Config=(), Response=ServiceResponse<EitherBody<EitherBody<EitherBody<EitherBody<BoxBody>>>, EitherBody<EitherBody<BoxBody>>>>, Error=actix_web::Error, InitError=()>> {
-    let middleware = auth_middleware::AuthFilter::new();
-    let biscuit_validator = OidcBiscuitValidator {
-        options: ValidationOptions {
-            issuer: Validation::Validate(var(OIDC_AUTHORITY).unwrap_or("No authority present".to_string())),
-            ..ValidationOptions::default()
+async fn basic_auth_middleware(request: Request, next: Next) -> Response {
+    if var(BASIC_AUTH).is_err() {
+        return next.run(request).await;
+    }
+
+    let expected_username = match var(USERNAME_BASIC) {
+        Ok(value) => value,
+        Err(_) => {
+            return (
+                StatusCode::UNAUTHORIZED,
+                [(header::WWW_AUTHENTICATE, "Basic realm=\"LIVISI\"")],
+                "Unauthorized",
+            )
+                .into_response();
         }
     };
-    Scope::new("")
-        .wrap(Condition::new(var(OIDC_AUTH).is_ok(), biscuit_validator))
-        .wrap(Condition::new(var(BASIC_AUTH).is_ok(), middleware))
-        .service(get_email_routes())
-        .service(get_capability_routes())
-        .service(get_status)
-        .service(get_users)
-        .service(get_devices)
-        .service(get_hash)
-        .service(get_scope_messages())
-        .service(get_locations)
-        .service(create_location)
-        .service(get_location_by_id)
-        .service(get_capabilties)
-        .service(get_user_storage)
-        .service(get_capability_states)
-        .service(delete_location)
-        .service(update_location)
-        .service(get_home_setup)
-        .service(post_action)
-        .service(get_relationship)
-        .service(get_device_states)
-        .service(get_interactions)
-        .service(get_all_api)
-        .service(unmount_usb_storage)
-        .service(get_usb_status)
-}
+    let expected_password = match var(PASSWORD_BASIC) {
+        Ok(value) => value,
+        Err(_) => {
+            return (
+                StatusCode::UNAUTHORIZED,
+                [(header::WWW_AUTHENTICATE, "Basic realm=\"LIVISI\"")],
+                "Unauthorized",
+            )
+                .into_response();
+        }
+    };
 
-pub fn get_ui_config() -> Scope {
-    web::scope("/ui")
-        .service(redirect("", "/ui/"))
-        .route("/index.html", web::get().to(index))
-        .route("/{path:[^.]*}", web::get().to(index))
-        .default_service(fn_service(|req: ServiceRequest| async {
-            let (req, _) = req.into_parts();
-            let path = req.path();
+    let authorization = request
+        .headers()
+        .get(header::AUTHORIZATION)
+        .and_then(|value| value.to_str().ok());
 
-            let test = Regex::new(r"/ui/(.*)").unwrap();
-            let rs = test.captures(path).unwrap().get(1).unwrap().as_str();
-            let file = NamedFile::open_async(format!("{}/{}",
-                                                     "./static", rs)).await?;
-            let mut content = String::new();
+    let Some(authorization) = authorization else {
+        return (
+            StatusCode::UNAUTHORIZED,
+            [(header::WWW_AUTHENTICATE, "Basic realm=\"LIVISI\"")],
+            "Unauthorized",
+        )
+            .into_response();
+    };
 
-            let type_of = file.content_type().to_string();
-            let res = file.file().read_to_string(&mut content);
+    let Some(encoded_part) = authorization.strip_prefix("Basic ") else {
+        return (
+            StatusCode::UNAUTHORIZED,
+            [(header::WWW_AUTHENTICATE, "Basic realm=\"LIVISI\"")],
+            "Unauthorized",
+        )
+            .into_response();
+    };
 
-            match res {
-                Ok(_) => {}
-                Err(_) => {
-                    return Ok(ServiceResponse::new(req.clone(), file.into_response(&req)))
-                }
-            }
-            let res = HttpResponse::Ok()
-                .content_type(type_of)
-                .body(content);
-            Ok(ServiceResponse::new(req, res))
-        }))
-}
+    let decoded = match general_purpose::STANDARD.decode(encoded_part) {
+        Ok(data) => data,
+        Err(_) => {
+            return (
+                StatusCode::UNAUTHORIZED,
+                [(header::WWW_AUTHENTICATE, "Basic realm=\"LIVISI\"")],
+                "Unauthorized",
+            )
+                .into_response();
+        }
+    };
 
-use std::thread::spawn;
-use actix::{Actor, Addr};
-use clap::Parser;
-use kv::Config;
-use crate::controllers::all_api::get_all_api;
-use crate::controllers::data_controller::get_capability_routes;
-use crate::controllers::email_controller::get_email_routes;
-use crate::controllers::images_controller::{get_images, get_resources};
-use crate::controllers::unmount_controller::{get_usb_status, unmount_usb_storage};
-use crate::controllers::websocket_controller::start_connection;
-use crate::models::client_data::ClientData;
-use crate::models::socket_event::Properties::Value;
-use crate::models::socket_event::{SocketData, SocketEvent};
-use crate::store::Store;
-use crate::utils::logging::init_logging;
-use crate::ws::broadcast_message::BroadcastMessage;
-use crate::ws::web_socket_message::Lobby;
+    let decoded = match String::from_utf8(decoded) {
+        Ok(data) => data,
+        Err(_) => {
+            return (
+                StatusCode::UNAUTHORIZED,
+                [(header::WWW_AUTHENTICATE, "Basic realm=\"LIVISI\"")],
+                "Unauthorized",
+            )
+                .into_response();
+        }
+    };
 
-pub async fn init_socket(base_url: String, x: &Args) {
+    let mut parts = decoded.splitn(2, ':');
+    let username = parts.next().unwrap_or_default();
+    let password = parts.next().unwrap_or_default();
 
-    if x.file.is_some() {
-        return
+    if username != expected_username || password != expected_password {
+        return (
+            StatusCode::UNAUTHORIZED,
+            [(header::WWW_AUTHENTICATE, "Basic realm=\"LIVISI\"")],
+            "Unauthorized",
+        )
+            .into_response();
     }
 
-    let token = MemPrefill::get_token().await;
-    if let Ok(token) = token {
-        let token_encoded = urlencoding::encode(token.access_token.as_str()).into_owned();
-        spawn(move || {
-            let mut url = Url::parse(&(base_url.replace("http://", "ws://") + "/events?token=" + &token_encoded)).unwrap();
-            url.set_port(Some(9090)).unwrap();
-            let (mut socket, _response) = connect(url).expect("Can't connect");
-            let mut retries = 0;
+    next.run(request).await
+}
 
-            while retries < 5 {
-                while let Ok(msg) = socket.read() {
-                    let mut parsed_message = serde_json::from_str::<SocketEvent>(&msg.to_string()).unwrap();
-                    let store_data = STORE_DATA.get().unwrap();
-                    let mut data = store_data.data.lock().unwrap();
-                    println!("Data: {:?}", parsed_message);
-                    data.handle_socket_event(&mut parsed_message);
-                    if let Some(Value(props)) = &parsed_message.properties {
-                        log::error!("Unknown properties!! {}", props);
-                    }
+async fn root_redirect() -> impl IntoResponse {
+    Redirect::temporary("/ui/")
+}
 
-                    if let Some(SocketData::Value(data)) = &parsed_message.data {
-                        log::error!("Unknown data!! {}", data);
-                    }
+async fn index() -> Response {
+    serve_ui_asset("index.html".to_string(), true).await
+}
 
+async fn get_ui_file(Path(path): Path<String>) -> Response {
+    serve_ui_asset(path, true).await
+}
 
-                    let lobby = WINNER.get().unwrap();
-                    lobby.do_send(BroadcastMessage {
-                        message: parsed_message
-                    });
-                }
-                retries += 1;
-                thread::sleep(Duration::from_secs(5));
+async fn serve_ui_asset(path: String, fallback_to_index: bool) -> Response {
+    let static_root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("static");
+    let requested_path = clean("/".to_owned() + path.trim_start_matches('/'));
+    let requested_str = requested_path.to_string_lossy().replace('\\', "/");
+
+    if !requested_str.starts_with('/') {
+        return (StatusCode::BAD_REQUEST, "Invalid path").into_response();
+    }
+
+    let relative_path = requested_str.trim_start_matches('/');
+    let has_file_extension = relative_path.contains('.');
+    let target_file = static_root.join(relative_path);
+
+    if has_file_extension {
+        return match fs::read(&target_file).await {
+            Ok(content) => (
+                [(header::CONTENT_TYPE, content_type_from_path(relative_path))],
+                content,
+            )
+                .into_response(),
+            Err(_) => (StatusCode::NOT_FOUND, "Not found").into_response(),
+        };
+    }
+
+    if fallback_to_index {
+        let index_file = static_root.join("index.html");
+        return match fs::read(index_file).await {
+            Ok(content) => (
+                [(header::CONTENT_TYPE, "text/html; charset=utf-8")],
+                content,
+            )
+                .into_response(),
+            Err(err) => {
+                log::warn!("No UI build found in ./static: {}", err);
+                (
+                    StatusCode::SERVICE_UNAVAILABLE,
+                    "UI build missing. Run `pnpm -C ui-new build:copy`.",
+                )
+                    .into_response()
             }
-            log::info!("Socket connection failed");
+        };
+    }
+
+    (StatusCode::NOT_FOUND, "Not found").into_response()
+}
+
+async fn get_images(State(state): State<AxumState>, Path(tail): Path<String>) -> Response {
+    get_cached_remote_asset(state, "images", tail).await
+}
+
+async fn get_resources(State(state): State<AxumState>, Path(tail): Path<String>) -> Response {
+    get_cached_remote_asset(state, "resources", tail).await
+}
+
+async fn get_cached_remote_asset(state: AxumState, prefix: &str, tail: String) -> Response {
+    let requested_path = clean(format!("/{}/{}", prefix, tail));
+    let requested_str = requested_path.to_string_lossy().replace('\\', "/");
+
+    if !requested_str.starts_with(&format!("/{}", prefix)) {
+        return (StatusCode::BAD_REQUEST, "Invalid path").into_response();
+    }
+
+    let bucket = match state.kv_store.bucket::<String, String>(Some("images")) {
+        Ok(bucket) => bucket,
+        Err(err) => {
+            log::error!("Could not open KV bucket: {}", err);
+            return (StatusCode::INTERNAL_SERVER_ERROR, "KV store error").into_response();
+        }
+    };
+
+    if let Ok(Some(cached_data)) = bucket.get(&requested_str) {
+        return (
+            [(header::CONTENT_TYPE, content_type_from_path(&requested_str))],
+            cached_data,
+        )
+            .into_response();
+    }
+
+    let shc_path = format!("{}{}", state.resource_base_url, requested_str.replace('\\', "/"));
+    let data = match reqwest::get(shc_path).await {
+        Ok(response) => match response.text().await {
+            Ok(body) => body,
+            Err(err) => {
+                log::error!("Could not read remote asset body: {}", err);
+                return (StatusCode::BAD_GATEWAY, "Could not read remote asset").into_response();
+            }
+        },
+        Err(err) => {
+            log::error!("Could not fetch remote asset: {}", err);
+            return (StatusCode::BAD_GATEWAY, "Could not fetch remote asset").into_response();
+        }
+    };
+
+    if let Err(err) = bucket.set(&requested_str, &data) {
+        log::warn!("Could not cache remote asset {}: {}", requested_str, err);
+    }
+
+    (
+        [(header::CONTENT_TYPE, content_type_from_path(&requested_str))],
+        data,
+    )
+        .into_response()
+}
+
+async fn start_connection(ws: WebSocketUpgrade) -> impl IntoResponse {
+    ws.on_upgrade(websocket_session)
+}
+
+async fn websocket_session(mut socket: WebSocket) {
+    let sender = WS_BROADCAST.get_or_init(|| {
+        let (sender, _) = broadcast::channel(512);
+        sender
+    });
+    let mut receiver = sender.subscribe();
+
+    loop {
+        tokio::select! {
+            broadcast_item = receiver.recv() => {
+                match broadcast_item {
+                    Ok(payload) => {
+                        if socket.send(WsMessage::Text(payload.into())).await.is_err() {
+                            break;
+                        }
+                    }
+                    Err(broadcast::error::RecvError::Lagged(_)) => {
+                        continue;
+                    }
+                    Err(_) => {
+                        break;
+                    }
+                }
+            }
+            incoming = socket.recv() => {
+                match incoming {
+                    Some(Ok(WsMessage::Ping(payload))) => {
+                        if socket.send(WsMessage::Pong(payload)).await.is_err() {
+                            break;
+                        }
+                    }
+                    Some(Ok(WsMessage::Close(_))) | None => {
+                        break;
+                    }
+                    Some(Ok(_)) => {}
+                    Some(Err(_)) => {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+async fn get_api_config() -> impl IntoResponse {
+    let basic_auth = var(BASIC_AUTH).is_ok();
+    let oidc_configured = var(OIDC_AUTH).is_ok();
+
+    let mut config = ConfigModel {
+        basic_auth,
+        oidc_configured,
+        oidc_config: None,
+    };
+
+    if oidc_configured {
+        config.oidc_config = Some(OidcConfigModel {
+            redirect_uri: var(OIDC_REDIRECT_URI)
+                .expect("OIDC redirect uri not configured"),
+            authority: var(OIDC_AUTHORITY)
+                .expect("OIDC authority not configured"),
+            client_id: var(OIDC_CLIENT_ID)
+                .expect("OIDC client id not configured"),
+            scope: var(OIDC_SCOPE).unwrap_or("openid profile email".to_string()),
         });
     }
+
+    Json(config)
+}
+
+fn normalized_sort_key(value: &str) -> String {
+    value.trim().to_lowercase()
+}
+
+fn device_display_name(device_id: &str, device: &DeviceStore) -> String {
+    device
+        .config
+        .as_ref()
+        .and_then(|config| config.name.clone())
+        .filter(|name| !name.trim().is_empty())
+        .unwrap_or_else(|| device_id.to_string())
+}
+
+fn canonical_device_id(device_id: &str) -> &str {
+    device_id.strip_prefix("/device/").unwrap_or(device_id)
+}
+
+fn compare_devices(
+    left_id: &str,
+    left_device: &DeviceStore,
+    right_id: &str,
+    right_device: &DeviceStore,
+) -> Ordering {
+    let left_name = normalized_sort_key(&device_display_name(left_id, left_device));
+    let right_name = normalized_sort_key(&device_display_name(right_id, right_device));
+    left_name
+        .cmp(&right_name)
+        .then_with(|| left_id.cmp(right_id))
+}
+
+fn sorted_devices_map_value(devices: &HashMap<String, DeviceStore>) -> Value {
+    let mut entries: Vec<(&String, &DeviceStore)> = devices.iter().collect();
+    entries.sort_by(|(left_id, left_device), (right_id, right_device)| {
+        compare_devices(left_id, left_device, right_id, right_device)
+    });
+
+    let mut sorted_map = serde_json::Map::new();
+    for (device_id, device) in entries {
+        match serde_json::to_value(device) {
+            Ok(device_value) => {
+                sorted_map.insert(device_id.clone(), device_value);
+            }
+            Err(err) => {
+                log::warn!("Could not serialize device {}: {}", device_id, err);
+            }
+        }
+    }
+
+    Value::Object(sorted_map)
+}
+
+fn sorted_locations(locations: &[LocationResponse], devices: &HashMap<String, DeviceStore>) -> Vec<LocationResponse> {
+    let mut sorted_locations = locations.to_vec();
+    sorted_locations.sort_by(|left, right| {
+        normalized_sort_key(&left.config.name)
+            .cmp(&normalized_sort_key(&right.config.name))
+            .then_with(|| left.id.cmp(&right.id))
+    });
+
+    for location in &mut sorted_locations {
+        if let Some(device_ids) = location.devices.as_mut() {
+            device_ids.sort_by(|left_id, right_id| {
+                let left_canonical = canonical_device_id(left_id);
+                let right_canonical = canonical_device_id(right_id);
+                let left_device = devices.get(left_canonical);
+                let right_device = devices.get(right_canonical);
+
+                match (left_device, right_device) {
+                    (Some(left_device), Some(right_device)) => {
+                        compare_devices(left_canonical, left_device, right_canonical, right_device)
+                    }
+                    (Some(_), None) => Ordering::Less,
+                    (None, Some(_)) => Ordering::Greater,
+                    (None, None) => normalized_sort_key(left_id)
+                        .cmp(&normalized_sort_key(right_id)),
+                }
+            });
+            device_ids.dedup();
+        }
+    }
+
+    sorted_locations
+}
+
+fn sorted_interactions(interactions: &[InteractionResponse]) -> Vec<InteractionResponse> {
+    let mut sorted_interactions = interactions.to_vec();
+    sorted_interactions.sort_by(|left, right| {
+        let left_name = normalized_sort_key(left.name.as_deref().unwrap_or(&left.id));
+        let right_name = normalized_sort_key(right.name.as_deref().unwrap_or(&right.id));
+        left_name
+            .cmp(&right_name)
+            .then_with(|| left.id.cmp(&right.id))
+    });
+    sorted_interactions
+}
+
+fn sorted_data_value(data: &Data) -> Value {
+    let mut value = match serde_json::to_value(data) {
+        Ok(value) => value,
+        Err(err) => {
+            log::warn!("Could not serialize /api/all payload: {}", err);
+            Value::Object(serde_json::Map::new())
+        }
+    };
+
+    if let Value::Object(map) = &mut value {
+        map.insert("devices".to_string(), sorted_devices_map_value(&data.devices));
+        map.insert(
+            "locations".to_string(),
+            serde_json::to_value(sorted_locations(&data.locations, &data.devices))
+                .unwrap_or(Value::Array(Vec::new())),
+        );
+        map.insert(
+            "interactions".to_string(),
+            serde_json::to_value(sorted_interactions(&data.interactions))
+                .unwrap_or(Value::Array(Vec::new())),
+        );
+    }
+
+    value
+}
+
+async fn login(Json(auth): Json<LoginRequest>) -> Response {
+    if var(BASIC_AUTH).is_err() {
+        return (StatusCode::UNAUTHORIZED, Json(json!("Username or password incorrect")))
+            .into_response();
+    }
+
+    let username = var(USERNAME_BASIC).unwrap_or_default();
+    let password = var(PASSWORD_BASIC).unwrap_or_default();
+    if auth.username == username && auth.password == password {
+        return (StatusCode::OK, Json(json!("Login successful"))).into_response();
+    }
+
+    (StatusCode::UNAUTHORIZED, Json(json!("Username or password incorrect"))).into_response()
+}
+
+async fn get_status(State(state): State<AxumState>) -> impl IntoResponse {
+    Json(state.status.get_status().await)
+}
+
+async fn get_users(State(state): State<AxumState>) -> impl IntoResponse {
+    Json(state.users.get_users().await)
+}
+
+async fn get_devices() -> Response {
+    let data = STORE_DATA.get().unwrap().data.lock().unwrap();
+    Json(sorted_devices_map_value(&data.devices)).into_response()
+}
+
+async fn get_device_states(State(state): State<AxumState>) -> impl IntoResponse {
+    Json(state.devices.get_all_device_states().await)
+}
+
+async fn get_hash(State(state): State<AxumState>) -> impl IntoResponse {
+    Json(state.hash.get_hash().await)
+}
+
+async fn get_messages(State(state): State<AxumState>) -> impl IntoResponse {
+    Json(state.messages.get_messages().await)
+}
+
+async fn get_message_by_id(
+    State(state): State<AxumState>,
+    Path(message_id): Path<String>,
+) -> impl IntoResponse {
+    Json(state.messages.get_message_by_id(message_id).await)
+}
+
+async fn delete_message_by_id(
+    State(state): State<AxumState>,
+    Path(message_id): Path<String>,
+) -> Response {
+    let response = state.messages.delete_message_by_id(message_id).await;
+    if response.status().is_success() {
+        StatusCode::OK.into_response()
+    } else {
+        StatusCode::BAD_REQUEST.into_response()
+    }
+}
+
+async fn update_message_by_id(
+    State(state): State<AxumState>,
+    Path(message_id): Path<String>,
+    Json(message_read): Json<MessageRead>,
+) -> Response {
+    let response = state
+        .messages
+        .update_mesage_read(message_id, MessageRead {
+            read: message_read.read,
+        })
+        .await;
+    if response.status().is_success() {
+        StatusCode::OK.into_response()
+    } else {
+        StatusCode::BAD_REQUEST.into_response()
+    }
+}
+
+async fn get_locations() -> Response {
+    let data = STORE_DATA.get().unwrap().data.lock().unwrap();
+    Json(sorted_locations(&data.locations, &data.devices)).into_response()
+}
+
+async fn get_location_by_id(
+    State(state): State<AxumState>,
+    Path(id): Path<String>,
+) -> impl IntoResponse {
+    Json(state.locations.get_location_by_id(id).await)
+}
+
+async fn create_location(
+    State(state): State<AxumState>,
+    Json(location_data): Json<LocationResponse>,
+) -> impl IntoResponse {
+    Json(state.locations.create_location(location_data).await)
+}
+
+async fn update_location(
+    State(state): State<AxumState>,
+    Path(id): Path<String>,
+    Json(location_data): Json<LocationResponse>,
+) -> impl IntoResponse {
+    Json(state.locations.update_location(location_data, id).await)
+}
+
+async fn delete_location(
+    State(state): State<AxumState>,
+    Path(id): Path<String>,
+) -> impl IntoResponse {
+    Json(state.locations.delete_location(id).await)
+}
+
+async fn get_capabilities() -> Response {
+    let capabilities = &STORE_DATA.get().unwrap().data.lock().unwrap().capabilities;
+    Json(capabilities.clone()).into_response()
+}
+
+async fn get_capability_states(State(state): State<AxumState>) -> impl IntoResponse {
+    Json(state.capabilities.get_all_capability_states().await)
+}
+
+async fn get_user_storage() -> Response {
+    let user_storage = &STORE_DATA.get().unwrap().data.lock().unwrap().user_storage;
+    Json(user_storage.clone()).into_response()
+}
+
+async fn get_home_setup(State(state): State<AxumState>) -> impl IntoResponse {
+    match state.home.get_home_setup().await {
+        Ok(home_setup) => (StatusCode::OK, Json(home_setup)).into_response(),
+        Err(error) => (
+            StatusCode::BAD_GATEWAY,
+            Json(json!({
+                "error": error
+            })),
+        )
+            .into_response(),
+    }
+}
+
+async fn get_sun_times(State(state): State<AxumState>) -> Response {
+    let home_setup = match state.home.get_home_setup().await {
+        Ok(home_setup) => home_setup,
+        Err(error) => {
+            return (
+                StatusCode::BAD_GATEWAY,
+                Json(json!({
+                    "error": error
+                })),
+            )
+                .into_response();
+        }
+    };
+    let geo_location = home_setup.config.geo_location.clone();
+    let (latitude, longitude) = match parse_geo_location(&geo_location) {
+        Some(coords) => coords,
+        None => {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(json!({
+                    "error": "Invalid geoLocation in home setup",
+                    "geoLocation": geo_location
+                })),
+            )
+                .into_response();
+        }
+    };
+
+    let now = Utc::now();
+    let today = now.date_naive();
+    let tomorrow = today
+        .checked_add_days(Days::new(1))
+        .unwrap_or(today);
+
+    let sunrise_today = solar_event_time_for_date(latitude, longitude, today, SolarEvent::Sunrise);
+    let sunset_today = solar_event_time_for_date(latitude, longitude, today, SolarEvent::Sunset);
+    let sunrise_tomorrow = solar_event_time_for_date(latitude, longitude, tomorrow, SolarEvent::Sunrise);
+    let sunset_tomorrow = solar_event_time_for_date(latitude, longitude, tomorrow, SolarEvent::Sunset);
+
+    let next_sunrise = first_future_event(now, sunrise_today, sunrise_tomorrow);
+    let next_sunset = first_future_event(now, sunset_today, sunset_tomorrow);
+
+    let next_event = match (next_sunrise, next_sunset) {
+        (Some(sunrise), Some(sunset)) => {
+            if sunrise <= sunset {
+                Some(("sunrise".to_string(), sunrise))
+            } else {
+                Some(("sunset".to_string(), sunset))
+            }
+        }
+        (Some(sunrise), None) => Some(("sunrise".to_string(), sunrise)),
+        (None, Some(sunset)) => Some(("sunset".to_string(), sunset)),
+        (None, None) => None,
+    };
+
+    let response = SunTimesResponse {
+        geo_location,
+        latitude,
+        longitude,
+        sunrise: sunrise_today.map(|time| time.to_rfc3339()),
+        sunset: sunset_today.map(|time| time.to_rfc3339()),
+        next_sunrise: next_sunrise.map(|time| time.to_rfc3339()),
+        next_sunset: next_sunset.map(|time| time.to_rfc3339()),
+        next_event_name: next_event.as_ref().map(|event| event.0.clone()),
+        next_event_at: next_event.map(|event| event.1.to_rfc3339()),
+    };
+
+    (StatusCode::OK, Json(response)).into_response()
+}
+
+async fn post_action(
+    State(state): State<AxumState>,
+    Json(action_data): Json<ActionPost>,
+) -> Response {
+    match state.action.post_action(action_data).await {
+        LivisResponseType::Ok(result) => (StatusCode::OK, Json(result)).into_response(),
+        LivisResponseType::Err(err) => map_livisi_error(err),
+    }
+}
+
+async fn get_relationship(State(state): State<AxumState>) -> impl IntoResponse {
+    Json(state.relationship.get_relationship().await)
+}
+
+async fn get_interactions(State(state): State<AxumState>) -> impl IntoResponse {
+    Json(sorted_interactions(&state.interaction.get_interaction().await))
+}
+
+async fn get_interaction_by_id(
+    State(state): State<AxumState>,
+    Path(id): Path<String>,
+) -> impl IntoResponse {
+    Json(state.interaction.get_interaction_by_id(id).await)
+}
+
+async fn update_interaction_by_id(
+    State(state): State<AxumState>,
+    Path(id): Path<String>,
+    Json(body): Json<Value>,
+) -> Response {
+    match state.interaction.update_interaction_by_id(id, body).await {
+        Ok(response) => {
+            let refreshed_interactions = state.interaction.get_interaction().await;
+            if let Some(store_data) = STORE_DATA.get() {
+                if let Ok(mut data) = store_data.data.lock() {
+                    data.set_interactions(refreshed_interactions);
+                }
+            }
+            (StatusCode::OK, Json(response)).into_response()
+        }
+        Err(err) => (StatusCode::BAD_GATEWAY, Json(json!({ "error": err }))).into_response(),
+    }
+}
+
+async fn trigger_interaction(
+    State(state): State<AxumState>,
+    Path(id): Path<String>,
+) -> Response {
+    match state.interaction.trigger_interaction(id).await {
+        Ok(response) => (StatusCode::OK, Json(response)).into_response(),
+        Err(err) => (StatusCode::BAD_GATEWAY, Json(json!({ "error": err }))).into_response(),
+    }
+}
+
+async fn get_all_api() -> Response {
+    let store = STORE_DATA.get().unwrap();
+    let data = store.data.lock().unwrap();
+    Json(sorted_data_value(&data)).into_response()
+}
+
+async fn unmount_usb_storage(State(state): State<AxumState>) -> Response {
+    state.usb_service.unmount_usb_storage().await;
+    (StatusCode::OK, "USB storage unmounted.").into_response()
+}
+
+async fn get_usb_status(State(state): State<AxumState>) -> impl IntoResponse {
+    Json(state.usb_service.get_usb_status().await)
+}
+
+async fn get_email_settings(State(state): State<AxumState>) -> impl IntoResponse {
+    Json(state.email.get_email_settings().await)
+}
+
+async fn update_email_settings(
+    State(state): State<AxumState>,
+    Json(email_data): Json<EmailAPI>,
+) -> Response {
+    let status = state.email.update_email_settings(&email_data).await;
+    if let Some(store_data) = STORE_DATA.get() {
+        if let Ok(mut store) = store_data.data.lock() {
+            store.email = Some(email_data);
+        }
+    }
+    StatusCode::from_u16(status)
+        .unwrap_or(StatusCode::INTERNAL_SERVER_ERROR)
+        .into_response()
+}
+
+async fn test_email(State(state): State<AxumState>) -> impl IntoResponse {
+    Json(state.email.test_email().await)
+}
+
+async fn get_capabilities_temperature(
+    State(state): State<AxumState>,
+    uri: Uri,
+) -> Response {
+    let full_url = uri
+        .path_and_query()
+        .map(|path_and_query| path_and_query.as_str().to_string())
+        .unwrap_or_else(|| uri.path().to_string());
+    let cleaned_url = clean(&full_url);
+    if !cleaned_url.to_string_lossy().starts_with("/data") {
+        return (StatusCode::BAD_REQUEST, "Invalid URL").into_response();
+    }
+
+    let response = state.capabilities.get_historic_data(&full_url).await;
+    Json(response).into_response()
+}
+
+fn parse_geo_location(geo_location: &str) -> Option<(f64, f64)> {
+    let mut tokens: Vec<String> = Vec::new();
+    let mut current = String::new();
+
+    for char in geo_location.chars() {
+        if char.is_ascii_digit() || char == '.' || char == '-' || char == '+' {
+            current.push(char);
+        } else if !current.is_empty() {
+            tokens.push(current.clone());
+            current.clear();
+        }
+    }
+
+    if !current.is_empty() {
+        tokens.push(current);
+    }
+
+    if tokens.len() < 2 {
+        return None;
+    }
+
+    let mut first = tokens[0].parse::<f64>().ok()?;
+    let mut second = tokens[1].parse::<f64>().ok()?;
+
+    if !(-90.0..=90.0).contains(&first)
+        && (-90.0..=90.0).contains(&second)
+        && (-180.0..=180.0).contains(&first)
+    {
+        std::mem::swap(&mut first, &mut second);
+    }
+
+    if !(-90.0..=90.0).contains(&first) || !(-180.0..=180.0).contains(&second) {
+        return None;
+    }
+
+    Some((first, second))
+}
+
+fn solar_event_time_for_date(
+    latitude: f64,
+    longitude: f64,
+    date: NaiveDate,
+    event: SolarEvent,
+) -> Option<DateTime<Utc>> {
+    let coordinates = Coordinates::new(latitude, longitude)?;
+    SolarDay::new(coordinates, date).event_time(event)
+}
+
+fn first_future_event(
+    now: DateTime<Utc>,
+    first: Option<DateTime<Utc>>,
+    second: Option<DateTime<Utc>>,
+) -> Option<DateTime<Utc>> {
+    if let Some(time) = first {
+        if time > now {
+            return Some(time);
+        }
+    }
+    second.filter(|time| *time > now)
+}
+
+fn map_livisi_error(err: ErrorConstruct) -> Response {
+    let status = match err.errorcode {
+        1000 => StatusCode::INTERNAL_SERVER_ERROR,
+        1001 => StatusCode::EXPECTATION_FAILED,
+        1002 => StatusCode::REQUEST_TIMEOUT,
+        1003 => StatusCode::INTERNAL_SERVER_ERROR,
+        1004 => StatusCode::BAD_REQUEST,
+        1005 => StatusCode::BAD_REQUEST,
+        1006 => StatusCode::SERVICE_UNAVAILABLE,
+        1007 => StatusCode::BAD_REQUEST,
+        1008 => StatusCode::PRECONDITION_FAILED,
+        2000 => StatusCode::BAD_REQUEST,
+        2001 => StatusCode::FORBIDDEN,
+        2002 => StatusCode::FORBIDDEN,
+        2003 => StatusCode::UNAUTHORIZED,
+        2004 => StatusCode::FORBIDDEN,
+        2005 => StatusCode::FORBIDDEN,
+        2006 => StatusCode::CONFLICT,
+        2007 => StatusCode::UNAUTHORIZED,
+        2008 => StatusCode::FORBIDDEN,
+        2009 => StatusCode::UNAUTHORIZED,
+        2010 => StatusCode::FORBIDDEN,
+        2011 => StatusCode::FORBIDDEN,
+        2012 => StatusCode::FAILED_DEPENDENCY,
+        2013 => StatusCode::FORBIDDEN,
+        _ => StatusCode::INTERNAL_SERVER_ERROR,
+    };
+
+    (status, Json(err)).into_response()
+}
+
+fn content_type_from_path(path: &str) -> &'static str {
+    if path.ends_with(".svg") {
+        "image/svg+xml"
+    } else if path.ends_with(".html") {
+        "text/html; charset=utf-8"
+    } else if path.ends_with(".js") {
+        "application/javascript; charset=utf-8"
+    } else if path.ends_with(".css") {
+        "text/css; charset=utf-8"
+    } else if path.ends_with(".json") {
+        "application/json; charset=utf-8"
+    } else if path.ends_with(".png") {
+        "image/png"
+    } else if path.ends_with(".jpg") || path.ends_with(".jpeg") {
+        "image/jpeg"
+    } else if path.ends_with(".gif") {
+        "image/gif"
+    } else if path.ends_with(".webp") {
+        "image/webp"
+    } else if path.ends_with(".ico") {
+        "image/x-icon"
+    } else {
+        "application/octet-stream"
+    }
+}
+
+fn build_livisi_ws_url(base_url: &str, token: &str) -> Option<Url> {
+    let ws_base = if base_url.starts_with("https://") {
+        base_url.replacen("https://", "wss://", 1)
+    } else {
+        base_url.replacen("http://", "ws://", 1)
+    };
+
+    let mut url = match Url::parse(
+        &(ws_base.trim_end_matches('/').to_string() + "/events?token=" + token),
+    ) {
+        Ok(url) => url,
+        Err(err) => {
+            log::error!("Could not parse websocket URL from BASE_URL: {}", err);
+            return None;
+        }
+    };
+
+    if let Err(err) = url.set_port(Some(9090)) {
+        log::error!("Could not set websocket port to 9090: {:?}", err);
+        return None;
+    }
+
+    Some(url)
+}
+
+fn process_socket_payload(payload: &str) {
+    let mut parsed_message = match serde_json::from_str::<SocketEvent>(payload) {
+        Ok(parsed_message) => parsed_message,
+        Err(err) => {
+            log::warn!("Ignoring malformed websocket payload: {}", err);
+            return;
+        }
+    };
+
+    if let Some(store_data) = STORE_DATA.get() {
+        match store_data.data.lock() {
+            Ok(mut data) => data.handle_socket_event(&mut parsed_message),
+            Err(err) => {
+                log::warn!("Could not acquire store lock for websocket event: {}", err);
+                return;
+            }
+        }
+    } else {
+        log::warn!("Store is not initialized yet. Dropping websocket event.");
+        return;
+    }
+
+    if let Some(SocketValue(props)) = &parsed_message.properties {
+        log::debug!("Unhandled websocket properties payload: {}", props);
+    }
+
+    if let Some(SocketData::Value(data)) = &parsed_message.data {
+        log::debug!("Unhandled websocket data payload: {}", data);
+    }
+
+    let sender = WS_BROADCAST.get_or_init(|| {
+        let (sender, _) = broadcast::channel(512);
+        sender
+    });
+    let payload = json!({
+        "message": parsed_message
+    })
+    .to_string();
+    let _ = sender.send(payload);
+}
+
+pub async fn init_socket(base_url: String, x: &Args) {
+    if x.file.is_some() {
+        return;
+    }
+
+    let token = match MemPrefill::get_token().await {
+        Ok(token) => token,
+        Err(err) => {
+            log::error!("Could not get token for websocket subscription: {:?}", err);
+            return;
+        }
+    };
+
+    let token_encoded = urlencoding::encode(token.access_token.as_str()).into_owned();
+    spawn(move || {
+        let Some(url) = build_livisi_ws_url(&base_url, &token_encoded) else {
+            return;
+        };
+
+        let mut retry_delay = Duration::from_secs(1);
+        let max_retry_delay = Duration::from_secs(60);
+
+        loop {
+            match connect(url.clone()) {
+                Ok((mut socket, _response)) => {
+                    log::info!("Connected to Livisi websocket.");
+                    retry_delay = Duration::from_secs(1);
+                    while let Ok(msg) = socket.read() {
+                        process_socket_payload(&msg.to_string());
+                    }
+                    log::warn!("Livisi websocket disconnected.");
+                }
+                Err(err) => {
+                    log::warn!("Livisi websocket connection failed: {}", err);
+                }
+            }
+
+            thread::sleep(retry_delay);
+            retry_delay = std::cmp::min(retry_delay + retry_delay, max_retry_delay);
+        }
+    });
 }

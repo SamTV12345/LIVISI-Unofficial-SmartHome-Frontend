@@ -16,7 +16,6 @@ export default defineConfig({
             '/usb_storage': target,
             '/unmount': target,
             '/status': target,
-            '/states': target,
             '/device': target,
             '/capability': target,
             '/message':target,

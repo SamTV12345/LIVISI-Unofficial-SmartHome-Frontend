@@ -1,16 +1,20 @@
 import {NavLink} from "react-router-dom";
-import {FC} from "react";
+import {FC, ReactNode} from "react";
+import {cn} from "@/src/utils/cn-helper.ts";
 
 type LinkProps = {
     to: string
-    children: string
+    children: ReactNode
 }
 
 export const LinkNav:FC<LinkProps> = ({to,children})=>{
-    return <NavLink to={to} className="relative before:content-[''] before:absolute before:block before:w-full before:h-[2px]
-              before:bottom-0 before:left-0 before:bg-black
-              before:hover:scale-x-100 before:scale-x-0 before:origin-top-left
-              before:transition before:ease-in-out before:duration-300">
+    return <NavLink
+        to={to}
+        className={({isActive}) => cn(
+            "relative rounded-lg px-2 py-1 text-base font-medium text-slate-700 transition hover:bg-cyan-50 hover:text-cyan-700",
+            isActive && "bg-cyan-100/80 text-cyan-800"
+        )}
+    >
         {children}
     </NavLink>
 }

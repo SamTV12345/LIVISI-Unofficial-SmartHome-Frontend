@@ -1,9 +1,8 @@
 use std::collections::HashMap;
 
-
-use serde::{Serialize};
 use serde::Deserialize;
-use serde_json::Value;
+use serde::Serialize;
+use serde_json::{json, Value};
 use crate::CLIENT_DATA;
 
 
@@ -192,5 +191,122 @@ impl Interaction{
         response.json::<InteractionResponse>()
             .await
             .unwrap()
+    }
+
+    pub async fn update_interaction_by_id(&self, id: String, interaction_data: Value) -> Result<Value, String> {
+        let api_client;
+        {
+            let locked_client = CLIENT_DATA.get().unwrap().lock();
+            api_client = locked_client.unwrap().client.clone()
+        }
+
+        let response = api_client
+            .put(self.base_url.clone() + "/" + &id)
+            .json(&interaction_data)
+            .send()
+            .await
+            .map_err(|err| format!("Could not update interaction: {}", err))?;
+
+        let status = response.status();
+        let text = response
+            .text()
+            .await
+            .map_err(|err| format!("Could not read interaction update response: {}", err))?;
+
+        if !status.is_success() {
+            return Err(format!("Interaction update failed with status {}: {}", status, text));
+        }
+
+        serde_json::from_str::<Value>(&text)
+            .map_err(|err| format!("Could not parse interaction update response JSON: {}", err))
+    }
+
+    pub async fn trigger_interaction(&self, id: String) -> Result<Value, String> {
+        let api_client;
+        {
+            let locked_client = CLIENT_DATA.get().unwrap().lock();
+            api_client = locked_client.unwrap().client.clone()
+        }
+
+        let mut errors: Vec<String> = Vec::new();
+
+        let direct_candidates = vec![
+            self.base_url.clone() + "/" + &id + "/trigger",
+            self.base_url.clone() + "/" + &id + "/execute"
+        ];
+
+        for endpoint in direct_candidates {
+            match api_client.post(endpoint.clone()).send().await {
+                Ok(response) => {
+                    let status = response.status();
+                    let text = response.text().await.unwrap_or_default();
+                    if status.is_success() {
+                        return Ok(serde_json::from_str::<Value>(&text).unwrap_or(json!({
+                            "status": "ok",
+                            "raw": text
+                        })));
+                    }
+                    errors.push(format!("POST {} failed with {}: {}", endpoint, status, text));
+                }
+                Err(err) => {
+                    errors.push(format!("POST {} failed: {}", endpoint, err));
+                }
+            }
+        }
+
+        let interaction_target = format!("/interaction/{}", id);
+        let action_base = self.base_url
+            .strip_suffix("/interaction")
+            .unwrap_or(self.base_url.as_str())
+            .trim_end_matches('/');
+        let action_endpoint = format!("{}/action", action_base);
+        let action_candidates = vec![
+            json!({
+                "id": id,
+                "type": "Execute",
+                "namespace": "core.Interaction",
+                "target": interaction_target
+            }),
+            json!({
+                "id": id,
+                "type": "Execute",
+                "namespace": "core.RWE",
+                "target": interaction_target
+            }),
+            json!({
+                "id": id,
+                "type": "Trigger",
+                "namespace": "core.Interaction",
+                "target": interaction_target
+            }),
+            json!({
+                "id": id,
+                "type": "SetTrigger",
+                "namespace": "core.Interaction",
+                "target": interaction_target
+            }),
+        ];
+
+        for payload in action_candidates {
+            match api_client.post(action_endpoint.clone()).json(&payload).send().await {
+                Ok(response) => {
+                    let status = response.status();
+                    let text = response.text().await.unwrap_or_default();
+                    if status.is_success() {
+                        return Ok(serde_json::from_str::<Value>(&text).unwrap_or(json!({
+                            "status": "ok",
+                            "raw": text
+                        })));
+                    }
+
+                    errors.push(format!("POST {} with payload {} failed with {}: {}", action_endpoint, payload, status, text));
+                }
+                Err(err) => {
+                    errors.push(format!("POST {} with payload {} failed: {}", action_endpoint, payload, err));
+                }
+            }
+        }
+
+        Err(errors.join(" | "))
     }
 }

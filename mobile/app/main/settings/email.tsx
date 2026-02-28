@@ -1,4 +1,4 @@
-import {View, Text, TextInput, ScrollView} from "react-native";
+import {View, Text, TextInput, ScrollView, RefreshControl} from "react-native";
 import {ListItemIsland} from "@/components/ListItemIsland";
 import {ListItemDescription} from "@/components/ListItemDescription";
 import {Link} from "@/components/Link";
@@ -10,6 +10,8 @@ import {useContentModel} from "@/store/store";
 import {useEffect, useState} from "react";
 import {ListItemInfoHeading} from "@/components/ListItemInfoHeading";
 import {ListItemList} from "@/components/ListItemList";
+import {useAllThingsRefresh} from "@/hooks/useAllThingsRefresh";
+import {ErrorBanner} from "@/components/ErrorBanner";
 
 export type EmailConfig = {
     server_address: string,
@@ -24,6 +26,24 @@ export type EmailConfig = {
 export default function () {
     const allthings = useContentModel(state=>state.allThings)
     const [emailConfig, setEmailConfig] = useState<EmailConfig>()
+    const {refreshing, refreshError, refreshAllThings} = useAllThingsRefresh();
+
+    const updateEmailConfig = (nextConfig: EmailConfig) => {
+        setEmailConfig(nextConfig);
+        const currentAllThings = useContentModel.getState().allThings;
+        if (currentAllThings) {
+            useContentModel.getState().setAllThings({
+                ...currentAllThings,
+                email: nextConfig
+            });
+        }
+    };
+    const withEmailConfig = (updater: (current: EmailConfig) => EmailConfig) => {
+        if (!emailConfig) {
+            return;
+        }
+        updateEmailConfig(updater(emailConfig));
+    };
 
     useEffect(() => {
         if (!allthings) return
@@ -33,7 +53,17 @@ export default function () {
 
 
     return <SafeAreaView>
-        <ScrollView overScrollMode="never"  style={{display: 'flex', flexDirection: 'column', gap: 10}}>
+        <ScrollView
+            overScrollMode="never"
+            style={{display: 'flex', flexDirection: 'column', gap: 10}}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => {
+                void refreshAllThings();
+            }}/>}
+        >
+        {refreshError && <ErrorBanner message={refreshError} onRetry={() => {
+            void refreshAllThings();
+        }}/>}
+        {!emailConfig && <ErrorBanner message="E-Mail-Konfiguration wird geladen."/>}
         <ListItemDescription title="Info" description={<Text>Dieses Binding ermöglicht eine direkte Verbindung der Zentrale zum SMTP Server des
             bevorzugten E-Mail Providers. Die Daten zur SMTP-Serveradresse, dem Port usw. müssen beim jeweiligen
             Provider erfragt werden.
@@ -43,10 +73,10 @@ export default function () {
         </ListItemDescription>
         <ListItemIsland style={{marginTop: 20}}>
             <ListItemInput title="SMTP-Serveradresse" onChange={(v)=>{
-                setEmailConfig({
-                    ...emailConfig!,
+                withEmailConfig((current) => ({
+                    ...current,
                     server_address: v
-                })
+                }));
             }}  value={emailConfig?emailConfig.server_address: ''}></ListItemInput>
         </ListItemIsland>
 
@@ -57,10 +87,10 @@ export default function () {
 
             <ListItemIsland style={{marginTop: 20}}>
                 <ListItemInput title="SMTP-Port" onChange={(v)=>{
-                    setEmailConfig({
-                        ...emailConfig!,
-                        server_port_number: parseInt(v)
-                    })
+                    withEmailConfig((current) => ({
+                        ...current,
+                        server_port_number: Number.isNaN(parseInt(v)) ? 0 : parseInt(v)
+                    }));
                 }}  value={emailConfig?String(emailConfig.server_port_number): ''}></ListItemInput>
             </ListItemIsland>
 
@@ -70,10 +100,10 @@ export default function () {
 
             <ListItemIsland style={{marginTop: 20}}>
                 <ListItemInput title="Benutzername" onChange={(v)=>{
-                    setEmailConfig({
-                        ...emailConfig!,
+                    withEmailConfig((current) => ({
+                        ...current,
                         email_username: v
-                    })
+                    }));
                 }}  value={emailConfig?String(emailConfig.email_username): ''}></ListItemInput>
             </ListItemIsland>
 
@@ -83,10 +113,10 @@ export default function () {
 
             <ListItemIsland style={{marginTop: 20}}>
                 <ListItemInput title="Passwort" secureTextEntry={true} onChange={(v)=>{
-                    setEmailConfig({
-                        ...emailConfig!,
+                    withEmailConfig((current) => ({
+                        ...current,
                         email_password: v
-                    })
+                    }));
                 }}  value={emailConfig?String(emailConfig.email_password): ''}></ListItemInput>
             </ListItemIsland>
 
@@ -97,10 +127,10 @@ export default function () {
             <ListItemInfoHeading>Empfänger</ListItemInfoHeading>
             <ListItemIsland>
                 <ListItemList values={emailConfig?emailConfig.recipient_list:[]} onChange={(v)=>{
-                    setEmailConfig({
-                        ...emailConfig!,
+                    withEmailConfig((current) => ({
+                        ...current,
                         recipient_list: v
-                    })
+                    }));
                 }} addNewItemText={"Neuen Empfänger hinzufügen"}/>
             </ListItemIsland>
         </ScrollView>

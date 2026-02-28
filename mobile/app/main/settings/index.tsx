@@ -1,4 +1,4 @@
-import {ScrollView, View} from "react-native"
+import {RefreshControl, ScrollView, View} from "react-native"
 import {useContentModel} from "@/store/store";
 import {SafeAreaView} from "react-native-safe-area-context";
 import {ListItem} from "@/components/ListItem";
@@ -8,9 +8,12 @@ import {router} from "expo-router";
 import {ListItemIsland} from "@/components/ListItemIsland";
 import {ListSeparator} from "@/components/ListSeparator";
 import {StatusBar} from "expo-status-bar";
+import {useAllThingsRefresh} from "@/hooks/useAllThingsRefresh";
+import {ErrorBanner} from "@/components/ErrorBanner";
 
 export default function SettingsPage() {
     const allthings = useContentModel(state=>state.allThings)
+    const {refreshing, refreshError, refreshAllThings} = useAllThingsRefresh();
 
 
     const logout = ()=>{
@@ -20,7 +23,17 @@ export default function SettingsPage() {
 
     return <SafeAreaView style={{backgroundColor: Colors.background, minHeight: '100%'}}>
         <StatusBar style="light" />
-        <ScrollView overScrollMode="always" style={{marginTop: 20, display: 'flex', gap: 20, flexDirection: 'column'}}>
+        <ScrollView
+            overScrollMode="always"
+            style={{marginTop: 20, display: 'flex', gap: 20, flexDirection: 'column'}}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => {
+                void refreshAllThings();
+            }}/>}
+        >
+                {refreshError && <ErrorBanner message={refreshError} onRetry={() => {
+                    void refreshAllThings();
+                }}/>}
+                {!allthings && <ErrorBanner message="SmartHome-Daten werden noch geladen."/>}
                 <ListItemIsland style={{marginBottom: 20}}>
                     <ListItem title="Gerätetreiber"/>
                     <ListSeparator/>

@@ -1,4 +1,4 @@
-import {Image, StyleSheet, Platform, ScrollView, Text, View, Dimensions} from 'react-native';
+import {Image, StyleSheet, Platform, ScrollView, Text, View, Dimensions, RefreshControl} from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import {useContentModel} from "@/store/store";
@@ -29,10 +29,13 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import Entypo from '@expo/vector-icons/Entypo';
 import {DeviceDecider} from "@/components/DeviceDecider";
 import {LocationResponse} from "@/models/Location";
+import {useAllThingsRefresh} from "@/hooks/useAllThingsRefresh";
+import {ErrorBanner} from "@/components/ErrorBanner";
 
 export default function HomeScreen() {
     const allthings = useContentModel(state=>state.allThings)
     const [selectedDeviceTypes, setSelectedDeviceTypes] = useState<string>()
+    const {refreshing, refreshError, refreshAllThings} = useAllThingsRefresh();
 
     const mappedDevicesToType = useMemo(() => {
         if (!allthings?.devices) return new Map<any, any>()
@@ -55,6 +58,9 @@ export default function HomeScreen() {
 
 
     const mappedLocations = useMemo(()=>{
+        if (!allthings?.locations || !allthings?.devices) {
+            return [];
+        }
         if (selectedDeviceTypes === undefined||selectedDeviceTypes?.length == 0) {
             return allthings?.locations
         } else {
@@ -65,8 +71,7 @@ export default function HomeScreen() {
 
                 if (location.devices) {
                     for (let deviceInLocation of location.devices!) {
-                        if (allthings?.devices[deviceInLocation].type === selectedDeviceTypes) {
-                            console.log("Found")
+                        if (allthings?.devices[deviceInLocation]?.type === selectedDeviceTypes) {
                             newLocation.devices.push(allthings?.devices[deviceInLocation].id)
                         }
                     }
@@ -75,7 +80,7 @@ export default function HomeScreen() {
             }
             return locations
         }
-    }, [allthings?.locations, selectedDeviceTypes])
+    }, [allthings?.devices, allthings?.locations, selectedDeviceTypes])
 
 
     const colorChecker = (key: string)=>{
@@ -102,13 +107,36 @@ export default function HomeScreen() {
     }
     let width = Dimensions.get('window').width
 
+    if (!allthings) {
+        return (
+            <SafeAreaView style={styles.stepContainer}>
+                <View style={{flex: 1, justifyContent: "center", alignItems: "center"}}>
+                    <ThemedText>Lade Gerätedaten...</ThemedText>
+                    {refreshError && <ErrorBanner message={refreshError} onRetry={() => {
+                        void refreshAllThings();
+                    }}/>}
+                </View>
+            </SafeAreaView>
+        );
+    }
+
     return (
         <SafeAreaView style={styles.stepContainer}>
             <StatusBar style="light" />
             <View>
                 <Image style={{  width: width, position: 'absolute', top:0, left:0 }} source={require('../../../../assets/images/caucasus.jpg')} />
             </View>
-            <ScrollView style={{}} overScrollMode="never" indicatorStyle="white">
+            <ScrollView
+                style={{}}
+                overScrollMode="never"
+                indicatorStyle="white"
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => {
+                    void refreshAllThings();
+                }}/>}
+            >
+                {refreshError && <ErrorBanner message={refreshError} onRetry={() => {
+                    void refreshAllThings();
+                }}/>}
                 <ThemedText type="title" style={{marginLeft: 20}}>Mein Zuhause</ThemedText>
                 <ListSeparator/>
                 <View style={{display: 'flex', flexDirection: 'row', gap: 10, marginLeft: 20, flexWrap: "wrap", marginTop: 10}}>
@@ -135,9 +163,13 @@ export default function HomeScreen() {
                                 <View style={{display: 'flex', flexDirection: 'row', flexWrap: 'wrap', padding: 10, gap: 10}}>
                                     {
                                         location.devices?.filter(device=>{
-                                            return TYPES.includes(allthings?.devices[device].type!)
-                                        })                                    .map(device=>{
-                                            return <DeviceDecider device={allthings?.devices[device]!} key={device}/>
+                                            return TYPES.includes(allthings?.devices[device]?.type!)
+                                        }).map(device=>{
+                                            const deviceData = allthings?.devices[device];
+                                            if (!deviceData) {
+                                                return null;
+                                            }
+                                            return <DeviceDecider device={deviceData} key={device}/>
                                         })
                                     }
                                 </View>

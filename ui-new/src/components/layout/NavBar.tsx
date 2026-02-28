@@ -6,64 +6,97 @@ import {Menu, X} from "lucide-react";
 import {useState} from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {cn} from "@/src/utils/cn-helper.ts";
+import {useContentModel} from "@/src/store.tsx";
 
-export const NavBar = ()=> {
-    const location = useLocation()
+export const NavBar = () => {
+    const location = useLocation();
     const [open, setOpen] = useState(false);
+    const socketConnected = useContentModel((state) => state.socketConnected);
+    const unreadMessages = useContentModel((state) => state.allThings?.messages?.filter((message) => !message.read).length ?? 0);
+    const navigate = useNavigate();
 
-    const navigate = useNavigate()
-
-
-    const NavLinks = ()=>{
+    const NavLinks = () => {
         return <>
             <LinkNav to={'/home'}>Home</LinkNav>
             <LinkNav to={'/devices'}>Geräte</LinkNav>
             <LinkNav to={'/scenarios'}>Szenarien</LinkNav>
             <LinkNav to={'/services'}>Dienste</LinkNav>
             <LinkNav to={'/states'}>Zustände</LinkNav>
-            <LinkNav to={'/news'}>Nachrichten</LinkNav>
+            <LinkNav to={'/news'}>
+                <span className="inline-flex items-center gap-2">
+                    Nachrichten
+                    {unreadMessages > 0 && <span
+                        className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#86b919] px-1 text-xs text-white">{unreadMessages}</span>}
+                </span>
+            </LinkNav>
         </>
     }
 
-    return <div className="md:h-20 md:navbar-bar">
-        <div className="float-right flex gap-5 pt-2 pr-3">
-            <button onClick={() => {
-                navigate('/settings')
-            }}>Einstellungen
-            </button>
-            <button className={location.pathname.includes('help') ? 'text-blue-500' : ''} onClick={() => {
-                navigate('/help')
-            }}>Hilfe
-            </button>
-        </div>
-        <button className="ml-5 mt-5 absolute md:hidden" onClick={()=>{
-            setOpen(true)
-        }}><Menu/></button>
-        <div className="md:flex md:header md:mb-5 hidden md:visible pt-2">
+    return <div className="border-b border-cyan-100 bg-white/85 px-4 pb-3 pt-3 backdrop-blur md:px-6">
+        <div className="mb-3 hidden items-center gap-4 md:flex">
             <img src={logo} className="w-10" alt="LIVISI Smarthome logo"/>
-            <div className="ml-20 flex gap-10 text-2xl">
+            <div className="flex flex-wrap items-center gap-2 text-lg">
                 <NavLinks/>
             </div>
+            <div className="ml-auto flex items-center gap-4">
+                <div className="hidden items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-sm text-slate-600 lg:flex">
+                    <span className={socketConnected ? "h-2 w-2 rounded-full bg-emerald-500" : "h-2 w-2 rounded-full bg-red-500"}></span>
+                    <span>{socketConnected ? "Live verbunden" : "Offline"}</span>
+                </div>
+                <button
+                    type="button"
+                    className={cn("rounded-lg px-3 py-1 text-sm font-medium text-slate-600 hover:bg-gray-100", location.pathname.includes('settings') && "bg-cyan-100/80 text-cyan-800")}
+                    onClick={() => navigate('/settings')}
+                >
+                    Einstellungen
+                </button>
+                <button
+                    type="button"
+                    className={cn("rounded-lg px-3 py-1 text-sm font-medium text-slate-600 hover:bg-gray-100", location.pathname.includes('help') && "bg-cyan-100/80 text-cyan-800")}
+                    onClick={() => navigate('/help')}
+                >
+                    Hilfe
+                </button>
+            </div>
         </div>
+
+        <div className="flex items-center justify-between md:hidden">
+            <button type="button" className="rounded-lg border border-gray-200 bg-white p-2" onClick={() => setOpen(true)}><Menu/></button>
+            <img src={logo} className="w-9" alt="LIVISI Smarthome logo"/>
+            <div className="flex items-center gap-2">
+                <span className={socketConnected ? "h-2 w-2 rounded-full bg-emerald-500" : "h-2 w-2 rounded-full bg-red-500"}></span>
+                <span className="text-xs text-slate-600">{socketConnected ? "Live" : "Offline"}</span>
+            </div>
+        </div>
+
         <Dialog.Root open={open}>
             <Dialog.Portal>
-                <Dialog.Overlay className="bg-black opacity-30 fixed inset-0 md:hidden md:pointer-events-none" onClick={()=>setOpen(false)}/>
-                <Dialog.Content className={cn("fixed top-0 left-0 bg-white h-full w-5/6 md:w-0 md:hidden md:pointer-events-none", open?"drawer-custom": "drawer-custom-close")}>
-                    <Dialog.Title className="DialogTitle">
+                <Dialog.Overlay className="fixed inset-0 bg-black/30 md:hidden" onClick={() => setOpen(false)}/>
+                <Dialog.Content className={cn("fixed left-0 top-0 h-full w-5/6 bg-white p-4 shadow-2xl md:hidden", open ? "drawer-custom" : "drawer-custom-close")}>
+                    <Dialog.Title className="mb-4 flex items-center justify-between">
                         <img src={logo} className="w-10" alt="LIVISI Smarthome logo"/>
-                    </Dialog.Title>
-                    <Dialog.Description className="DialogDescription">
-                    </Dialog.Description>
-                    <div className="ml-20 flex gap-10 text-2xl flex-col" onClick={()=>setOpen(false)}>
-                        <NavLinks/>
-                    </div>
-                    <Dialog.Close asChild>
-                        <button className="IconButton" aria-label="Close">
-                            <X className="absolute top-2 right-2" onClick={()=>{
-                                setOpen(false)
-                            }}/>
+                        <button type="button" className="rounded-md border border-gray-200 p-1" onClick={() => setOpen(false)}>
+                            <X/>
                         </button>
-                    </Dialog.Close>
+                    </Dialog.Title>
+                    <Dialog.Description/>
+                    <div className="flex flex-col gap-2 text-lg" onClick={() => setOpen(false)}>
+                        <NavLinks/>
+                        <button
+                            type="button"
+                            className="mt-3 rounded-lg border border-gray-200 px-3 py-2 text-left text-sm font-medium text-slate-700"
+                            onClick={() => navigate('/settings')}
+                        >
+                            Einstellungen
+                        </button>
+                        <button
+                            type="button"
+                            className="rounded-lg border border-gray-200 px-3 py-2 text-left text-sm font-medium text-slate-700"
+                            onClick={() => navigate('/help')}
+                        >
+                            Hilfe
+                        </button>
+                    </div>
                 </Dialog.Content>
             </Dialog.Portal>
         </Dialog.Root>

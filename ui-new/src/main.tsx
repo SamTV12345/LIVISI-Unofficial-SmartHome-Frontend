@@ -15,10 +15,10 @@ import {NewsScreen} from "@/src/pages/NewsScreen.tsx";
 import {HelpPage} from "@/src/pages/HelpPage.tsx";
 import {AboutPage} from "@/src/pages/AboutPage.tsx";
 import {ErrorPage} from "@/src/pages/ErrorPage.tsx";
-import {SocketMessage} from "@/src/models/SocketMessage.ts";
 import {SettingsPage} from "@/src/pages/SettingsPage.tsx";
 import {DeviceDetailPage} from "@/src/pages/DeviceDetailPage.tsx";
 import {ScenarioScreen} from "@/src/pages/ScenarioScreen.tsx";
+import {ScenarioDetailScreen} from "@/src/pages/ScenarioDetailScreen.tsx";
 import {DeviceDrivers} from "@/src/components/actionComponents/DeviceDrivers.tsx";
 import {NetworkPage} from "@/src/components/actionComponents/NetworkPage.tsx";
 import {LANPage} from "@/src/pages/LANPage.tsx";
@@ -31,6 +31,8 @@ import {Imprint} from "@/src/pages/Imprint.tsx";
 import {ErrorAdvancedPage} from "@/src/pages/ErrorAdvancedPage.tsx";
 import {DetailedMessageScreen} from "@/src/pages/DetailedMessageScreen.tsx";
 import {WLANPage} from "@/src/pages/WLANPage.tsx";
+import {configureHttpClient} from "@/src/api/configureHttpClient.ts";
+import {StatesScreen} from "@/src/pages/StatesScreen.tsx";
 
 const router = createBrowserRouter(createRoutesFromElements(
     <Route path="/">
@@ -49,6 +51,10 @@ const router = createBrowserRouter(createRoutesFromElements(
             </Route>
             <Route path="scenarios">
                 <Route index element={<ScenarioScreen/>}/>
+                <Route path=":id" element={<ScenarioDetailScreen/>}/>
+            </Route>
+            <Route path="states">
+                <Route index element={<StatesScreen/>}/>
             </Route>
             <Route path="news">
                 <Route index element={<NewsScreen/>}/>
@@ -82,32 +88,7 @@ const router = createBrowserRouter(createRoutesFromElements(
     basename: import.meta.env.BASE_URL
 })
 
-let ws
-const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws"
-if (import.meta.env.MODE === "development") {
-    console.log("development mode")
-    console.log("connecting to " + wsProtocol + "://" + window.location.host + "/websocket")
-    ws = new WebSocket(wsProtocol + "://" + "localhost:8000" + "/websocket")
-
-} else {
-    ws = new WebSocket(wsProtocol + "://" + window.location.host + "/websocket")
-
-}
-
-ws.onerror = (e) => {
-    console.log(e)
-}
-ws.onopen = () => {
-    console.log("connected")
-}
-
-ws.onmessage = (e: MessageEvent<SocketMessage>) => {
-    console.log(e.data)
-}
-
-ws.onclose = () => {
-    console.log("disconnected")
-}
+configureHttpClient();
 
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(

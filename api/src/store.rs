@@ -8,13 +8,13 @@ use crate::api_lib::capability::{CapabilityConfig, CapabilityResponse, Capabilit
 use crate::api_lib::capability::CapValueType::CapValueItem;
 use crate::api_lib::device::{DeviceConfig, DeviceResponse};
 use crate::api_lib::email::EmailAPI;
+use crate::api_lib::interaction::InteractionResponse;
 use crate::api_lib::location::LocationResponse;
 use crate::api_lib::message::MessageResponse;
 use crate::api_lib::status::StatusResponse;
 use crate::api_lib::user_storage::UserStorageResponse;
-use crate::models::socket_event::{Properties, SocketEvent, Source};
+use crate::models::socket_event::{Properties, SocketData, SocketEvent, Source};
 use crate::models::token::Token;
-use crate::STORE_DATA;
 
 #[derive(Default,Serialize,Deserialize, Debug,Clone)]
 #[serde(rename_all = "camelCase")]
@@ -58,7 +58,9 @@ pub struct Data {
     pub locations: Vec<LocationResponse>,
     pub(crate) capabilities: Vec<CapabilitiesStore>,
     pub messages: Vec<MessageResponse>,
-    pub email: Option<EmailAPI>
+    pub email: Option<EmailAPI>,
+    #[serde(default)]
+    pub interactions: Vec<InteractionResponse>
 }
 
 
@@ -193,18 +195,29 @@ impl Data {
 
             }
             Source::System => {
-                log::info!("system change")
+                log::info!("system change");
+
+                if let Some(Properties::ConfigVersion(config_version)) = &socket_event.properties {
+                    if let Some(status) = self.status.as_mut() {
+                        status.config_version = config_version.config_version;
+                    }
+                }
+
+                if let Some(SocketData::ConfigVersion(config_version_data)) = &socket_event.data {
+                    if let Some(status) = self.status.as_mut() {
+                        status.config_version = config_version_data.config_version;
+                    }
+                    self.set_interactions(config_version_data.interactions.clone());
+                }
             }
             Source::Message =>{
-                let st = STORE_DATA.get().unwrap();
-                let mut data = st.data.lock().unwrap();
                 if let Some(id) = socket_event.id.clone() {
                     let mut found_item = false;
-                    data.messages.iter_mut().for_each(|m|{
+                    self.messages.iter_mut().for_each(|m|{
                         if m.id == id {
                             found_item = true;
                             m.class = socket_event.class.clone();
-                            m.read = socket_event.read.unwrap();
+                            m.read = socket_event.read.unwrap_or(m.read);
                         }
                     });
 
@@ -216,14 +229,15 @@ impl Data {
                         {"id":"21c509371e95491c9684c1d8e64fb421","class":"message","type":"LogLevelChanged","namespace":"core.RWE","desc":"/desc/device/SHCA.RWE/1.0/message/LogLevelChanged","source":"/device/00000000000000000000000000000000","timestamp":"2024-07-28T19:48:04.781511Z","devices":[],"capabilities":[],"read":true,"properties":{"changeReason":"Test","expiresAfterMinutes":120,"module":"","requesterInfo":"Administrator"}}
                          */
 
-                        let props = &socket_event.properties;
-                        let serde_serialized = serde_json::to_string(props).unwrap();
-                        let props = serde_json::from_str(&serde_serialized).unwrap();
+                        let props = match serde_json::to_string(&socket_event.properties) {
+                            Ok(serialized) => serde_json::from_str(&serialized).ok(),
+                            Err(_) => None,
+                        };
 
-                        data.messages.push(MessageResponse{
+                        self.messages.push(MessageResponse{
                             id,
                             timestamp: socket_event.timestamp.clone(),
-                            read: socket_event.read.unwrap().clone(),
+                            read: socket_event.read.unwrap_or(false),
                             devices: None,
                             messages: None,
                             capabilities: None,
@@ -356,6 +370,10 @@ impl Data {
     pub fn set_messages(&mut self, messages: Vec<MessageResponse>) {
         self.messages.clone_from(&messages);
     }
+
+    pub fn set_interactions(&mut self, interactions: Vec<InteractionResponse>) {
+        self.interactions.clone_from(&interactions);
+    }
 }
 
 pub struct Store {
@@ -375,6 +393,7 @@ impl Store {
                 capabilities: Vec::new(),
                 messages: Vec::new(),
                 email: None,
+                interactions: Vec::new(),
             })
         }
     }

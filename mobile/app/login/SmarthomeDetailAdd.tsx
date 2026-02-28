@@ -42,19 +42,7 @@ export default function SmarthomeDetailAdd() {
                         saveBaseURL(newBase)
                         return router.replace("/login/smarthomeSelection" as Href)
                     }).catch((reason)=>{
-                        if (reason instanceof TypeError) {
-                            setError('Server nicht erreichbar')
-                            return
-                        }
-
-                        if (reason === "Error retrieving data") {
-                            setError('URL ist nicht erreichbar')
-                            return
-                        } else if (reason.includes('JSON Parse error')) {
-                            setError('SmartHome-Server nicht erkannt')
-                        } else if (reason.includes('Network request failed')) {
-                            setError('Server nicht erreichbar')
-                        }
+                        setError('Server nicht erreichbar')
                     })
             }}/>
         </ThemedView>

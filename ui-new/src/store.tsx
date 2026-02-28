@@ -47,7 +47,8 @@ export type AxiosDeviceResponse = {
     user_storage: any[],
     locations: LocationResponse[],
     messages: Message[],
-    email: EmailConfig
+    email: EmailConfig,
+    interactions?: Interaction[]
 }
 
 export type EmailConfig = {
@@ -84,6 +85,8 @@ interface ContentModelState {
     messages: Message[],
     setMessages(data: Message[]): void,
     setInteractions(data: Interaction[]): void
+    socketConnected: boolean,
+    setSocketConnected(connected: boolean): void
 }
 
 
@@ -130,5 +133,9 @@ export const useContentModel = create<ContentModelState>((set)=>({
     interactions: undefined,
     setInteractions(data: Interaction[]) {
         set(()=>({interactions: data}))
-    }
+    },
+    socketConnected: false,
+    setSocketConnected(connected: boolean) {
+        set(()=>({socketConnected: connected}))
+    },
 }))
