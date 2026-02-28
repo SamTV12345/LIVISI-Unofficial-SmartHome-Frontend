@@ -1,7 +1,7 @@
 import {FC, PropsWithChildren} from "react";
 import {useAuth} from "react-oidc-context";
-import axios from "axios";
 import useOnMount from "@/src/hooks/useOnMount.tsx";
+import {getAuthorizationHeader, setAuthorizationHeader} from "@/src/api/authHeaderStore.ts";
 
 export const OIDCRefresher:FC<PropsWithChildren> = ({children})=>{
     const auth = useAuth()
@@ -19,8 +19,8 @@ export const OIDCRefresher:FC<PropsWithChildren> = ({children})=>{
         return ()=>clearInterval(interval)
     })
 
-    if (axios.defaults.headers.common['Authorization'] == undefined && auth.user?.access_token){
-        axios.defaults.headers.common['Authorization'] = 'Bearer ' + auth.user.access_token
+    if (getAuthorizationHeader() == undefined && auth.user?.access_token){
+        setAuthorizationHeader('Bearer ' + auth.user.access_token)
     }
 
     return <>

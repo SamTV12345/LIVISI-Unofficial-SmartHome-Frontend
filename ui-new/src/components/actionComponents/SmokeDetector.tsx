@@ -6,8 +6,8 @@ import {useNavigate} from "react-router-dom";
 import {SirenOff} from "@/src/icons/SirenOff.tsx";
 import {CapabilityState} from "@/src/models/CapabilityState.ts";
 import {useDebounce} from "@/src/utils/useDebounce.ts";
-import axios from "axios";
 import {ACTION_ENDPOINT} from "@/src/constants/FieldConstants.ts";
+import {postJson} from "@/src/api/httpClient.ts";
 
 type WindowDeviceProps = {
     device: Device,
@@ -61,7 +61,7 @@ export const SmokeDetector: FC<WindowDeviceProps> = ({device, showRoom}) => {
     useDebounce(()=>{
         if (!alarmCap) return
         const switchModel = constructSmokeDetectorPostModel(alarmCap)
-        axios.post(ACTION_ENDPOINT,switchModel)
+        postJson(ACTION_ENDPOINT,switchModel)
             .then(()=>{
                 console.log('Alarm switched')
             })

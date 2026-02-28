@@ -1,10 +1,10 @@
 import {useContentModel} from "@/src/store.tsx";
 import {useEffect, useMemo, useState} from "react";
-import axios, {AxiosResponse} from "axios";
 import {useNavigate} from "react-router-dom";
 import {PageComponent} from "@/src/components/actionComponents/PageComponent.tsx";
 import {PageBox} from "@/src/components/actionComponents/PageBox.tsx";
 import {PrimaryButton} from "@/src/components/actionComponents/PrimaryButton.tsx";
+import {postJson} from "@/src/api/httpClient.ts";
 
 type LoggingReq = {
     id: string,
@@ -47,13 +47,13 @@ export const ErrorPage = () => {
     const [countDown, setCountDown] = useState<number>(0)
 
     const retrieveLogging = ()=>{
-        axios.post("/action",{
+        postJson<LoggingResp>("/action",{
             id: shc!.id,
             type: "GetLoggingConfig",
             target: "/device/" + shc!.id,
             namespace: "core.RWE",
-        } satisfies LoggingReq).then((resp: AxiosResponse<LoggingResp>)=>{
-            setLoggingConf(resp.data)
+        } satisfies LoggingReq).then((resp)=>{
+            setLoggingConf(resp)
         })
     }
 
@@ -77,7 +77,7 @@ export const ErrorPage = () => {
         <div className="space-y-4 p-4 md:p-6">
             <PageBox title="Zentrale neu starten" description="Bei Problemen mit Ihrem SmartHome haben Sie hier die Möglichkeit, Ihre Zentrale neu zu starten.">
                 <PrimaryButton onClick={async () => {
-                    await axios.post("/action", {
+                    await postJson("/action", {
                             id: shc!.id,
                             type: "Restart",
                             target: "/device/" + shc!.id,
@@ -105,7 +105,7 @@ export const ErrorPage = () => {
                         loggingConf&& (loggingConf.properties.expiresAfterMinutes === 0&&navigate('/help/errors/advanced'))
 
                         if (loggingConf && loggingConf.properties.expiresAfterMinutes !== 0) {
-                            axios.post("/action", {
+                            postJson("/action", {
                                 id: shc!.id,
                                 type: "SetLoggingConfig",
                                 target: "/device/" + shc!.id,

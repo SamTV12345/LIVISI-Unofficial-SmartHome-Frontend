@@ -1,7 +1,7 @@
 import {useAuth} from "react-oidc-context";
 import {useNavigate} from "react-router-dom";
-import axios from "axios";
 import {useTranslation} from "react-i18next";
+import {setAuthorizationHeader} from "@/src/api/authHeaderStore.ts";
 
 export const OIDCLogin = () => {
     const auth = useAuth()
@@ -9,7 +9,7 @@ export const OIDCLogin = () => {
     const {t} = useTranslation()
 
     if (auth.isAuthenticated && auth.user){
-        axios.defaults.headers.common['Authorization'] = 'Bearer ' + auth.user.access_token;
+        setAuthorizationHeader('Bearer ' + auth.user.access_token);
         navigate("/")
     }
 

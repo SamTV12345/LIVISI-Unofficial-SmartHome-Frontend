@@ -1,9 +1,9 @@
 import {useEffect} from "react";
 import {useNavigate} from "react-router-dom";
-import axios from "axios";
 import {useContentModel} from "@/src/store.tsx";
 import {LoadingScreen} from "@/src/components/actionComponents/LoadingScreen.tsx";
 import App from "@/src/App.tsx";
+import {getAuthorizationHeader, setAuthorizationHeader} from "@/src/api/authHeaderStore.ts";
 
 export const Root = () => {
     const navigate = useNavigate()
@@ -15,7 +15,7 @@ export const Root = () => {
         const res = test.split(":")
 
         auth_local && setLoginData({password: res[1], username: res[0],rememberMe: false})
-        axios.defaults.headers.common['Authorization'] = 'Basic ' + auth_local;
+        setAuthorizationHeader('Basic ' + auth_local);
     }
 
     useEffect(()=>{
@@ -33,16 +33,17 @@ export const Root = () => {
                     extractLoginData(auth_session)
                 }
                 else if (loginData){
-                    axios.defaults.headers.common['Authorization'] = 'Basic ' + btoa(loginData.username + ":" + loginData.password);
+                    setAuthorizationHeader('Basic ' + btoa(loginData.username + ":" + loginData.password));
                 }
             }
-            else if (loginConfig.oidcConfig && !axios.defaults.headers.common["Authorization"]){
+            else if (loginConfig.oidcConfig && !getAuthorizationHeader()){
                 navigate("/logincom")
             }
         }
     },[loginConfig])
 
-    if(!loginConfig || (loginConfig.basicAuth && !axios.defaults.headers.common["Authorization"]||(loginConfig.oidcConfigured&& !axios.defaults.headers.common["Authorization"]))){
+    const hasAuthorization = Boolean(getAuthorizationHeader());
+    if(!loginConfig || (loginConfig.basicAuth && !hasAuthorization||(loginConfig.oidcConfigured&& !hasAuthorization))){
         console.log("loading root")
         return <LoadingScreen/>
     }

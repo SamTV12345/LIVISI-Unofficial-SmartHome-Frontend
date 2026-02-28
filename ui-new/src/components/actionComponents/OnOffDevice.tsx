@@ -1,11 +1,11 @@
 import {Device} from "@/src/models/Device.ts";
 import {FC, MouseEvent, useCallback, useEffect, useMemo, useState} from "react";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/src/components/layout/Card.tsx";
-import axios from "axios";
 import {ACTION_ENDPOINT, CAPABILITY_PREFIX} from "@/src/constants/FieldConstants.ts";
 import {Power} from "lucide-react";
 import {useNavigate} from "react-router-dom";
 import {cn} from "@/src/utils/cn-helper.ts";
+import {postJson} from "@/src/api/httpClient.ts";
 
 type OnOffDeviceProps = {
     device: Device,
@@ -42,7 +42,7 @@ export const OnOffDevice: FC<OnOffDeviceProps> = ({device, showRoom = false}) =>
         setError(undefined);
 
         try {
-            await axios.post(ACTION_ENDPOINT, {
+            await postJson(ACTION_ENDPOINT, {
                 id: onStateCapability.id,
                 target: CAPABILITY_PREFIX + onStateCapability.id,
                 namespace: device.product,

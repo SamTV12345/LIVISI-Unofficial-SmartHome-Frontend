@@ -1,19 +1,22 @@
-import {useContentModel} from "@/src/store.tsx";
 import {formatTime} from "@/src/utils/timeUtils.ts";
 import {PageComponent} from "@/src/components/actionComponents/PageComponent.tsx";
 import {determineTitleAndDescription} from "@/src/utils/messageDetermining.ts";
 import {ModernHero, ModernSection} from "@/src/components/layout/ModernSurface.tsx";
 import {Bell, Circle, Mail} from "lucide-react";
-import {useMemo} from "react";
+import {Suspense, useMemo} from "react";
 import {useNavigate} from "react-router-dom";
+import {apiQueryClient} from "@/src/api/openapiClient.ts";
+import {Message} from "@/src/models/Messages.ts";
+import {PageSkeleton} from "@/src/components/layout/PageSkeleton.tsx";
 
-export const NewsScreen = () => {
-    const allthings = useContentModel((state) => state.allThings)
+const NewsScreenContent = () => {
+    const {data: messagesResponse} = apiQueryClient.useSuspenseQuery("get", "/message");
+    const messages = (messagesResponse as Message[] | undefined) ?? [];
     const navigate = useNavigate();
 
     const sortedMessages = useMemo(() => {
-        return [...(allthings?.messages ?? [])].sort((a, b) => b.timestamp.localeCompare(a.timestamp));
-    }, [allthings?.messages]);
+        return [...messages].sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+    }, [messages]);
     const unreadCount = sortedMessages.filter((message) => !message.read).length;
 
     return <PageComponent title="Nachrichten">
@@ -68,4 +71,12 @@ export const NewsScreen = () => {
             </ModernSection>
         </div>
     </PageComponent>
-}
+};
+
+export const NewsScreen = () => {
+    return (
+        <Suspense fallback={<PageSkeleton cards={4}/>}>
+            <NewsScreenContent/>
+        </Suspense>
+    );
+};

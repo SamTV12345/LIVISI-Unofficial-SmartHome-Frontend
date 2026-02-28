@@ -1,29 +1,153 @@
 import {PageComponent} from "@/src/components/actionComponents/PageComponent.tsx";
 import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "@/src/components/actionComponents/Accordion.tsx";
-import {useEffect, useMemo, useState} from "react";
+import {Suspense, useMemo, useState} from "react";
 import {useContentModel} from "@/src/store.tsx";
 import {Device} from "@/src/models/Device.ts";
-import axios from "axios";
 import TimeSeriesChart, {DataPoint} from "@/src/components/layout/TimeSeriesChart.tsx";
 import {buildHomeSummary, getDevicesForHomeSection} from "@/src/utils/homeSummary.ts";
 import {DeviceDecider} from "@/src/components/actionComponents/DeviceDecider.tsx";
 import {ModernHero, ModernSection} from "@/src/components/layout/ModernSurface.tsx";
-import {House, Lightbulb, MapPin, Thermometer} from "lucide-react";
+import {House, Lightbulb, MapPin, RefreshCw, Thermometer} from "lucide-react";
+import {apiQueryClient} from "@/src/api/openapiClient.ts";
+import {queryClient} from "@/src/api/queryClient.ts";
 
-type CapData = {
+type CapabilityHistoryRow = {
     eventType: string,
     eventTime: string,
     dataName: string,
-    dataValue: string
+    dataValue: string,
     entityId: string
-}
+};
+
+const toDataPoints = (rows: CapabilityHistoryRow[]): DataPoint[] => {
+    return rows
+        .map((row) => ({
+            timeString: row.eventTime,
+            value: Number.parseFloat(row.dataValue)
+        }))
+        .filter((row) => Number.isFinite(row.value));
+};
+
+const RoomClimateHistorySkeleton = ({roomName}: {roomName: string}) => {
+    return (
+        <div className="mb-4 rounded-md border border-gray-200 p-3">
+            <div className="mb-2 text-sm font-semibold text-slate-800">{roomName}</div>
+            <div className="space-y-3 animate-pulse">
+                <div className="h-40 rounded-lg border border-gray-200 bg-gray-100"/>
+                <div className="h-40 rounded-lg border border-gray-200 bg-gray-100"/>
+            </div>
+        </div>
+    );
+};
+
+const RoomClimateHistoryCard = ({device}: {device: Device}) => {
+    const [timeWindow] = useState(() => {
+        const end = new Date();
+        const start = new Date(end.getTime() - 24 * 60 * 60 * 1000);
+        return {
+            start: start.toISOString(),
+            end: end.toISOString()
+        };
+    });
+
+    const temperatureEntity = `${device.manufacturer}.${device.type}.${device.serialNumber}.RoomTemperature`;
+    const humidityEntity = `${device.manufacturer}.${device.type}.${device.serialNumber}.RoomHumidity`;
+
+    const temperatureParams = useMemo(() => ({
+        params: {
+            query: {
+                entityId: temperatureEntity,
+                start: timeWindow.start,
+                end: timeWindow.end,
+                page: 1,
+                pagesize: 288,
+                eventType: "StateChanged"
+            }
+        }
+    }), [temperatureEntity, timeWindow.end, timeWindow.start]);
+
+    const humidityParams = useMemo(() => ({
+        params: {
+            query: {
+                entityId: humidityEntity,
+                start: timeWindow.start,
+                end: timeWindow.end,
+                page: 1,
+                pagesize: 288,
+                eventType: "StateChanged"
+            }
+        }
+    }), [humidityEntity, timeWindow.end, timeWindow.start]);
+
+    const {data: temperatureResponse} = apiQueryClient.useSuspenseQuery("get", "/data/capability", temperatureParams);
+    const {data: humidityResponse} = apiQueryClient.useSuspenseQuery("get", "/data/capability", humidityParams);
+
+    const temperatureData = useMemo(() => toDataPoints((temperatureResponse as CapabilityHistoryRow[] | undefined) ?? []), [temperatureResponse]);
+    const humidityData = useMemo(() => toDataPoints((humidityResponse as CapabilityHistoryRow[] | undefined) ?? []), [humidityResponse]);
+
+    const refreshRoomHistory = async () => {
+        await Promise.all([
+            queryClient.invalidateQueries({
+                queryKey: apiQueryClient.queryOptions("get", "/data/capability", temperatureParams).queryKey
+            }),
+            queryClient.invalidateQueries({
+                queryKey: apiQueryClient.queryOptions("get", "/data/capability", humidityParams).queryKey
+            })
+        ]);
+    };
+
+    const roomName = device.locationData?.config.name ?? device.config.name;
+
+    return (
+        <div className="mb-4 rounded-md border border-gray-200 p-3">
+            <div className="mb-3 flex items-center gap-2">
+                <button
+                    type="button"
+                    className="font-semibold text-black"
+                    onClick={() => {
+                        void refreshRoomHistory();
+                    }}
+                >
+                    {roomName}
+                </button>
+                <button
+                    type="button"
+                    className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-slate-600 hover:bg-slate-50"
+                    onClick={() => {
+                        void refreshRoomHistory();
+                    }}
+                >
+                    <RefreshCw size={12}/>
+                    Aktualisieren
+                </button>
+            </div>
+
+            {temperatureData.length === 0 && humidityData.length === 0 && (
+                <div className="mb-3 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-500">
+                    Keine Verlaufsdaten für die letzten 24 Stunden vorhanden.
+                </div>
+            )}
+            {temperatureData.length > 0 && (
+                <TimeSeriesChart
+                    chartTitle={"Temperatur in " + roomName}
+                    ytitle="Temperatur in Grad"
+                    data={temperatureData}
+                />
+            )}
+            {humidityData.length > 0 && (
+                <TimeSeriesChart
+                    chartTitle={"Feuchtigkeit in " + roomName}
+                    ytitle="Feuchtigkeit in Prozent"
+                    data={humidityData}
+                />
+            )}
+        </div>
+    );
+};
 
 export const HomeScreen = () => {
-    const allthings = useContentModel(state => state.allThings)
-    const [deviceDataStore, setDeviceDataStore] = useState<Map<string, DataPoint[]>>(new Map<string, DataPoint[]>())
-    const [loadingDeviceIds, setLoadingDeviceIds] = useState<Set<string>>(new Set<string>())
-    const [deviceLoadErrors, setDeviceLoadErrors] = useState<Map<string, string>>(new Map<string, string>())
-    const [climateHistoryOpen, setClimateHistoryOpen] = useState<string>("")
+    const allthings = useContentModel((state) => state.allThings);
+    const [climateHistoryOpen, setClimateHistoryOpen] = useState<string>("");
     const homeSummary = useMemo(() => buildHomeSummary(allthings?.devices), [allthings?.devices]);
     const homeSectionsWithDevices = useMemo(() => {
         return homeSummary.map((section) => ({
@@ -33,102 +157,9 @@ export const HomeScreen = () => {
     }, [allthings?.devices, homeSummary]);
 
     const roomsClimate = useMemo(() => {
-        let deviceArrays: Device[] = []
-        if (!allthings?.devices) return deviceArrays
-        deviceArrays = Object.values(allthings.devices).filter((d) => d.type === "VRCC")
-        return deviceArrays || []
-    }, [allthings?.devices])
-
-    const loadObject = async (device: Device, capKey: string): Promise<DataPoint[]> => {
-        const currentDate = new Date().toISOString()
-        const start = new Date()
-        start.setHours(start.getHours() - 24)
-        const response = await axios.get<CapData[]>('/data/capability', {
-            params: {
-                entityId: device.manufacturer + "." + device.type + "." + device.serialNumber + capKey,
-                start: start.toISOString(),
-                end: currentDate,
-                page: 1,
-                pagesize: 288,
-                eventType: "StateChanged"
-            }
-        })
-        const data = response.data
-            .map((value) => ({
-                timeString: value.eventTime,
-                value: parseFloat(value.dataValue)
-            }))
-            .filter((value) => !Number.isNaN(value.value))
-        return data
-    }
-
-    const setDeviceLoading = (deviceId: string, loading: boolean) => {
-        setLoadingDeviceIds((previous) => {
-            const next = new Set(previous)
-            if (loading) {
-                next.add(deviceId)
-            } else {
-                next.delete(deviceId)
-            }
-            return next
-        })
-    }
-
-    const loadDeviceData = async (device: Device, force = false) => {
-        const tempKey = device.id + "temp"
-        const humidityKey = device.id + "humidity"
-
-        if (!force && deviceDataStore.has(tempKey) && deviceDataStore.has(humidityKey)) {
-            return
-        }
-
-        setDeviceLoading(device.id, true)
-        setDeviceLoadErrors((previous) => {
-            const next = new Map(previous)
-            next.delete(device.id)
-            return next
-        })
-
-        const [temperatureResponse, humidityResponse] = await Promise.allSettled([
-            loadObject(device, ".RoomTemperature"),
-            loadObject(device, ".RoomHumidity")
-        ])
-
-        setDeviceDataStore((previous) => {
-            const next = new Map(previous)
-            if (temperatureResponse.status === "fulfilled") {
-                next.set(tempKey, temperatureResponse.value)
-            } else {
-                next.set(tempKey, [])
-            }
-
-            if (humidityResponse.status === "fulfilled") {
-                next.set(humidityKey, humidityResponse.value)
-            } else {
-                next.set(humidityKey, [])
-            }
-            return next
-        })
-
-        if (temperatureResponse.status === "rejected" && humidityResponse.status === "rejected") {
-            setDeviceLoadErrors((previous) => {
-                const next = new Map(previous)
-                next.set(device.id, "Verlaufsdaten konnten nicht geladen werden.")
-                return next
-            })
-        }
-
-        setDeviceLoading(device.id, false)
-    }
-
-    useEffect(() => {
-        if (climateHistoryOpen !== "climate-history") {
-            return
-        }
-        roomsClimate.forEach((device) => {
-            void loadDeviceData(device)
-        })
-    }, [climateHistoryOpen, roomsClimate])
+        if (!allthings?.devices) return [];
+        return Object.values(allthings.devices).filter((device) => device.type === "VRCC");
+    }, [allthings?.devices]);
 
     return <PageComponent title="Home">
         <div className="space-y-5 p-4 md:p-6">
@@ -187,49 +218,15 @@ export const HomeScreen = () => {
                         <AccordionTrigger className="px-4 py-3 hover:no-underline">Verläufe anzeigen</AccordionTrigger>
                         <AccordionContent className="bg-white px-4 pb-4">
                             {roomsClimate.length === 0 && <div className="text-gray-500">Keine Klimageräte vorhanden.</div>}
-                            {roomsClimate.map((r) => (
-                                <div key={r.id} className="mb-4 rounded-md border border-gray-200 p-3">
-                                    <button className="mb-2 font-semibold text-black" onClick={() => void loadDeviceData(r, true)}>
-                                        {r.locationData?.config.name ?? r.config.name}
-                                    </button>
-                                    {loadingDeviceIds.has(r.id) && (
-                                        <div className="mb-3 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-500">Lade Verlaufsdaten...</div>
-                                    )}
-                                    {deviceLoadErrors.has(r.id) && (
-                                        <div className="mb-3 rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700">
-                                            {deviceLoadErrors.get(r.id)}
-                                        </div>
-                                    )}
-                                    {!loadingDeviceIds.has(r.id) &&
-                                        !deviceLoadErrors.has(r.id) &&
-                                        deviceDataStore.has(r.id + "temp") &&
-                                        deviceDataStore.has(r.id + "humidity") &&
-                                        (deviceDataStore.get(r.id + "temp")?.length ?? 0) === 0 &&
-                                        (deviceDataStore.get(r.id + "humidity")?.length ?? 0) === 0 && (
-                                            <div className="mb-3 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-500">
-                                                Keine Verlaufsdaten für die letzten 24 Stunden vorhanden.
-                                            </div>
-                                        )}
-                                    {(deviceDataStore.get(r.id + "temp")?.length ?? 0) > 0 && (
-                                        <TimeSeriesChart
-                                            chartTitle={"Temperatur in " + (r.locationData?.config.name ?? r.config.name)}
-                                            ytitle="Temperatur in Grad"
-                                            data={deviceDataStore.get(r.id + "temp") || []}
-                                        />
-                                    )}
-                                    {(deviceDataStore.get(r.id + "humidity")?.length ?? 0) > 0 && (
-                                        <TimeSeriesChart
-                                            chartTitle={"Feuchtigkeit in " + (r.locationData?.config.name ?? r.config.name)}
-                                            ytitle="Feuchtigkeit in Prozent"
-                                            data={deviceDataStore.get(r.id + "humidity") || []}
-                                        />
-                                    )}
-                                </div>
+                            {roomsClimate.map((roomDevice) => (
+                                <Suspense key={roomDevice.id} fallback={<RoomClimateHistorySkeleton roomName={roomDevice.locationData?.config.name ?? roomDevice.config.name}/>}>
+                                    <RoomClimateHistoryCard device={roomDevice}/>
+                                </Suspense>
                             ))}
                         </AccordionContent>
                     </AccordionItem>
                 </Accordion>
             </ModernSection>
         </div>
-    </PageComponent>
-}
+    </PageComponent>;
+};

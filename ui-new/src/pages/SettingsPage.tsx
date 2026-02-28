@@ -1,15 +1,17 @@
-import {useEffect, useMemo, useState} from "react";
+import {Suspense, useMemo} from "react";
 import {useNavigate} from "react-router-dom";
-import axios, {AxiosResponse} from "axios";
-import {USBStorage} from "@/src/models/USBStorage.ts";
 import {PageComponent} from "@/src/components/actionComponents/PageComponent.tsx";
 import {PrimaryButton} from "@/src/components/actionComponents/PrimaryButton.tsx";
 import {ModernHero, ModernSection} from "@/src/components/layout/ModernSurface.tsx";
 import {HardDrive, LogOut, Mail, MapPin, Network, Router, Settings2, Shield, Wifi} from "lucide-react";
+import {apiQueryClient, openapiFetchClient} from "@/src/api/openapiClient.ts";
+import {queryClient} from "@/src/api/queryClient.ts";
+import {PageSkeleton} from "@/src/components/layout/PageSkeleton.tsx";
+import {clearAuthorizationHeader} from "@/src/api/authHeaderStore.ts";
 
-export const SettingsPage = () => {
-    const navigate = useNavigate()
-    const [usbStorage, setUSBStorage] = useState<USBStorage>()
+const SettingsPageContent = () => {
+    const navigate = useNavigate();
+    const {data: usbStorage} = apiQueryClient.useSuspenseQuery("get", "/usb_storage");
 
     const settingsCards = useMemo(() => [
         {title: "Gerätetreiber", to: "/settings/deviceDrivers", icon: <Settings2 size={18}/>},
@@ -22,22 +24,21 @@ export const SettingsPage = () => {
     ], []);
 
     const logout = () => {
-        localStorage.removeItem("auth")
-        sessionStorage.removeItem("auth")
-        navigate("/logincom")
-    }
-
-    useEffect(() => {
-        axios.get("/usb_storage")
-            .then((value: AxiosResponse<USBStorage>) => {
-                setUSBStorage(value.data)
-            })
-    }, []);
+        localStorage.removeItem("auth");
+        sessionStorage.removeItem("auth");
+        clearAuthorizationHeader();
+        navigate("/logincom");
+    };
 
     const unmountUSBStorage = () => {
-        axios.get("/unmount")
-            .then(() => setUSBStorage({external_storage: false}))
-    }
+        openapiFetchClient.GET("/unmount")
+            .then((response) => {
+                if (response.error) {
+                    return;
+                }
+                queryClient.setQueryData(apiQueryClient.queryOptions("get", "/usb_storage").queryKey, {external_storage: false});
+            });
+    };
 
     return <PageComponent title="Einstellungen">
         <div className="space-y-5 p-4 md:p-6">
@@ -87,5 +88,13 @@ export const SettingsPage = () => {
                 </div>
             </ModernSection>
         </div>
-    </PageComponent>
-}
+    </PageComponent>;
+};
+
+export const SettingsPage = () => {
+    return (
+        <Suspense fallback={<PageSkeleton cards={7}/>}>
+            <SettingsPageContent/>
+        </Suspense>
+    );
+};

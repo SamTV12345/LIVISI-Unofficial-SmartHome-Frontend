@@ -1,0 +1,901 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "api",
+    "description": "",
+    "license": {
+      "name": ""
+    },
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/all": {
+      "get": {
+        "tags": [],
+        "operationId": "get_api_all_doc",
+        "responses": {
+          "200": {
+            "description": "All aggregated API data",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/server": {
+      "get": {
+        "tags": [],
+        "operationId": "get_api_server_doc",
+        "responses": {
+          "200": {
+            "description": "Server config",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiServerConfigDoc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/data/capability": {
+      "get": {
+        "tags": [],
+        "operationId": "get_capability_history_doc",
+        "parameters": [
+          {
+            "name": "entityId",
+            "in": "query",
+            "description": "Entity id with capability suffix",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "description": "Start timestamp ISO-8601",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "description": "End timestamp ISO-8601",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pagesize",
+            "in": "query",
+            "description": "Page size",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "eventType",
+            "in": "query",
+            "description": "Event type",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Capability history",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CapabilityHistoryDoc"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/email/settings": {
+      "get": {
+        "tags": [],
+        "operationId": "get_email_settings_doc",
+        "responses": {
+          "200": {
+            "description": "Email settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailSettingsDoc"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [],
+        "operationId": "put_email_settings_doc",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailSettingsDoc"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Email settings updated"
+          }
+        }
+      }
+    },
+    "/email/test": {
+      "get": {
+        "tags": [],
+        "operationId": "get_email_test_doc",
+        "responses": {
+          "200": {
+            "description": "Email test result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailTestDoc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/interaction": {
+      "get": {
+        "tags": [],
+        "operationId": "get_interactions_doc",
+        "responses": {
+          "200": {
+            "description": "Interactions",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/interaction/{id}": {
+      "get": {
+        "tags": [],
+        "operationId": "get_interaction_doc",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Interaction id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Single interaction",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [],
+        "operationId": "put_interaction_doc",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Interaction id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Updated interaction",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/interaction/{id}/trigger": {
+      "post": {
+        "tags": [],
+        "operationId": "trigger_interaction_doc",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Interaction id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Trigger result",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/location": {
+      "get": {
+        "tags": [],
+        "operationId": "get_locations_doc",
+        "responses": {
+          "200": {
+            "description": "Locations",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LocationDoc"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [],
+        "operationId": "post_location_doc",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LocationDoc"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Location created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationDoc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/location/{id}": {
+      "get": {
+        "tags": [],
+        "operationId": "get_location_doc",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Location id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Single location",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationDoc"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [],
+        "operationId": "put_location_doc",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Location id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LocationDoc"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Location updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationDoc"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [],
+        "operationId": "delete_location_doc",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Location id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Location deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationDoc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/message": {
+      "get": {
+        "tags": [],
+        "operationId": "get_messages_doc",
+        "responses": {
+          "200": {
+            "description": "Messages",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/message/{message_id}": {
+      "get": {
+        "tags": [],
+        "operationId": "get_message_doc",
+        "parameters": [
+          {
+            "name": "message_id",
+            "in": "path",
+            "description": "Message id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Single message",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [],
+        "operationId": "put_message_doc",
+        "parameters": [
+          {
+            "name": "message_id",
+            "in": "path",
+            "description": "Message id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Message updated",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [],
+        "operationId": "delete_message_doc",
+        "parameters": [
+          {
+            "name": "message_id",
+            "in": "path",
+            "description": "Message id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Message deleted"
+          }
+        }
+      }
+    },
+    "/product": {
+      "get": {
+        "tags": [],
+        "operationId": "get_product_doc",
+        "responses": {
+          "200": {
+            "description": "Installed products/drivers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProductDoc"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/product/hash": {
+      "get": {
+        "tags": [],
+        "operationId": "get_product_hash_doc",
+        "responses": {
+          "200": {
+            "description": "Product hash",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HashDoc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/service/sun-times": {
+      "get": {
+        "tags": [],
+        "operationId": "get_sun_times_doc",
+        "responses": {
+          "200": {
+            "description": "Sunrise / sunset times",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SunTimesDoc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/status": {
+      "get": {
+        "tags": [],
+        "operationId": "get_status_doc",
+        "responses": {
+          "200": {
+            "description": "System status",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/unmount": {
+      "get": {
+        "tags": [],
+        "operationId": "unmount_doc",
+        "responses": {
+          "200": {
+            "description": "USB unmounted",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/usb_storage": {
+      "get": {
+        "tags": [],
+        "operationId": "get_usb_storage_doc",
+        "responses": {
+          "200": {
+            "description": "USB storage status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsbStorageDoc"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ApiServerConfigDoc": {
+        "type": "object",
+        "required": [
+          "basicAuth",
+          "oidcConfigured"
+        ],
+        "properties": {
+          "basicAuth": {
+            "type": "boolean"
+          },
+          "oidcConfig": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/OidcConfigDoc"
+              }
+            ]
+          },
+          "oidcConfigured": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CapabilityHistoryDoc": {
+        "type": "object",
+        "required": [
+          "eventType",
+          "eventTime",
+          "dataName",
+          "dataValue",
+          "entityId"
+        ],
+        "properties": {
+          "dataName": {
+            "type": "string"
+          },
+          "dataValue": {
+            "type": "string"
+          },
+          "entityId": {
+            "type": "string"
+          },
+          "eventTime": {
+            "type": "string"
+          },
+          "eventType": {
+            "type": "string"
+          }
+        }
+      },
+      "EmailSettingsDoc": {
+        "type": "object",
+        "required": [
+          "server_address",
+          "server_port_number",
+          "email_username",
+          "email_password",
+          "recipient_list",
+          "notifications_device_unreachable",
+          "notification_device_low_battery"
+        ],
+        "properties": {
+          "email_password": {
+            "type": "string"
+          },
+          "email_username": {
+            "type": "string"
+          },
+          "notification_device_low_battery": {
+            "type": "boolean"
+          },
+          "notifications_device_unreachable": {
+            "type": "boolean"
+          },
+          "recipient_list": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "server_address": {
+            "type": "string"
+          },
+          "server_port_number": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "EmailTestDoc": {
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "properties": {
+          "result": {
+            "type": "string"
+          }
+        }
+      },
+      "HashDoc": {
+        "type": "object",
+        "required": [
+          "hash"
+        ],
+        "properties": {
+          "hash": {
+            "type": "string"
+          }
+        }
+      },
+      "LocationDoc": {
+        "type": "object",
+        "required": [
+          "id",
+          "config"
+        ],
+        "properties": {
+          "config": {},
+          "devices": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "id": {
+            "type": "string"
+          },
+          "tags": {}
+        }
+      },
+      "OidcConfigDoc": {
+        "type": "object",
+        "required": [
+          "authority",
+          "clientId",
+          "redirectUri",
+          "scope"
+        ],
+        "properties": {
+          "authority": {
+            "type": "string"
+          },
+          "clientId": {
+            "type": "string"
+          },
+          "redirectUri": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string"
+          }
+        }
+      },
+      "ProductDoc": {
+        "type": "object",
+        "required": [
+          "id",
+          "type"
+        ],
+        "properties": {
+          "config": {},
+          "generic": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "provisioned": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "state": {},
+          "type": {
+            "type": "string"
+          },
+          "version": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "SunTimesDoc": {
+        "type": "object",
+        "required": [
+          "geoLocation",
+          "latitude",
+          "longitude"
+        ],
+        "properties": {
+          "geoLocation": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "nextEventAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "nextEventName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "nextSunrise": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "nextSunset": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sunrise": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sunset": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "UsbStorageDoc": {
+        "type": "object",
+        "required": [
+          "external_storage"
+        ],
+        "properties": {
+          "external_storage": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Frontend API",
+      "description": "Documented endpoints consumed by the React UI"
+    }
+  ]
+}

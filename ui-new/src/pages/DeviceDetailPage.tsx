@@ -1,6 +1,5 @@
-import {useCallback, useEffect, useMemo, useState} from "react";
+import {Suspense, useCallback, useEffect, useMemo, useState} from "react";
 import {useNavigate, useParams} from "react-router-dom";
-import axios from "axios";
 import {PageComponent} from "@/src/components/actionComponents/PageComponent.tsx";
 import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "@/src/components/actionComponents/Accordion.tsx";
 import {SliderCDN} from "@/src/components/actionComponents/Slider.tsx";
@@ -25,12 +24,15 @@ import {
     MapPin,
     Package,
     Power,
+    RefreshCw,
     SlidersHorizontal,
     Sparkles,
     Thermometer,
     Wifi
 } from "lucide-react";
 import TimeSeriesChart, {DataPoint} from "@/src/components/layout/TimeSeriesChart.tsx";
+import {apiQueryClient} from "@/src/api/openapiClient.ts";
+import {postJson} from "@/src/api/httpClient.ts";
 
 type DeviceStateRow = {
     capabilityId: string,
@@ -160,6 +162,81 @@ const climateScenarioScore = (interaction: Interaction): number => {
     return keywords.reduce((score, keyword) => score + (name.includes(keyword) ? 1 : 0), 0);
 };
 
+const ClimateHistorySection = ({device}: {device: Device}) => {
+    const [refreshSeed, setRefreshSeed] = useState(0);
+
+    const timeWindow = useMemo(() => {
+        const end = new Date();
+        const start = new Date(end.getTime() - 24 * 60 * 60 * 1000);
+        return {
+            start: start.toISOString(),
+            end: end.toISOString()
+        };
+    }, [device.id, refreshSeed]);
+
+    const temperatureParams = useMemo(() => ({
+        params: {
+            query: {
+                entityId: `${device.manufacturer}.${device.type}.${device.serialNumber}.RoomTemperature`,
+                start: timeWindow.start,
+                end: timeWindow.end,
+                page: 1,
+                pagesize: 288,
+                eventType: "StateChanged"
+            }
+        }
+    }), [device.manufacturer, device.serialNumber, device.type, timeWindow.end, timeWindow.start]);
+
+    const humidityParams = useMemo(() => ({
+        params: {
+            query: {
+                entityId: `${device.manufacturer}.${device.type}.${device.serialNumber}.RoomHumidity`,
+                start: timeWindow.start,
+                end: timeWindow.end,
+                page: 1,
+                pagesize: 288,
+                eventType: "StateChanged"
+            }
+        }
+    }), [device.manufacturer, device.serialNumber, device.type, timeWindow.end, timeWindow.start]);
+
+    const {data: temperatureResponse} = apiQueryClient.useSuspenseQuery("get", "/data/capability", temperatureParams);
+    const {data: humidityResponse} = apiQueryClient.useSuspenseQuery("get", "/data/capability", humidityParams);
+
+    const roomTemperatureHistory = useMemo(() => toDataPoints((temperatureResponse as CapabilityHistoryRow[] | undefined) ?? []), [temperatureResponse]);
+    const roomHumidityHistory = useMemo(() => toDataPoints((humidityResponse as CapabilityHistoryRow[] | undefined) ?? []), [humidityResponse]);
+
+    return (
+        <>
+            <div className="flex items-center justify-end">
+                <button
+                    type="button"
+                    onClick={() => setRefreshSeed((previous) => previous + 1)}
+                    className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-slate-600 hover:bg-slate-50"
+                >
+                    <RefreshCw size={12}/>
+                    Verlauf neu laden
+                </button>
+            </div>
+            {roomTemperatureHistory.length === 0 && roomHumidityHistory.length === 0 && (
+                <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-500">
+                    Keine Verlaufsdaten vorhanden.
+                </div>
+            )}
+            {roomTemperatureHistory.length > 0 && (
+                <div className="rounded-lg border border-gray-200 p-2">
+                    <TimeSeriesChart data={roomTemperatureHistory} chartTitle="Raumtemperatur (24h)" ytitle="Temperatur in °C"/>
+                </div>
+            )}
+            {roomHumidityHistory.length > 0 && (
+                <div className="rounded-lg border border-gray-200 p-2">
+                    <TimeSeriesChart data={roomHumidityHistory} chartTitle="Luftfeuchtigkeit (24h)" ytitle="Luftfeuchtigkeit in %"/>
+                </div>
+            )}
+        </>
+    );
+};
+
 export const DeviceDetailPage = () => {
     const params = useParams<{ id: string }>();
     const navigate = useNavigate();
@@ -197,10 +274,6 @@ export const DeviceDetailPage = () => {
     const [setpointValue, setSetpointValue] = useState<number | undefined>(setpointFromStore);
     const [setpointPending, setSetpointPending] = useState(false);
     const [setpointError, setSetpointError] = useState<string | undefined>(undefined);
-    const [roomTemperatureHistory, setRoomTemperatureHistory] = useState<DataPoint[]>([]);
-    const [roomHumidityHistory, setRoomHumidityHistory] = useState<DataPoint[]>([]);
-    const [climateHistoryLoading, setClimateHistoryLoading] = useState(false);
-    const [climateHistoryError, setClimateHistoryError] = useState<string | undefined>(undefined);
 
     useEffect(() => {
         if (!setpointPending) setSetpointValue(setpointFromStore);
@@ -211,7 +284,7 @@ export const DeviceDetailPage = () => {
         const timeout = setTimeout(() => {
             setSetpointPending(true);
             setSetpointError(undefined);
-            axios.post(ACTION_ENDPOINT, {
+            postJson(ACTION_ENDPOINT, {
                 target: CAPABILITY_PREFIX + setpointCapability.id,
                 type: "SetState",
                 namespace: "core." + device.manufacturer,
@@ -225,62 +298,6 @@ export const DeviceDetailPage = () => {
         return () => clearTimeout(timeout);
     }, [device, setpointCapability, setpointFromStore, setpointValue]);
 
-    useEffect(() => {
-        if (!device || device.type !== HEATING) {
-            setRoomTemperatureHistory([]);
-            setRoomHumidityHistory([]);
-            setClimateHistoryError(undefined);
-            setClimateHistoryLoading(false);
-            return;
-        }
-
-        let cancelled = false;
-        const start = new Date();
-        start.setHours(start.getHours() - 24);
-        const commonParams = {
-            start: start.toISOString(),
-            end: new Date().toISOString(),
-            page: 1,
-            pagesize: 288,
-            eventType: "StateChanged"
-        };
-
-        setClimateHistoryLoading(true);
-        setClimateHistoryError(undefined);
-
-        const temperatureEntity = `${device.manufacturer}.${device.type}.${device.serialNumber}.RoomTemperature`;
-        const humidityEntity = `${device.manufacturer}.${device.type}.${device.serialNumber}.RoomHumidity`;
-
-        Promise.allSettled([
-            axios.get<CapabilityHistoryRow[]>("/data/capability", {params: {...commonParams, entityId: temperatureEntity}}),
-            axios.get<CapabilityHistoryRow[]>("/data/capability", {params: {...commonParams, entityId: humidityEntity}})
-        ]).then(([temperatureResponse, humidityResponse]) => {
-            if (cancelled) return;
-
-            if (temperatureResponse.status === "fulfilled") {
-                setRoomTemperatureHistory(toDataPoints(temperatureResponse.value.data));
-            } else {
-                setRoomTemperatureHistory([]);
-            }
-
-            if (humidityResponse.status === "fulfilled") {
-                setRoomHumidityHistory(toDataPoints(humidityResponse.value.data));
-            } else {
-                setRoomHumidityHistory([]);
-            }
-
-            if (temperatureResponse.status === "rejected" && humidityResponse.status === "rejected") {
-                setClimateHistoryError("Verlaufsdaten konnten nicht geladen werden.");
-            }
-        }).finally(() => {
-            if (!cancelled) setClimateHistoryLoading(false);
-        });
-
-        return () => {
-            cancelled = true;
-        };
-    }, [device?.id, device?.manufacturer, device?.serialNumber, device?.type]);
-
     const toggleOnState = useCallback(async () => {
         if (!device || !onStateCapability || onStateValue === undefined || switchPending) return;
         const previousValue = onStateValue;
@@ -289,7 +306,7 @@ export const DeviceDetailPage = () => {
         setSwitchPending(true);
         setSwitchError(undefined);
         try {
-            await axios.post(ACTION_ENDPOINT, {
+            await postJson(ACTION_ENDPOINT, {
                 id: onStateCapability.id,
                 target: CAPABILITY_PREFIX + onStateCapability.id,
                 namespace: device.product,
@@ -361,7 +378,7 @@ export const DeviceDetailPage = () => {
                             </div>
                             <div className="rounded-lg bg-black/15 p-3">
                                 <div className="text-xs uppercase tracking-wide text-white/70">Auswertungen</div>
-                                <div className="mt-1 text-sm font-semibold">{roomTemperatureHistory.length > 0 || roomHumidityHistory.length > 0 ? "24h vorhanden" : "Keine Historie"}</div>
+                                <div className="mt-1 text-sm font-semibold">24h Verlauf</div>
                             </div>
                             <div className="rounded-lg bg-black/15 p-3">
                                 <div className="text-xs uppercase tracking-wide text-white/70">Szenarien</div>
@@ -424,23 +441,9 @@ export const DeviceDetailPage = () => {
                                 </div>
                             </AccordionTrigger>
                             <AccordionContent className="space-y-4 px-4 pb-4">
-                                {climateHistoryLoading && <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-500">Lade Verlaufsdaten...</div>}
-                                {climateHistoryError && <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700">{climateHistoryError}</div>}
-                                {!climateHistoryLoading && roomTemperatureHistory.length === 0 && roomHumidityHistory.length === 0 && (
-                                    <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-500">
-                                        Keine Verlaufsdaten vorhanden.
-                                    </div>
-                                )}
-                                {roomTemperatureHistory.length > 0 && (
-                                    <div className="rounded-lg border border-gray-200 p-2">
-                                        <TimeSeriesChart data={roomTemperatureHistory} chartTitle="Raumtemperatur (24h)" ytitle="Temperatur in °C"/>
-                                    </div>
-                                )}
-                                {roomHumidityHistory.length > 0 && (
-                                    <div className="rounded-lg border border-gray-200 p-2">
-                                        <TimeSeriesChart data={roomHumidityHistory} chartTitle="Luftfeuchtigkeit (24h)" ytitle="Luftfeuchtigkeit in %"/>
-                                    </div>
-                                )}
+                                <Suspense fallback={<div className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-500">Lade Verlaufsdaten...</div>}>
+                                    <ClimateHistorySection device={device}/>
+                                </Suspense>
                             </AccordionContent>
                         </AccordionItem>
 

@@ -1,4 +1,3 @@
-import axios from "axios";
 import {useTranslation} from "react-i18next";
 import {useNavigate} from "react-router-dom";
 import {useContentModel} from "@/src/store.tsx";
@@ -21,6 +20,8 @@ import {useToast} from "@/src/hooks/useToast.ts";
 import {SubmitHandler, useForm} from "react-hook-form";
 import {Checkbox} from "@/src/components/actionComponents/CheckBox.tsx";
 import {FC} from "react";
+import {postJson} from "@/src/api/httpClient.ts";
+import {setAuthorizationHeader} from "@/src/api/authHeaderStore.ts";
 
 const formSchema = z.object({
     username: z.string().min(2, {
@@ -54,7 +55,7 @@ export const LoginComponent:FC<LoginComponentProps> = () => {
 
     const onSubmit: SubmitHandler<z.infer<typeof formSchema>> = (data, p) => {
         p?.preventDefault()
-        axios.post("/login", data)
+        postJson("/login", data)
             .then(() => {
                 const basicAuthString = btoa(data.username + ":" + data.password)
                 if (data.rememberMe){
@@ -63,7 +64,7 @@ export const LoginComponent:FC<LoginComponentProps> = () => {
                 else{
                     sessionStorage.setItem("auth", basicAuthString)
                 }
-                axios.defaults.headers.common['Authorization'] = 'Basic ' + basicAuthString;
+                setAuthorizationHeader('Basic ' + basicAuthString);
                 setTimeout(()=>navigate('/'), 1000)
 
             })

@@ -3,38 +3,47 @@ import {useContentModel} from "@/src/store.tsx";
 import {AuthProvider} from "react-oidc-context";
 import {OIDCRefresher} from "@/src/components/navigation/OIDCRefresher.tsx";
 import {ConfigModel} from "@/src/models/ConfigModel.ts";
-import axios, {AxiosResponse} from "axios";
-import {LoadingScreen} from "@/src/components/actionComponents/LoadingScreen.tsx";
 import {useNavigate} from "react-router-dom";
+import {apiQueryClient} from "@/src/api/openapiClient.ts";
+import {setAuthorizationHeader} from "@/src/api/authHeaderStore.ts";
 
 export const AuthWrapper:FC<PropsWithChildren> = ({children})=>{
     const configModel = useContentModel(state=>state.loginConfig)
     const setLoginData = useContentModel(state=>state.setLoginConfig)
     const navigate = useNavigate()
+    const {data: serverConfig} = apiQueryClient.useSuspenseQuery("get", "/api/server");
+    const normalizedConfig: ConfigModel | undefined = serverConfig ? {
+        podindexConfigured: false,
+        rssFeed: "",
+        serverUrl: "",
+        basicAuth: serverConfig.basicAuth ? "true" : "",
+        oidcConfigured: serverConfig.oidcConfigured,
+        oidcConfig: serverConfig.oidcConfig ? {
+            authority: serverConfig.oidcConfig.authority,
+            clientId: serverConfig.oidcConfig.clientId,
+            redirectUri: serverConfig.oidcConfig.redirectUri,
+            scope: serverConfig.oidcConfig.scope
+        } : undefined
+    } : undefined;
 
     useEffect(()=>{
-        if (!configModel) {
-            axios.get("/api/server")
-                .then((c:AxiosResponse<ConfigModel>)=>{
-                    setLoginData(c.data)
-                })
+        if (!configModel && normalizedConfig) {
+            setLoginData(normalizedConfig)
         }
-    },[configModel])
+    },[configModel, normalizedConfig, setLoginData])
 
-    if(configModel===undefined){
-        console.log("loading auth")
-        return <LoadingScreen/>
-    }
+    const activeConfig = (configModel ?? normalizedConfig);
+    if (!activeConfig) return children;
 
-    if(configModel.oidcConfigured){
-        return <AuthProvider client_id={configModel.oidcConfig!.clientId}
-                             authority={configModel.oidcConfig!.authority} scope={configModel.oidcConfig!.scope}
-                             redirect_uri={configModel.oidcConfig!.redirectUri}>
+    if(activeConfig.oidcConfigured){
+        return <AuthProvider client_id={activeConfig.oidcConfig!.clientId}
+                             authority={activeConfig.oidcConfig!.authority} scope={activeConfig.oidcConfig!.scope}
+                             redirect_uri={activeConfig.oidcConfig!.redirectUri}>
             <OIDCRefresher>
                 {children}
             </OIDCRefresher>
         </AuthProvider>
-    } else if (configModel.basicAuth) {
+    } else if (activeConfig.basicAuth) {
             let item = localStorage.getItem("auth")
             if (item === null) {
                 item = sessionStorage.getItem("auth")
@@ -42,11 +51,11 @@ export const AuthWrapper:FC<PropsWithChildren> = ({children})=>{
                     navigate("/logincom")
                 }
                 else{
-                    axios.defaults.headers.common['Authorization'] = "Basic "+item
+                    setAuthorizationHeader("Basic " + item)
                 }
             }
             else{
-                axios.defaults.headers.common['Authorization'] = "Basic "+item
+                setAuthorizationHeader("Basic " + item)
             }
     }
 

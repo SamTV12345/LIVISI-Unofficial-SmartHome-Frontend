@@ -1,22 +1,12 @@
+import {Suspense, useMemo} from "react";
 import {PageComponent} from "@/src/components/actionComponents/PageComponent.tsx";
 import {useTranslation} from "react-i18next";
 import {ModernHero, ModernSection} from "@/src/components/layout/ModernSurface.tsx";
 import {CloudSun, Globe, ShieldCheck, Smartphone} from "lucide-react";
 import {useNavigate} from "react-router-dom";
-import {ReactNode, useEffect, useMemo, useState} from "react";
-import axios from "axios";
-
-type SunTimesResponse = {
-    geoLocation: string,
-    latitude: number,
-    longitude: number,
-    sunrise?: string,
-    sunset?: string,
-    nextSunrise?: string,
-    nextSunset?: string,
-    nextEventName?: string,
-    nextEventAt?: string
-}
+import {ReactNode} from "react";
+import {apiQueryClient} from "@/src/api/openapiClient.ts";
+import {PageSkeleton} from "@/src/components/layout/PageSkeleton.tsx";
 
 const formatDateTime = (isoDate?: string): string => {
     if (!isoDate) {
@@ -35,48 +25,21 @@ const formatDateTime = (isoDate?: string): string => {
     });
 };
 
-export const ServicesScreen = () => {
+const ServicesScreenContent = () => {
     const {t} = useTranslation();
     const navigate = useNavigate();
-    const [sunTimes, setSunTimes] = useState<SunTimesResponse | undefined>(undefined);
-    const [sunTimesLoading, setSunTimesLoading] = useState(true);
-    const [sunTimesError, setSunTimesError] = useState<string | undefined>(undefined);
-
-    useEffect(() => {
-        setSunTimesLoading(true);
-        setSunTimesError(undefined);
-
-        axios.get<SunTimesResponse>("/service/sun-times")
-            .then((response) => {
-                setSunTimes(response.data);
-            })
-            .catch((error) => {
-                console.error("Could not load sun times", error);
-                setSunTimesError("Sonnenzeiten konnten nicht geladen werden.");
-            })
-            .finally(() => {
-                setSunTimesLoading(false);
-            });
-    }, []);
+    const {data: sunTimes} = apiQueryClient.useSuspenseQuery("get", "/service/sun-times");
 
     const sunDescription = useMemo<ReactNode>(() => {
-        if (sunTimesLoading) {
-            return "Lade Sonnenzeiten...";
-        }
-
-        if (sunTimesError) {
-            return sunTimesError;
-        }
-
         if (!sunTimes) {
             return "Keine Sonnenzeiten verfügbar.";
         }
 
         return <span className="space-y-1 block">
-            <span className="block">Nächster Sonnenaufgang: {formatDateTime(sunTimes.nextSunrise)}</span>
-            <span className="block">Nächster Sonnenuntergang: {formatDateTime(sunTimes.nextSunset)}</span>
+            <span className="block">Nächster Sonnenaufgang: {formatDateTime(sunTimes.nextSunrise ?? undefined)}</span>
+            <span className="block">Nächster Sonnenuntergang: {formatDateTime(sunTimes.nextSunset ?? undefined)}</span>
         </span>;
-    }, [sunTimes, sunTimesError, sunTimesLoading]);
+    }, [sunTimes]);
 
     const cards: {
         id: string,
@@ -119,7 +82,7 @@ export const ServicesScreen = () => {
                     {label: "Dienste", value: cards.length},
                     {label: "Aktiv", value: 1},
                     {label: "Inaktiv", value: cards.length - 1},
-                    {label: "Nächstes Sonnen-Event", value: sunTimes?.nextEventAt ? formatDateTime(sunTimes.nextEventAt) : sunTimesLoading ? "Lädt..." : "-"}
+                    {label: "Nächstes Sonnen-Event", value: sunTimes?.nextEventAt ? formatDateTime(sunTimes.nextEventAt) : "-"}
                 ]}
             />
 
@@ -141,4 +104,12 @@ export const ServicesScreen = () => {
             </ModernSection>
         </div>
     </PageComponent>
-}
+};
+
+export const ServicesScreen = () => {
+    return (
+        <Suspense fallback={<PageSkeleton cards={3}/>}>
+            <ServicesScreenContent/>
+        </Suspense>
+    );
+};

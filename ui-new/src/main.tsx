@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import './index.css'
 import {createBrowserRouter, createRoutesFromElements, Route, RouterProvider} from "react-router-dom";
+import {QueryClientProvider} from "@tanstack/react-query";
 import {DeviceScreen} from "@/src/pages/DeviceScreen.tsx";
 import {I18nextProvider} from "react-i18next";
 import {HomeScreen} from "@/src/pages/HomeScreen.tsx";
@@ -31,8 +32,10 @@ import {Imprint} from "@/src/pages/Imprint.tsx";
 import {ErrorAdvancedPage} from "@/src/pages/ErrorAdvancedPage.tsx";
 import {DetailedMessageScreen} from "@/src/pages/DetailedMessageScreen.tsx";
 import {WLANPage} from "@/src/pages/WLANPage.tsx";
-import {configureHttpClient} from "@/src/api/configureHttpClient.ts";
 import {StatesScreen} from "@/src/pages/StatesScreen.tsx";
+import {queryClient} from "@/src/api/queryClient.ts";
+import {PageSkeleton} from "@/src/components/layout/PageSkeleton.tsx";
+import {AppErrorBoundary} from "@/src/components/layout/AppErrorBoundary.tsx";
 
 const router = createBrowserRouter(createRoutesFromElements(
     <Route path="/">
@@ -88,14 +91,17 @@ const router = createBrowserRouter(createRoutesFromElements(
     basename: import.meta.env.BASE_URL
 })
 
-configureHttpClient();
-
-
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     <React.StrictMode>
-        <I18nextProvider i18n={i18next}>
-            <RouterProvider router={router}/>
-            <Toaster/>
-        </I18nextProvider>
+        <QueryClientProvider client={queryClient}>
+            <I18nextProvider i18n={i18next}>
+                <React.Suspense fallback={<PageSkeleton/>}>
+                    <AppErrorBoundary>
+                        <RouterProvider router={router}/>
+                    </AppErrorBoundary>
+                </React.Suspense>
+                <Toaster/>
+            </I18nextProvider>
+        </QueryClientProvider>
     </React.StrictMode>,
 )

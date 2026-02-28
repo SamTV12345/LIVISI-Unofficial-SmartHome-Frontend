@@ -1,14 +1,18 @@
 import {useCallback, useEffect, useRef} from "react";
-import axios, {AxiosResponse} from "axios";
 import {AxiosDeviceResponse, useContentModel} from "@/src/store.tsx";
 import {SocketClient} from "@/src/realtime/socketClient.ts";
 import {SocketMessage} from "@/src/models/SocketMessage.ts";
 import {applyRealtimeMessage} from "@/src/realtime/applyRealtimeMessage.ts";
+import {openapiFetchClient} from "@/src/api/openapiClient.ts";
 
 const REFRESH_DEBOUNCE_MS = 400;
 const FULL_SYNC_INTERVAL_MS = 5 * 60_000;
 
-export const useRealtimeSync = () => {
+type RealtimeSyncOptions = {
+    skipInitialFetch?: boolean
+};
+
+export const useRealtimeSync = ({skipInitialFetch = false}: RealtimeSyncOptions = {}) => {
     const setAllThings = useContentModel((state) => state.setAllThings);
     const setSocketConnected = useContentModel((state) => state.setSocketConnected);
     const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -23,8 +27,12 @@ export const useRealtimeSync = () => {
 
         refreshInFlightRef.current = true;
         try {
-            const response: AxiosResponse<AxiosDeviceResponse> = await axios.get("/api/all");
-            setAllThings(response.data);
+            const response = await openapiFetchClient.GET("/api/all");
+            if (!response.data) {
+                console.error("Could not refresh /api/all");
+                return;
+            }
+            setAllThings(response.data as AxiosDeviceResponse);
         } catch (error) {
             console.error("Could not refresh /api/all", error);
         } finally {
@@ -46,7 +54,9 @@ export const useRealtimeSync = () => {
     }, [refreshAllThings]);
 
     useEffect(() => {
-        void refreshAllThings();
+        if (!skipInitialFetch) {
+            void refreshAllThings();
+        }
         const fullSyncInterval = setInterval(() => {
             void refreshAllThings();
         }, FULL_SYNC_INTERVAL_MS);
@@ -54,7 +64,7 @@ export const useRealtimeSync = () => {
         return () => {
             clearInterval(fullSyncInterval);
         };
-    }, [refreshAllThings]);
+    }, [refreshAllThings, skipInitialFetch]);
 
     useEffect(() => {
         const socketClient = new SocketClient<SocketMessage>({

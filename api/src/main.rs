@@ -3,10 +3,13 @@ mod api_lib;
 mod utils;
 mod constants;
 mod store;
+mod openapi_doc;
 
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::env::var;
+use std::future::pending;
+use std::sync::atomic::{AtomicBool, Ordering as AtomicOrdering};
 use std::sync::{Mutex, OnceLock};
 use std::thread;
 use std::thread::spawn;
@@ -32,6 +35,7 @@ use serde_json::{json, Value};
 use sunrise::{Coordinates, SolarDay, SolarEvent};
 use tokio::sync::broadcast;
 use tungstenite::connect;
+use utoipa::OpenApi;
 
 use crate::api_lib::action::{Action, ActionPost};
 use crate::api_lib::capability::Capability;
@@ -61,6 +65,7 @@ use crate::utils::connection::{Args, MemPrefill};
 use crate::utils::logging::init_logging;
 static WS_BROADCAST: OnceLock<broadcast::Sender<String>> = OnceLock::new();
 static EMBEDDED_UI_DIR: Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR/static");
+static IS_SHUTTING_DOWN: AtomicBool = AtomicBool::new(false);
 
 pub static CLIENT_DATA: OnceLock<Mutex<ClientData>> = OnceLock::new();
 pub static STORE_DATA: OnceLock<Store> = OnceLock::new();
@@ -239,6 +244,7 @@ async fn main() -> std::io::Result<()> {
     let app = Router::new()
         .route("/", get(root_redirect))
         .route("/api/server", get(get_api_config))
+        .route("/api-docs/openapi.json", get(get_openapi_json))
         .route("/health/live", get(liveness_probe))
         .route("/health/ready", get(readiness_probe))
         .route("/login", post(login))
@@ -253,7 +259,41 @@ async fn main() -> std::io::Result<()> {
 
     log::info!("Starting Axum server at port 8000. The UI is served at /ui/");
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8000").await?;
-    axum::serve(listener, app).await
+    axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal())
+        .await
+}
+
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        if let Err(err) = tokio::signal::ctrl_c().await {
+            log::error!("Could not install Ctrl+C handler: {}", err);
+        }
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        match tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()) {
+            Ok(mut signal) => {
+                signal.recv().await;
+            }
+            Err(err) => {
+                log::error!("Could not install SIGTERM handler: {}", err);
+                pending::<()>().await;
+            }
+        }
+    };
+
+    #[cfg(not(unix))]
+    let terminate = pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => {},
+        _ = terminate => {},
+    }
+
+    IS_SHUTTING_DOWN.store(true, AtomicOrdering::Relaxed);
+    log::info!("Shutdown signal received. Draining in-flight HTTP requests.");
 }
 
 async fn basic_auth_middleware(request: Request, next: Next) -> Response {
@@ -547,6 +587,19 @@ async fn liveness_probe() -> Response {
 }
 
 async fn readiness_probe() -> Response {
+    if IS_SHUTTING_DOWN.load(AtomicOrdering::Relaxed) {
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(json!({
+                "status": "not_ready",
+                "probe": "readiness",
+                "reason": "shutting_down",
+                "timestamp": Utc::now().to_rfc3339()
+            })),
+        )
+            .into_response();
+    }
+
     let Some(store) = STORE_DATA.get() else {
         return (
             StatusCode::SERVICE_UNAVAILABLE,
@@ -765,6 +818,10 @@ async fn get_device_states(State(state): State<AxumState>) -> impl IntoResponse 
 
 async fn get_hash(State(state): State<AxumState>) -> impl IntoResponse {
     Json(state.hash.get_hash().await)
+}
+
+async fn get_openapi_json() -> impl IntoResponse {
+    Json(openapi_doc::ApiDoc::openapi())
 }
 
 async fn get_products(State(state): State<AxumState>) -> impl IntoResponse {

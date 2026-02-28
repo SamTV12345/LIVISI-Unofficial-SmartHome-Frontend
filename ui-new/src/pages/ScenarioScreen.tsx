@@ -1,24 +1,25 @@
-import {useCallback, useEffect, useMemo, useState} from "react";
+import {Suspense, useCallback, useMemo, useState} from "react";
 import {PageComponent} from "@/src/components/actionComponents/PageComponent.tsx";
 import {Interaction} from "@/src/models/Interaction.ts";
-import axios, {AxiosResponse} from "axios";
 import {PrimaryButton} from "@/src/components/actionComponents/PrimaryButton.tsx";
 import {useContentModel} from "@/src/store.tsx";
 import {useNavigate} from "react-router-dom";
 import {ModernHero, ModernSection} from "@/src/components/layout/ModernSurface.tsx";
 import {Bolt, Layers, Settings2} from "lucide-react";
 import {formatTime} from "@/src/utils/timeUtils.ts";
+import {apiQueryClient, openapiFetchClient} from "@/src/api/openapiClient.ts";
+import {queryClient} from "@/src/api/queryClient.ts";
+import {PageSkeleton} from "@/src/components/layout/PageSkeleton.tsx";
 
-export const ScenarioScreen = () => {
-    const allThings = useContentModel((state) => state.allThings);
+const ScenarioScreenContent = () => {
     const setAllThings = useContentModel((state) => state.setAllThings);
-    const [interactions, setInteractions] = useState<Interaction[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | undefined>(undefined);
     const [activeInteractionId, setActiveInteractionId] = useState<string | undefined>(undefined);
     const [actionError, setActionError] = useState<string | undefined>(undefined);
     const [refreshPending, setRefreshPending] = useState(false);
     const navigate = useNavigate();
+
+    const {data: interactionsResponse} = apiQueryClient.useSuspenseQuery("get", "/interaction");
+    const interactions = (interactionsResponse as Interaction[] | undefined) ?? [];
 
     const sortedInteractions = useMemo(() => {
         return [...interactions].sort((a, b) => (a.name ?? a.id).localeCompare((b.name ?? b.id)));
@@ -28,33 +29,18 @@ export const ScenarioScreen = () => {
         return sortedInteractions.reduce((count, interaction) => count + (interaction.rules?.reduce((ruleCount, rule) => ruleCount + (rule.actions?.length ?? 0), 0) ?? 0), 0);
     }, [sortedInteractions]);
 
-    const loadInteractions = useCallback(() => {
-        if (allThings?.interactions) {
-            setInteractions(allThings.interactions);
-            setLoading(false);
-            setError(undefined);
-            return;
-        }
-
-        setLoading(true);
-        setError(undefined);
-        axios.get("/interaction")
-            .then((response: AxiosResponse<Interaction[]>) => {
-                setInteractions(response.data ?? []);
-            })
-            .catch(() => {
-                setError("Szenarien konnten nicht geladen werden.");
-            })
-            .finally(() => {
-                setLoading(false);
-            });
-    }, [allThings?.interactions]);
-
     const triggerInteraction = useCallback(async (interactionId: string) => {
         setActionError(undefined);
         setActiveInteractionId(interactionId);
         try {
-            await axios.post(`/interaction/${interactionId}/trigger`);
+            const response = await openapiFetchClient.POST("/interaction/{id}/trigger", {
+                params: {
+                    path: {id: interactionId}
+                }
+            });
+            if (!response.response.ok) {
+                throw new Error("Interaction trigger failed");
+            }
         } catch (triggerError) {
             console.error("Could not trigger interaction", triggerError);
             setActionError("Szenario konnte nicht ausgelöst werden.");
@@ -66,15 +52,15 @@ export const ScenarioScreen = () => {
     const refreshFromBackend = useCallback(async () => {
         setRefreshPending(true);
         try {
-            const response = await axios.get<Interaction[]>("/interaction");
-            const nextInteractions = response.data ?? [];
-            setInteractions(nextInteractions);
-
+            await queryClient.invalidateQueries({
+                queryKey: apiQueryClient.queryOptions("get", "/interaction").queryKey
+            });
+            const refreshedData = queryClient.getQueryData(apiQueryClient.queryOptions("get", "/interaction").queryKey) as Interaction[] | undefined;
             const latestAllThings = useContentModel.getState().allThings;
-            if (latestAllThings) {
+            if (latestAllThings && refreshedData) {
                 setAllThings({
                     ...latestAllThings,
-                    interactions: nextInteractions
+                    interactions: refreshedData
                 });
             }
             setActionError(undefined);
@@ -85,10 +71,6 @@ export const ScenarioScreen = () => {
             setRefreshPending(false);
         }
     }, [setAllThings]);
-
-    useEffect(() => {
-        loadInteractions();
-    }, [loadInteractions]);
 
     return <PageComponent title="Szenarien">
         <div className="space-y-5 p-4 md:p-6">
@@ -116,30 +98,22 @@ export const ScenarioScreen = () => {
                 stats={[
                     {label: "Szenarien", value: sortedInteractions.length},
                     {label: "Aktionen", value: totalActionCount},
-                    {label: "Status", value: loading ? "Lädt" : "Bereit"},
-                    {label: "Fehler", value: error || actionError ? "Ja" : "Nein"}
+                    {label: "Status", value: "Bereit"},
+                    {label: "Fehler", value: actionError ? "Ja" : "Nein"}
                 ]}
             />
 
-            {loading && <ModernSection title="Lade Szenarien" description="Bitte warten..."><div className="text-sm text-gray-500">Szenarien werden geladen.</div></ModernSection>}
-            {!loading && error && (
-                <ModernSection title="Fehler" description={error}>
-                    <div className="max-w-[220px]">
-                        <PrimaryButton filled onClick={loadInteractions}>Erneut versuchen</PrimaryButton>
-                    </div>
-                </ModernSection>
-            )}
             {actionError && (
                 <div className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">{actionError}</div>
             )}
 
-            {!loading && !error && sortedInteractions.length === 0 && (
+            {sortedInteractions.length === 0 && (
                 <ModernSection title="Keine Szenarien" description="Es sind noch keine Szenarien vorhanden.">
                     <div className="text-sm text-gray-500">Erstelle oder synchronisiere Szenarien, um sie hier zu sehen.</div>
                 </ModernSection>
             )}
 
-            {!loading && !error && sortedInteractions.length > 0 && (
+            {sortedInteractions.length > 0 && (
                 <ModernSection title="Szenarienliste" description="Direkt ausführen oder öffnen.">
                     <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
                         {sortedInteractions.map((interaction) => {
@@ -185,5 +159,13 @@ export const ScenarioScreen = () => {
                 </ModernSection>
             )}
         </div>
-    </PageComponent>
-}
+    </PageComponent>;
+};
+
+export const ScenarioScreen = () => {
+    return (
+        <Suspense fallback={<PageSkeleton cards={4}/>}>
+            <ScenarioScreenContent/>
+        </Suspense>
+    );
+};

@@ -3,8 +3,8 @@ import {PageBox} from "@/src/components/actionComponents/PageBox.tsx";
 import {PrimaryButton} from "@/src/components/actionComponents/PrimaryButton.tsx";
 import {useContentModel} from "@/src/store.tsx";
 import {useMemo, useState} from "react";
-import axios from "axios";
 import {useNavigate} from "react-router-dom";
+import {postJson} from "@/src/api/httpClient.ts";
 
 const LOGGING_TIME = [
     {
@@ -52,7 +52,7 @@ export const ErrorAdvancedPage = ()=>{
             }
             <PrimaryButton filled onClick={()=>{
                 loggingTime &&
-                axios.post("/action", {
+                postJson("/action", {
                     id: shc!.id,
                     type: "SetLoggingConfig",
                     target: "/device/" + shc!.id,

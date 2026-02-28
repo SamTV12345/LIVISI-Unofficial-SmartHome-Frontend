@@ -1,43 +1,67 @@
 import {useParams} from "react-router";
 import {useContentModel} from "@/src/store.tsx";
-import {useEffect, useState} from "react";
+import {Suspense, useEffect} from "react";
 import {PageComponent} from "@/src/components/actionComponents/PageComponent.tsx";
 import {useNavigate} from "react-router-dom";
 import {determineTitleAndDescription, MessageReturnType} from "@/src/utils/messageDetermining.ts";
-import axios from "axios";
 import {ModernHero, ModernSection} from "@/src/components/layout/ModernSurface.tsx";
 import {Bell, Clock3, Info} from "lucide-react";
 import {formatTime} from "@/src/utils/timeUtils.ts";
+import {apiQueryClient, openapiFetchClient} from "@/src/api/openapiClient.ts";
+import {Message} from "@/src/models/Messages.ts";
+import {queryClient} from "@/src/api/queryClient.ts";
+import {PageSkeleton} from "@/src/components/layout/PageSkeleton.tsx";
 
-export const DetailedMessageScreen = () => {
-    const params = useParams()
-    const allthings = useContentModel(state => state.allThings)
-    const [message, setMessage] = useState<MessageReturnType>()
-    const [messageTimestamp, setMessageTimestamp] = useState<string>("")
-    const navigate = useNavigate()
+const DetailedMessageScreenContent = ({messageId}: {messageId: string}) => {
+    const setAllThings = useContentModel((state) => state.setAllThings);
+    const navigate = useNavigate();
+    const {data: messageResponse} = apiQueryClient.useSuspenseQuery("get", "/message/{message_id}", {
+        params: {
+            path: {message_id: messageId}
+        }
+    });
+    const selectedMessage = messageResponse as Message;
+    const message: MessageReturnType = determineTitleAndDescription(selectedMessage);
+    const messageTimestamp = selectedMessage.timestamp;
 
     useEffect(() => {
-        if (!allthings) return
-
-        const selectedMessage = allthings.messages.find((value) => value.id === params.id)
         if (!selectedMessage) {
-            navigate('/404')
+            navigate("/404");
             return;
         }
 
         if (!selectedMessage.read) {
-            axios.put("/message/" + selectedMessage.id, {read: true})
-                .then(() => {
-                    allthings.messages.map((item) => {
-                        if (item.id === selectedMessage.id) item.read = true
-                        return item
-                    })
-                })
-        }
+            openapiFetchClient.PUT("/message/{message_id}", {
+                params: {
+                    path: {message_id: selectedMessage.id}
+                },
+                body: {read: true}
+            }).then((response) => {
+                if (response.error) {
+                    return;
+                }
 
-        setMessage(determineTitleAndDescription(selectedMessage))
-        setMessageTimestamp(selectedMessage.timestamp);
-    }, [allthings, navigate, params.id]);
+                queryClient.setQueryData(
+                    apiQueryClient.queryOptions("get", "/message/{message_id}", {params: {path: {message_id: selectedMessage.id}}}).queryKey,
+                    {...selectedMessage, read: true}
+                );
+
+                const listKey = apiQueryClient.queryOptions("get", "/message").queryKey;
+                const cachedList = queryClient.getQueryData(listKey) as Message[] | undefined;
+                if (cachedList) {
+                    queryClient.setQueryData(listKey, cachedList.map((item) => item.id === selectedMessage.id ? {...item, read: true} : item));
+                }
+
+                const currentState = useContentModel.getState().allThings;
+                if (currentState) {
+                    setAllThings({
+                        ...currentState,
+                        messages: currentState.messages.map((item) => item.id === selectedMessage.id ? {...item, read: true} : item)
+                    });
+                }
+            });
+        }
+    }, [navigate, selectedMessage, setAllThings]);
 
     return <PageComponent title={message?.title || ''} to="/news">
         <div className="space-y-5 p-4 md:p-6">
@@ -63,4 +87,25 @@ export const DetailedMessageScreen = () => {
             </ModernSection>
         </div>
     </PageComponent>
-}
+};
+
+export const DetailedMessageScreen = () => {
+    const params = useParams<{ id: string }>();
+    const messageId = params.id;
+
+    if (!messageId) {
+        return (
+            <PageComponent title="Nachricht" to="/news">
+                <div className="space-y-4 p-4 md:p-6">
+                    <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">Nachrichten-ID fehlt.</div>
+                </div>
+            </PageComponent>
+        );
+    }
+
+    return (
+        <Suspense fallback={<PageSkeleton cards={2}/>}>
+            <DetailedMessageScreenContent messageId={messageId}/>
+        </Suspense>
+    );
+};

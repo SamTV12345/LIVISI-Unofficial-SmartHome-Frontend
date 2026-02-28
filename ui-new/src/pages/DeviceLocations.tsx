@@ -2,18 +2,20 @@ import {PageComponent} from "@/src/components/actionComponents/PageComponent.tsx
 import {useContentModel} from "@/src/store.tsx";
 import {PageBox} from "@/src/components/actionComponents/PageBox.tsx";
 import {LocationResponse} from "@/src/models/Location.ts";
-import {LOCATION_ENDPOINT, TYPES} from "@/src/constants/FieldConstants.ts";
+import {TYPES} from "@/src/constants/FieldConstants.ts";
 import {Plus} from "lucide-react";
-import {useState} from "react";
+import {Suspense, useState} from "react";
 import {PortalDialog} from "@/src/components/actionComponents/PortalDialog.tsx";
-import {SubmitHandler, useForm} from "react-hook-form";
-import axios from "axios";
+import {apiQueryClient} from "@/src/api/openapiClient.ts";
+import {PageSkeleton} from "@/src/components/layout/PageSkeleton.tsx";
 
-export const DeviceLocations = ()=>{
-    const allthings = useContentModel(state=>state.allThings)
-    const [deviceDialogOpen, setDeviceDialogOpen] = useState(false)
-    //const [deviceToEdit, setDeviceToEdit] = useState<LocationResponse | undefined>(undefined)
-    const formatTitle = (locationResponse: LocationResponse)=>{
+const DeviceLocationsContent = () => {
+    const allthings = useContentModel((state) => state.allThings);
+    const [deviceDialogOpen, setDeviceDialogOpen] = useState(false);
+    const {data: locationsResponse} = apiQueryClient.useSuspenseQuery("get", "/location");
+    const locations = (locationsResponse as LocationResponse[] | undefined) ?? [];
+
+    const formatTitle = (locationResponse: LocationResponse) => {
         let filteredDevices: string[] = []
         if (locationResponse.devices !== undefined){
             filteredDevices = locationResponse.devices?.filter(v=>{
@@ -21,29 +23,16 @@ export const DeviceLocations = ()=>{
             })
         }
         return `${locationResponse.config.name}  (${filteredDevices.length})`
-    }
+    };
 
 
-    const AddDialogComponent = ()=>{
-
-        type DeviceLoc = {
-            name: string,
-                type: string
-        }
-
-        const {handleSubmit} = useForm<DeviceLoc>()
-
-        const onSubmit: SubmitHandler<DeviceLoc> = (data)=>{
-            axios.post(LOCATION_ENDPOINT, data)
-        }
-
-
+    const AddDialogComponent = () => {
         return <PortalDialog setDeviceDialogOpen={setDeviceDialogOpen} deviceDialogOpen={deviceDialogOpen} title="Ort hinzufügen" description="Fügt einen Ort zur besseren Übersicht hinzu">
-            <form onSubmit={handleSubmit(onSubmit)}>
-
-            </form>
+            <div className="mt-4 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-3 text-sm text-gray-500">
+                Dieses Dialog-Formular wird im nächsten Schritt ergänzt.
+            </div>
         </PortalDialog>
-    }
+    };
 
     return <PageComponent title={"Gerätestandorte"} to="/settings" actionButton={<button onClick={()=>{
         setDeviceDialogOpen(true)
@@ -52,11 +41,19 @@ export const DeviceLocations = ()=>{
     </button>}>
         <div className="space-y-4 p-4 md:p-6">
             {
-                allthings?.locations.map((v)=> {
+                locations.map((v)=> {
                     return <PageBox key={v.id} title={formatTitle(v)} to={"/settings/deviceLocations/"+v.id}/>
                 })
             }
             <AddDialogComponent/>
         </div>
     </PageComponent>
-}
+};
+
+export const DeviceLocations = () => {
+    return (
+        <Suspense fallback={<PageSkeleton cards={5}/>}>
+            <DeviceLocationsContent/>
+        </Suspense>
+    );
+};

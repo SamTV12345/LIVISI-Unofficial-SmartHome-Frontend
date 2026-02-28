@@ -3,10 +3,10 @@ import {FC, useEffect, useMemo, useState} from "react";
 import {Thermometer, Waves} from "lucide-react";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/src/components/layout/Card.tsx";
 import {SliderCDN} from "@/src/components/actionComponents/Slider.tsx";
-import axios from "axios";
 import {ACTION_ENDPOINT, CAPABILITY_PREFIX} from "@/src/constants/FieldConstants.ts";
 import {formatTime} from "@/src/utils/timeUtils.ts";
 import {useNavigate} from "react-router-dom";
+import {postJson} from "@/src/api/httpClient.ts";
 
 type HeatingdeviceProps = {
     device: Device
@@ -69,7 +69,7 @@ export const Heatingdevice: FC<HeatingdeviceProps> = ({device}) => {
             setPending(true);
             setError(undefined);
 
-            axios.post(ACTION_ENDPOINT, {
+            postJson(ACTION_ENDPOINT, {
                 target: CAPABILITY_PREFIX + setpointCapability.id,
                 type: "SetState",
                 namespace: "core." + device.manufacturer,
