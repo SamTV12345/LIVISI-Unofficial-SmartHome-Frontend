@@ -234,6 +234,8 @@ async fn main() -> std::io::Result<()> {
     let app = Router::new()
         .route("/", get(root_redirect))
         .route("/api/server", get(get_api_config))
+        .route("/health/live", get(liveness_probe))
+        .route("/health/ready", get(readiness_probe))
         .route("/login", post(login))
         .route("/websocket", get(start_connection))
         .route("/images/*tail", get(get_images))
@@ -527,6 +529,81 @@ async fn get_api_config() -> impl IntoResponse {
     }
 
     Json(config)
+}
+
+async fn liveness_probe() -> Response {
+    (
+        StatusCode::OK,
+        Json(json!({
+            "status": "ok",
+            "probe": "liveness",
+            "timestamp": Utc::now().to_rfc3339()
+        })),
+    )
+        .into_response()
+}
+
+async fn readiness_probe() -> Response {
+    let Some(store) = STORE_DATA.get() else {
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(json!({
+                "status": "not_ready",
+                "probe": "readiness",
+                "reason": "store_not_initialized",
+                "timestamp": Utc::now().to_rfc3339()
+            })),
+        )
+            .into_response();
+    };
+
+    let data = match store.data.lock() {
+        Ok(data) => data,
+        Err(err) => {
+            return (
+                StatusCode::SERVICE_UNAVAILABLE,
+                Json(json!({
+                    "status": "not_ready",
+                    "probe": "readiness",
+                    "reason": "store_lock_failed",
+                    "error": err.to_string(),
+                    "timestamp": Utc::now().to_rfc3339()
+                })),
+            )
+                .into_response();
+        }
+    };
+
+    let has_core_state = data.status.is_some()
+        || !data.devices.is_empty()
+        || !data.locations.is_empty()
+        || data.user_storage.is_some()
+        || data.email.is_some();
+
+    let payload = json!({
+        "status": if has_core_state { "ready" } else { "not_ready" },
+        "probe": "readiness",
+        "timestamp": Utc::now().to_rfc3339(),
+        "checks": {
+            "statusLoaded": data.status.is_some(),
+            "devicesLoaded": !data.devices.is_empty(),
+            "locationsLoaded": !data.locations.is_empty(),
+            "userStorageLoaded": data.user_storage.is_some(),
+            "emailLoaded": data.email.is_some()
+        },
+        "counts": {
+            "devices": data.devices.len(),
+            "locations": data.locations.len(),
+            "interactions": data.interactions.len(),
+            "messages": data.messages.len()
+        }
+    });
+
+    if has_core_state {
+        (StatusCode::OK, Json(payload)).into_response()
+    } else {
+        (StatusCode::SERVICE_UNAVAILABLE, Json(payload)).into_response()
+    }
 }
 
 fn normalized_sort_key(value: &str) -> String {
