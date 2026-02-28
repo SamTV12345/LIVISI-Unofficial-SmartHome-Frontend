@@ -3,14 +3,29 @@
     "development": {
       "autoIncrement": true,
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "node": "20.19.4",
+      "pnpm": "10.11.0",
+      "env": {
+        "EXPO_USE_COMMUNITY_AUTOLINKING": "1"
+      }
     },
     "preview": {
       "autoIncrement": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "node": "20.19.4",
+      "pnpm": "10.11.0",
+      "env": {
+        "EXPO_USE_COMMUNITY_AUTOLINKING": "1"
+      }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "node": "20.19.4",
+      "pnpm": "10.11.0",
+      "env": {
+        "EXPO_USE_COMMUNITY_AUTOLINKING": "1"
+      }
     }
   },
   "cli": {
