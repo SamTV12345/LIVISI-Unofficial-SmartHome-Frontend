@@ -6,15 +6,17 @@ export const LANPage = ()=>{
     const allthings = useContentModel(state=>state.allThings)
 
     return <PageComponent title="LAN" to="/settings">
-        <PageBox>
-        <div className="grid grid-cols-2">
-            <div>MAC</div>
-            <div>{allthings?.status.network.ethMacAddress}</div>
-            <div>IP</div>
-            <div>{allthings?.status.network.ethIpAddress}</div>
-            <div>Status</div>
-            <div>{allthings?.status.network.ethCableAttached&& 'Verbunden'}</div>
+        <div className="space-y-4 p-4 md:p-6">
+            <PageBox>
+            <div className="grid grid-cols-2">
+                <div>MAC</div>
+                <div>{allthings?.status.network.ethMacAddress}</div>
+                <div>IP</div>
+                <div>{allthings?.status.network.ethIpAddress}</div>
+                <div>Status</div>
+                <div>{allthings?.status.network.ethCableAttached&& 'Verbunden'}</div>
+            </div>
+            </PageBox>
         </div>
-        </PageBox>
     </PageComponent>
 }

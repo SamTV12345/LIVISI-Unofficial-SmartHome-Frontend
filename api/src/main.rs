@@ -43,6 +43,7 @@ use crate::api_lib::interaction::{Interaction, InteractionResponse};
 use crate::api_lib::livisi_response_type::{ErrorConstruct, LivisResponseType};
 use crate::api_lib::location::{Location, LocationResponse};
 use crate::api_lib::message::{Message, MessageRead};
+use crate::api_lib::product::Product;
 use crate::api_lib::relationship::Relationship;
 use crate::api_lib::status::Status;
 use crate::api_lib::unmount_service::USBService;
@@ -70,6 +71,7 @@ struct AxumState {
     users: User,
     devices: Device,
     hash: Hash,
+    product: Product,
     messages: Message,
     locations: Location,
     capabilities: Capability,
@@ -141,6 +143,7 @@ async fn main() -> std::io::Result<()> {
     let devices = Device::new(&base_url);
     let _user_storage = UserStorage::new(&base_url);
     let hash = Hash::new(&base_url);
+    let product = Product::new(&base_url);
     let message = Message::new(&base_url);
     let locations = Location::new(&base_url);
     let capabilities = Capability::new(&base_url);
@@ -156,6 +159,7 @@ async fn main() -> std::io::Result<()> {
         users,
         devices,
         hash,
+        product,
         messages: message,
         locations,
         capabilities,
@@ -198,6 +202,7 @@ async fn main() -> std::io::Result<()> {
         .route("/users", get(get_users))
         .route("/device", get(get_devices))
         .route("/device/states", get(get_device_states))
+        .route("/product", get(get_products))
         .route("/product/hash", get(get_hash))
         .route("/message", get(get_messages))
         .route(
@@ -762,6 +767,10 @@ async fn get_hash(State(state): State<AxumState>) -> impl IntoResponse {
     Json(state.hash.get_hash().await)
 }
 
+async fn get_products(State(state): State<AxumState>) -> impl IntoResponse {
+    Json(state.product.get_products().await)
+}
+
 async fn get_messages(State(state): State<AxumState>) -> impl IntoResponse {
     Json(state.messages.get_messages().await)
 }
@@ -1030,14 +1039,14 @@ async fn get_capabilities_temperature(
     State(state): State<AxumState>,
     uri: Uri,
 ) -> Response {
+    if uri.path() != "/data/capability" {
+        return (StatusCode::BAD_REQUEST, "Invalid URL").into_response();
+    }
+
     let full_url = uri
         .path_and_query()
         .map(|path_and_query| path_and_query.as_str().to_string())
         .unwrap_or_else(|| uri.path().to_string());
-    let cleaned_url = clean(&full_url);
-    if !cleaned_url.to_string_lossy().starts_with("/data") {
-        return (StatusCode::BAD_REQUEST, "Invalid URL").into_response();
-    }
 
     let response = state.capabilities.get_historic_data(&full_url).await;
     Json(response).into_response()

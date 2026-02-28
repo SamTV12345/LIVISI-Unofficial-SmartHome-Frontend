@@ -74,57 +74,58 @@ export const ErrorPage = () => {
 
 
     return <PageComponent title="Fehlerbehebung" to="/help">
-        <PageBox title="Zentrale neu starten" description="Bei Problemen mit Ihrem SmartHome haben Sie hier die Möglichkeit, Ihre Zentrale neu zu starten.">
-            <PrimaryButton onClick={async () => {
-                await axios.post("/action", {
-                        id: shc!.id,
-                        type: "Restart",
-                        target: "/device/" + shc!.id,
-                        namespace: "core.RWE",
-                        params: {
-                            reason: {
-                                type: "Constant",
-                                value: "User requested to restart smarthome controller."
-                            }
-                        }
-                    }
-                )
-            }}>Neustart</PrimaryButton>
-        </PageBox>
-
-        <PageBox title="Erweiterte Fehlersuche" description="Bei unregelmäßig auftretenden Fehlern zwischen den Geräten und Systemaktivitäten.">
-            {
-                loggingConf && loggingConf.properties.expiresAfterMinutes !=0 && <div className="pt-2 pb-2">
-                    Eingeschaltet - Gültigkeitsdauer der Fehlerbehebung: {formatTime(countDown)} Stunden
-
-                </div>
-            }
-
-                <PrimaryButton onClick={()=>{
-                    loggingConf&& (loggingConf.properties.expiresAfterMinutes === 0&&navigate('/help/errors/advanced'))
-
-                    if (loggingConf && loggingConf.properties.expiresAfterMinutes !== 0) {
-                        axios.post("/action", {
+        <div className="space-y-4 p-4 md:p-6">
+            <PageBox title="Zentrale neu starten" description="Bei Problemen mit Ihrem SmartHome haben Sie hier die Möglichkeit, Ihre Zentrale neu zu starten.">
+                <PrimaryButton onClick={async () => {
+                    await axios.post("/action", {
                             id: shc!.id,
-                            type: "SetLoggingConfig",
+                            type: "Restart",
                             target: "/device/" + shc!.id,
                             namespace: "core.RWE",
                             params: {
-                                expiresAfterMinutes: {
-                                    type: 'Constant',
-                                    value: 1
-                                },
                                 reason: {
-                                    type: 'Constant',
-                                    value: 'Test'
+                                    type: "Constant",
+                                    value: "User requested to restart smarthome controller."
                                 }
-
                             }
-                        }).then(()=>{
-                            setLoggingConf({...loggingConf, properties: {...loggingConf.properties, expiresAfterMinutes: 0,}})
-                    })
+                        }
+                    )
+                }}>Neustart</PrimaryButton>
+            </PageBox>
 
-                }}}>{loggingConf&& (loggingConf.properties.expiresAfterMinutes === 0? "Fehlersuche aktivieren": "Fehlersuche beenden")}</PrimaryButton>
+            <PageBox title="Erweiterte Fehlersuche" description="Bei unregelmäßig auftretenden Fehlern zwischen den Geräten und Systemaktivitäten.">
+                {
+                    loggingConf && loggingConf.properties.expiresAfterMinutes !=0 && <div className="pt-2 pb-2">
+                        Eingeschaltet - Gültigkeitsdauer der Fehlerbehebung: {formatTime(countDown)} Stunden
+
+                    </div>
+                }
+
+                    <PrimaryButton onClick={()=>{
+                        loggingConf&& (loggingConf.properties.expiresAfterMinutes === 0&&navigate('/help/errors/advanced'))
+
+                        if (loggingConf && loggingConf.properties.expiresAfterMinutes !== 0) {
+                            axios.post("/action", {
+                                id: shc!.id,
+                                type: "SetLoggingConfig",
+                                target: "/device/" + shc!.id,
+                                namespace: "core.RWE",
+                                params: {
+                                    expiresAfterMinutes: {
+                                        type: 'Constant',
+                                        value: 1
+                                    },
+                                    reason: {
+                                        type: 'Constant',
+                                        value: 'Test'
+                                    }
+
+                                },
+                            }).then(()=>{
+                                setLoggingConf({...loggingConf, properties: {...loggingConf.properties, expiresAfterMinutes: 0,}})
+                        })
+
+                    }}}>{loggingConf&& (loggingConf.properties.expiresAfterMinutes === 0? "Fehlersuche aktivieren": "Fehlersuche beenden")}</PrimaryButton>
             </PageBox>
             <PageBox title="Internetverbindung" description={<><p>Um Verbindungsprobleme als Ursache für Störungen (z.B.
                 Abbrüche, fehlgeschlagene Updates) ihres SmartHomes
@@ -138,6 +139,7 @@ export const ErrorPage = () => {
                     Internetverbindung testen
                 </PrimaryButton>
             </PageBox>
+        </div>
 
     </PageComponent>
 }

@@ -6,6 +6,7 @@ export const WLANPage = ()=>{
     const allthings = useContentModel(state=>state.allThings)
 
     return <PageComponent title="WLAN" to="/settings">
+        <div className="space-y-4 p-4 md:p-6">
             <PageBox>
                 <div className="grid grid-cols-2">
                     <div>MAC</div>
@@ -16,5 +17,6 @@ export const WLANPage = ()=>{
                     <div>{allthings?.status.network.wifiActiveSsid !== undefined&& 'Verbunden'}</div>
                 </div>
             </PageBox>
-        </PageComponent>
+        </div>
+    </PageComponent>
 }

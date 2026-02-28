@@ -40,35 +40,37 @@ export const ErrorAdvancedPage = ()=>{
     },    [allThings])
 
     return <PageComponent title="Erweiterte Fehlersuche">
-        <PageBox description="Wählen Sie die Dauer, in der die Daten aufgezeichnet werden sollen." variant="gray">
-        </PageBox>
-        {
-            LOGGING_TIME.map((time)=>{
-                return <PageBox key={time.display} title={time.display} selected={loggingTime === time.value} onClick={()=>{
-                    setLoggingTime(time.value)
-                }}><div></div></PageBox>
-            })
-        }
-        <PrimaryButton filled onClick={()=>{
-            loggingTime &&
-            axios.post("/action", {
-                id: shc!.id,
-                type: "SetLoggingConfig",
-                target: "/device/" + shc!.id,
-                namespace: "core.RWE",
-                params: {
-                    expiresAfterMinutes: {
-                        type: 'Constant',
-                        value: loggingTime
-                    },
-                    reason: {
-                        type: 'Constant',
-                        value: 'Test'
-                    }
+        <div className="space-y-4 p-4 md:p-6">
+            <PageBox description="Wählen Sie die Dauer, in der die Daten aufgezeichnet werden sollen." variant="gray">
+            </PageBox>
+            {
+                LOGGING_TIME.map((time)=>{
+                    return <PageBox key={time.display} title={time.display} selected={loggingTime === time.value} onClick={()=>{
+                        setLoggingTime(time.value)
+                    }}><div></div></PageBox>
+                })
+            }
+            <PrimaryButton filled onClick={()=>{
+                loggingTime &&
+                axios.post("/action", {
+                    id: shc!.id,
+                    type: "SetLoggingConfig",
+                    target: "/device/" + shc!.id,
+                    namespace: "core.RWE",
+                    params: {
+                        expiresAfterMinutes: {
+                            type: 'Constant',
+                            value: loggingTime
+                        },
+                        reason: {
+                            type: 'Constant',
+                            value: 'Test'
+                        }
 
-                }
-            })
-            navigate("/help/errors")
-        }}>OK</PrimaryButton>
+                    }
+                })
+                navigate("/help/errors")
+            }}>OK</PrimaryButton>
+        </div>
     </PageComponent>
 }

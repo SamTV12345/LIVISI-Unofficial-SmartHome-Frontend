@@ -56,6 +56,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      '/product':{
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        secure: false,
+      },
       '/interaction':{
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,

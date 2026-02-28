@@ -45,16 +45,18 @@ export const DeviceLocations = ()=>{
         </PortalDialog>
     }
 
-    return <PageComponent title={"Gerätestandorte"} actionButton={<button onClick={()=>{
+    return <PageComponent title={"Gerätestandorte"} to="/settings" actionButton={<button onClick={()=>{
         setDeviceDialogOpen(true)
     }}>
         <Plus/>
     </button>}>
-        {
-            allthings?.locations.map((v)=> {
-                return <PageBox title={formatTitle(v)} to={"/settings/deviceLocations/"+v.id}/>
-            })
-        }
-        <AddDialogComponent/>
+        <div className="space-y-4 p-4 md:p-6">
+            {
+                allthings?.locations.map((v)=> {
+                    return <PageBox key={v.id} title={formatTitle(v)} to={"/settings/deviceLocations/"+v.id}/>
+                })
+            }
+            <AddDialogComponent/>
+        </div>
     </PageComponent>
 }

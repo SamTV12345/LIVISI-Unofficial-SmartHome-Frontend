@@ -31,31 +31,33 @@ export const LocationUpdateScreen = ()=>{
         })
     }, [allthings]);
 
-    return <PageComponent title={location?.config.name!}>
-        <PageBox variant="gray" title="Ort ändern"/>
-            <PageBox title="">
-                <Input value={location?.config.name} onChange={()=>setLocation({
-                    ...location!,
-                    config:{
-                        ...location?.config!,
-                        name: location?.config.name!
-                    }
-                })}/>
+    return <PageComponent title={location?.config.name!} to="/settings/deviceLocations">
+        <div className="space-y-4 p-4 md:p-6">
+            <PageBox variant="gray" title="Ort ändern"/>
+                <PageBox title="">
+                    <Input value={location?.config.name} onChange={()=>setLocation({
+                        ...location!,
+                        config:{
+                            ...location?.config!,
+                            name: location?.config.name!
+                        }
+                    })}/>
+                </PageBox>
+            <PageBox title="Geräte im Bereich">
+                <div className="sm:grid-cols-1 grid grid-cols-2 gap-3">{
+                    memoizedDevices.map(v=>{
+                        return <DeviceDecider device={v!} key={v.id}/>
+                    })
+                }</div>
             </PageBox>
-        <PageBox title="Geräte im Bereich">
-            <div className="sm:grid-cols-1 grid grid-cols-2 gap-3">{
-                memoizedDevices.map(v=>{
-                    return <DeviceDecider device={v!} key={v.id}/>
-                })
-            }</div>
-        </PageBox>
-        <div className="flex flex-col gap-5 m-3">
-            <PrimaryButton onClick={async () => {
-                await axios.put(LOCATION_ENDPOINT + "/" + location!.id, location)
-            }}>{t('SaveChangesButtonCaption')}</PrimaryButton>
-            <PrimaryButton status="error" onClick={async () => {
-                await axios.delete(LOCATION_ENDPOINT + "/" + location!.id)
-            }}>{t('DeleteLocationButtonTag')}</PrimaryButton>
+            <div className="flex flex-col gap-5 pt-2">
+                <PrimaryButton onClick={async () => {
+                    await axios.put(LOCATION_ENDPOINT + "/" + location!.id, location)
+                }}>{t('SaveChangesButtonCaption')}</PrimaryButton>
+                <PrimaryButton status="error" onClick={async () => {
+                    await axios.delete(LOCATION_ENDPOINT + "/" + location!.id)
+                }}>{t('DeleteLocationButtonTag')}</PrimaryButton>
+            </div>
         </div>
     </PageComponent>
 }

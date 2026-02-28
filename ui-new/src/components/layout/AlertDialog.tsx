@@ -2,6 +2,7 @@ import {FC} from "react";
 import {PrimaryButton} from "@/src/components/actionComponents/PrimaryButton.tsx";
 import * as Dialog from "@radix-ui/react-dialog";
 import {cn} from "@/src/utils/cn-helper.ts";
+import {CheckCircle2, CircleX} from "lucide-react";
 
 type AlertDialogProps = {
     open: boolean,
@@ -18,15 +19,12 @@ export const AlertDialog: FC<AlertDialogProps> = ({setOpen,open,msg, status})=>{
                 <div className="block w-full">
                 <div className="flex justify-center flex-col">
                     {status === "error" && <>
-                        <svg className="w-20 self-center" viewBox="0 0 60 60">
-                            <use href="/images/sprite.symbol.svg#GR_Icons_System_overlay_error"
-                                 className="GR_Icons_System_overlay_error"></use>
-                        </svg>
-                        <div className="text-green-green text-2xl self-center">Fehler</div>
+                        <CircleX className="h-20 w-20 self-center text-red-600" strokeWidth={1.6}/>
+                        <div className="text-2xl self-center text-red-600">Fehler</div>
                     </>
                     }
                     {
-                        status === "success" && <><img src="/checkIcon.gif" alt="Checked icon" className="w-20 self-center"/>
+                        status === "success" && <><CheckCircle2 className="h-20 w-20 self-center text-green-green" strokeWidth={1.6}/>
                             <div className="text-green-green text-2xl self-center">Erfolgreich</div>
                         </>
                     }
