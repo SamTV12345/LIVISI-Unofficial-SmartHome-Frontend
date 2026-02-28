@@ -69,10 +69,10 @@ export const NavBar = () => {
             </div>
         </div>
 
-        <Dialog.Root open={open}>
+        <Dialog.Root open={open} onOpenChange={setOpen}>
             <Dialog.Portal>
-                <Dialog.Overlay className="fixed inset-0 bg-black/30 md:hidden" onClick={() => setOpen(false)}/>
-                <Dialog.Content className={cn("fixed left-0 top-0 h-full w-5/6 bg-white p-4 shadow-2xl md:hidden", open ? "drawer-custom" : "drawer-custom-close")}>
+                <Dialog.Overlay className="fixed inset-0 z-[80] bg-slate-950/45 md:hidden" onClick={() => setOpen(false)}/>
+                <Dialog.Content className={cn("fixed inset-y-0 left-0 z-[90] h-dvh w-[85%] max-w-[340px] overflow-y-auto border-r border-gray-200 bg-white p-4 shadow-2xl md:hidden", open ? "drawer-custom" : "drawer-custom-close")}>
                     <Dialog.Title className="mb-4 flex items-center justify-between">
                         <img src={logo} className="w-10" alt="LIVISI Smarthome logo"/>
                         <button type="button" className="rounded-md border border-gray-200 p-1" onClick={() => setOpen(false)}>
