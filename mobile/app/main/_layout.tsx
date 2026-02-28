@@ -1,42 +1,42 @@
-import {DarkTheme, ThemeProvider} from "@react-navigation/native";
-import {useCallback, useEffect, useState} from "react";
+import {DefaultTheme, ThemeProvider} from "@react-navigation/native";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import "react-native-reanimated";
-import {Text, View, Pressable, ActivityIndicator} from "react-native";
+import {ActivityIndicator, Pressable, Text, View} from "react-native";
 import {GestureHandlerRootView} from "react-native-gesture-handler";
 import {fetchAPIAll, saveEmailSettings} from "@/lib/api";
 import {useContentModel} from "@/store/store";
 import {Colors} from "@/constants/Colors";
-import {FontAwesome} from "@expo/vector-icons";
+import {FontAwesome, MaterialCommunityIcons} from "@expo/vector-icons";
 import {Tabs} from "expo-router";
 
 const REFRESH_INTERVAL_MS = 30_000;
 
 export default function RootLayout() {
     const setAllThings = useContentModel((state) => state.setAllThings);
-    const baseURL = useContentModel((state) => state.baseURL);
+    const gateway = useContentModel((state) => state.gateway);
     const allThings = useContentModel((state) => state.allThings);
     const [isLoading, setIsLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | undefined>(undefined);
     const [isSavingEmail, setIsSavingEmail] = useState(false);
 
     const loadAllThings = useCallback(async () => {
-        if (!baseURL) {
+        if (!gateway?.baseURL) {
             return;
         }
 
         try {
-            const data = await fetchAPIAll(baseURL);
+            const data = await fetchAPIAll(gateway);
             setAllThings(data);
             setLoadError(undefined);
-        } catch (error) {
+        } catch {
             setLoadError("Daten konnten nicht geladen werden.");
         } finally {
             setIsLoading(false);
         }
-    }, [baseURL, setAllThings]);
+    }, [gateway, setAllThings]);
 
     useEffect(() => {
-        if (!baseURL) {
+        if (!gateway?.baseURL) {
             return;
         }
 
@@ -49,35 +49,53 @@ export default function RootLayout() {
         return () => {
             clearInterval(interval);
         };
-    }, [baseURL, loadAllThings]);
+    }, [gateway?.baseURL, loadAllThings]);
 
     const onSaveEmail = useCallback(async () => {
-        if (!baseURL || !allThings?.email || isSavingEmail) {
+        if (!gateway?.baseURL || !allThings?.email || isSavingEmail) {
             return;
         }
 
         setIsSavingEmail(true);
         try {
-            await saveEmailSettings(baseURL, allThings.email);
+            await saveEmailSettings(gateway, allThings.email);
             setLoadError(undefined);
-        } catch (error) {
+        } catch {
             setLoadError("E-Mail-Einstellungen konnten nicht gespeichert werden.");
         } finally {
             setIsSavingEmail(false);
         }
-    }, [allThings?.email, baseURL, isSavingEmail]);
+    }, [allThings?.email, gateway, isSavingEmail]);
+
+    const tabScreenOptions = useMemo(() => ({
+        headerShown: false,
+        tabBarActiveTintColor: Colors.app.primary,
+        tabBarInactiveTintColor: Colors.app.textMuted,
+        tabBarStyle: {
+            borderTopColor: Colors.app.border,
+            borderTopWidth: 1,
+            backgroundColor: Colors.app.surface,
+            height: 64,
+            paddingBottom: 8,
+            paddingTop: 8
+        },
+        tabBarLabelStyle: {
+            fontSize: 12,
+            fontWeight: "600" as const
+        }
+    }), []);
 
     if (isLoading && !allThings) {
         return (
-            <ThemeProvider value={DarkTheme}>
+            <ThemeProvider value={DefaultTheme}>
                 <View style={{
                     flex: 1,
-                    backgroundColor: Colors.background,
+                    backgroundColor: Colors.app.background,
                     justifyContent: "center",
                     alignItems: "center"
                 }}>
-                    <ActivityIndicator color={Colors.color.white} size="large"/>
-                    <Text style={{color: "white", marginTop: 10}}>Lade SmartHome-Daten...</Text>
+                    <ActivityIndicator color={Colors.app.primary} size="large"/>
+                    <Text style={{color: Colors.app.text, marginTop: 12}}>Lade SmartHome-Daten...</Text>
                 </View>
             </ThemeProvider>
         );
@@ -85,26 +103,25 @@ export default function RootLayout() {
 
     if (loadError && !allThings) {
         return (
-            <ThemeProvider value={DarkTheme}>
+            <ThemeProvider value={DefaultTheme}>
                 <View style={{
                     flex: 1,
-                    backgroundColor: Colors.background,
+                    backgroundColor: Colors.app.background,
                     justifyContent: "center",
                     alignItems: "center",
                     padding: 20
                 }}>
-                    <Text style={{color: "white", textAlign: "center", marginBottom: 20}}>{loadError}</Text>
+                    <Text style={{color: Colors.app.text, textAlign: "center", marginBottom: 20}}>{loadError}</Text>
                     <Pressable onPress={() => {
                         setIsLoading(true);
                         void loadAllThings();
                     }} style={{
-                        borderColor: Colors.borderColor,
-                        borderWidth: 1,
+                        backgroundColor: Colors.app.primary,
                         borderRadius: 999,
                         paddingHorizontal: 20,
                         paddingVertical: 10
                     }}>
-                        <Text style={{color: "white"}}>Erneut versuchen</Text>
+                        <Text style={{color: "white", fontWeight: "700"}}>Erneut versuchen</Text>
                     </Pressable>
                 </View>
             </ThemeProvider>
@@ -112,84 +129,97 @@ export default function RootLayout() {
     }
 
     return (
-        <ThemeProvider value={DarkTheme}>
+        <ThemeProvider value={DefaultTheme}>
             <GestureHandlerRootView style={{flex: 1}}>
                 {loadError && allThings && <View style={{
-                    backgroundColor: "#5f1f1f",
-                    borderColor: "#ff6b6b",
+                    backgroundColor: Colors.app.warningSoft,
+                    borderColor: Colors.app.warningBorder,
                     borderWidth: 1,
-                    borderRadius: 8,
-                    marginHorizontal: 14,
+                    borderRadius: 12,
+                    marginHorizontal: 16,
                     marginTop: 10,
                     paddingHorizontal: 12,
                     paddingVertical: 10
                 }}>
-                    <Text style={{color: "#ffe0e0"}}>{loadError}</Text>
+                    <Text style={{color: Colors.app.warningText}}>{loadError}</Text>
                     <Pressable onPress={() => {
                         void loadAllThings();
                     }}>
-                        <Text style={{color: "#ffd9d9", textDecorationLine: "underline", marginTop: 6}}>
+                        <Text style={{
+                            color: Colors.app.warningText,
+                            textDecorationLine: "underline",
+                            marginTop: 6
+                        }}>
                             Erneut versuchen
                         </Text>
                     </Pressable>
                 </View>}
-                <Tabs screenOptions={{
-                    tabBarActiveTintColor: "white",
-                    tabBarInactiveBackgroundColor: Colors.background,
-                    tabBarActiveBackgroundColor: Colors.background,
-                    tabBarStyle: {
-                        borderTopColor: Colors.borderColor,
-                        borderTopWidth: 2
-                    },
-                    tabBarHideOnKeyboard: true
-                }}>
+                <Tabs screenOptions={tabScreenOptions}>
                     <Tabs.Screen
                         name="devices/(tabs)/index"
                         options={{
-                            headerShown: false,
                             title: "Zuhause",
-                            tabBarIcon: ({color}) => <FontAwesome size={28} name="home" color={color}/>
+                            tabBarIcon: ({color}) => <FontAwesome size={20} name="home" color={color}/>
                         }}
                     />
                     <Tabs.Screen
                         name="devices/(tabs)/rooms"
                         options={{
-                            headerShown: false,
-                            title: "Bereiche",
-                            tabBarIcon: ({color}) => <FontAwesome size={28} name="th-large" color={color}/>
-                        }}
-                    />
-                    <Tabs.Screen
-                        name="devices/(tabs)/devices"
-                        options={{
-                            headerShown: false,
-                            href: null,
                             title: "Geräte",
-                            tabBarIcon: ({color}) => <FontAwesome size={28} name="cog" color={color}/>
+                            tabBarIcon: ({color}) => <MaterialCommunityIcons size={22} name="view-grid-outline" color={color}/>
                         }}
                     />
                     <Tabs.Screen
                         name="settings/index"
                         options={{
-                            headerShown: false,
                             title: "Einstellungen",
-                            tabBarIcon: ({color}) => <FontAwesome size={28} name="cog" color={color}/>
+                            tabBarIcon: ({color}) => <FontAwesome size={20} name="cog" color={color}/>
                         }}
                     />
+                    <Tabs.Screen name="devices/(tabs)/devices" options={{href: null, headerShown: false}} />
                     <Tabs.Screen name="home/index" options={{href: null}}/>
-                    <Tabs.Screen name="settings/network" options={{href: null, headerShown: true, title: "Netzwerk"}}/>
+                    <Tabs.Screen
+                        name="settings/network"
+                        options={{
+                            href: null,
+                            headerShown: true,
+                            title: "Netzwerk",
+                            headerTintColor: Colors.app.text
+                        }}
+                    />
+                    <Tabs.Screen
+                        name="settings/gateway"
+                        options={{
+                            href: null,
+                            headerShown: true,
+                            title: "Gateway",
+                            headerTintColor: Colors.app.text
+                        }}
+                    />
                     <Tabs.Screen
                         name="settings/email"
                         options={{
                             href: null,
                             headerShown: true,
                             title: "E-Mail",
+                            headerTintColor: Colors.app.text,
                             headerRight: () => (
-                                <Text style={{color: "#0385FF", marginRight: 20, fontSize: 17, lineHeight: 22}}
-                                      onPress={onSaveEmail}>
+                                <Text
+                                    style={{color: Colors.app.primary, marginRight: 16, fontSize: 17, lineHeight: 22}}
+                                    onPress={onSaveEmail}
+                                >
                                     {isSavingEmail ? "Speichert..." : "Speichern"}
                                 </Text>
                             )
+                        }}
+                    />
+                    <Tabs.Screen
+                        name="devices/device/[deviceId]"
+                        options={{
+                            href: null,
+                            headerShown: true,
+                            title: "Gerätedetails",
+                            headerTintColor: Colors.app.text
                         }}
                     />
                 </Tabs>

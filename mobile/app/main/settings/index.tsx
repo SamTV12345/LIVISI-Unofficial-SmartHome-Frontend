@@ -1,70 +1,76 @@
-import {RefreshControl, ScrollView, View} from "react-native"
-import {useContentModel} from "@/store/store";
-import {SafeAreaView} from "react-native-safe-area-context";
-import {ListItem} from "@/components/ListItem";
-import {Colors} from "@/constants/Colors";
-import {setAllInactive} from "@/utils/sqlite";
+import {RefreshControl, ScrollView, View} from "react-native";
 import {router} from "expo-router";
-import {ListItemIsland} from "@/components/ListItemIsland";
-import {ListSeparator} from "@/components/ListSeparator";
-import {StatusBar} from "expo-status-bar";
+import {useContentModel} from "@/store/store";
+import {setAllInactive} from "@/utils/sqlite";
 import {useAllThingsRefresh} from "@/hooks/useAllThingsRefresh";
 import {ErrorBanner} from "@/components/ErrorBanner";
+import {AppScreen} from "@/components/ui/AppScreen";
+import {SectionHeader} from "@/components/ui/SectionHeader";
+import {SurfaceCard} from "@/components/ui/SurfaceCard";
+import {NavRow} from "@/components/ui/NavRow";
 
 export default function SettingsPage() {
-    const allthings = useContentModel(state=>state.allThings)
     const {refreshing, refreshError, refreshAllThings} = useAllThingsRefresh();
+    const gateway = useContentModel((state) => state.gateway);
+    const setGateway = useContentModel((state) => state.setGateway);
 
+    const logout = () => {
+        setAllInactive();
+        setGateway(undefined);
+        router.replace("/login");
+    };
 
-    const logout = ()=>{
-        setAllInactive()
-        router.replace('/login')
-    }
-
-    return <SafeAreaView style={{backgroundColor: Colors.background, minHeight: '100%'}}>
-        <StatusBar style="light" />
-        <ScrollView
-            overScrollMode="always"
-            style={{marginTop: 20, display: 'flex', gap: 20, flexDirection: 'column'}}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => {
-                void refreshAllThings();
-            }}/>}
+    return (
+        <AppScreen
+            title="Einstellungen"
+            subtitle={gateway?.label || gateway?.baseURL || "Kein aktives Gateway"}
+            scroll={false}
         >
+            <ScrollView
+                overScrollMode="always"
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => {
+                    void refreshAllThings();
+                }}/>}
+                showsVerticalScrollIndicator={false}
+            >
                 {refreshError && <ErrorBanner message={refreshError} onRetry={() => {
                     void refreshAllThings();
                 }}/>}
-                {!allthings && <ErrorBanner message="SmartHome-Daten werden noch geladen."/>}
-                <ListItemIsland style={{marginBottom: 20}}>
-                    <ListItem title="Gerätetreiber"/>
-                    <ListSeparator/>
-                    <ListItem title="Gerätestandorte"/>
-                </ListItemIsland>
 
+                <SectionHeader title="Verbindung"/>
+                <SurfaceCard style={{marginBottom: 14}}>
+                    <NavRow
+                        title="Gateway konfigurieren"
+                        subtitle="URL, Nutzername und Passwort verwalten"
+                        onPress={() => router.push("/main/settings/gateway")}
+                    />
+                    <View style={{height: 1, backgroundColor: "#e7edf3"}}/>
+                    <NavRow
+                        title="Netzwerk"
+                        subtitle="Lokale Netzwerkdaten der Zentrale"
+                        onPress={() => router.push("/main/settings/network")}
+                    />
+                </SurfaceCard>
 
-                <ListItemIsland style={{marginBottom: 20}}>
-                    <ListItem title="Lokales Zuhause"/>
-                    <ListSeparator/>
-                    <ListItem title="Zentrale"/>
-                    <ListSeparator/>
-                    <ListItem title="Softwareinformationen"/>
-                </ListItemIsland>
+                <SectionHeader title="Benachrichtigungen"/>
+                <SurfaceCard style={{marginBottom: 14}}>
+                    <NavRow
+                        title="E-Mail"
+                        subtitle="SMTP und Empfänger konfigurieren"
+                        onPress={() => router.push("/main/settings/email")}
+                    />
+                </SurfaceCard>
 
-                <ListItemIsland style={{marginBottom: 20}}>
-                    <ListItem title="Geräteaktivitäten"/>
-                    <ListSeparator/>
-                    <ListItem title="Impressum"/>
-                    <ListSeparator/>
-                    <ListItem title="Netzwerk verwalten" to="/main/settings/network"/>
-                    <ListSeparator/>
-                    <ListItem title="E-Mail" to="/main/settings/email"/>
-                </ListItemIsland>
-
-                <ListItemIsland style={{marginBottom: 20}}>
-                    <ListItem title="USB-Stick auswerfen" type="action" onClick={function (): void {
-                        throw new Error("Function not implemented.");
-                    }}  />
-                    <ListItem  title="Abmelden" onClick={logout} type="action"/>
-                </ListItemIsland>
-        </ScrollView>
-    </SafeAreaView>
+                <SectionHeader title="Session"/>
+                <SurfaceCard>
+                    <NavRow
+                        title="Abmelden"
+                        subtitle="Aktive Gateway-Sitzung beenden"
+                        onPress={logout}
+                        danger
+                    />
+                </SurfaceCard>
+            </ScrollView>
+        </AppScreen>
+    );
 }

@@ -1,41 +1,41 @@
-import {Href, router, Stack} from "expo-router";
-import {FontAwesome} from "@expo/vector-icons";
-import AntDesign from '@expo/vector-icons/AntDesign';
+import {Stack} from "expo-router";
+import {Colors} from "@/constants/Colors";
 
 export default function Login() {
-    return  (
+    return (
         <Stack
             screenOptions={{
-                headerTintColor: '#fff',
-                headerTitleStyle: {
-                    fontWeight: 'bold',
+                headerShadowVisible: false,
+                headerStyle: {
+                    backgroundColor: Colors.app.background
                 },
-                navigationBarHidden: true,
-                statusBarStyle:'dark'
-            }}>
-            <Stack.Screen name="index" options={{
-                title: 'Livisi Smarthome',
-                headerRight: ()=><FontAwesome onPress={()=>{
-                    router.replace("/login/smarthomeSelection" as  Href<string | object>)
-                }} color="white" size={20} name="cog"/>,
-            }} />
-            <Stack.Screen name="smarthomeSelection" options={{
-                title: 'Smarthome auswählen',
-                headerTitleAlign: 'center',
-                headerLeft: ()=><AntDesign onPress={()=>{
-                    router.replace("/login")
-                }} color="white" size={20} name="arrow-left"/>,
-                headerRight: ()=><AntDesign onPress={()=>{
-                    router.replace("/login/SmarthomeDetailAdd"  as  Href<string | object>)
-                }} color="white" size={20} name="plus"/>,
-            }} />
-            <Stack.Screen name="SmarthomeDetailAdd" options={{
-                title: 'Smarthome hinzufügen',
-                headerTitleAlign: 'center',
-                headerLeft: ()=><AntDesign onPress={()=>{
-                    router.replace("/login/smarthomeSelection"  as  Href<string | object>)
-                }} color="white" size={20} name="arrow-left"/>,
-            }} />
+                headerTintColor: Colors.app.text,
+                headerTitleStyle: {
+                    fontWeight: "700"
+                },
+                contentStyle: {
+                    backgroundColor: Colors.app.background
+                }
+            }}
+        >
+            <Stack.Screen
+                name="index"
+                options={{
+                    title: "Gateway verbinden"
+                }}
+            />
+            <Stack.Screen
+                name="smarthomeSelection"
+                options={{
+                    title: "Gespeicherte Gateways"
+                }}
+            />
+            <Stack.Screen
+                name="SmarthomeDetailAdd"
+                options={{
+                    title: "Gateway hinzufügen"
+                }}
+            />
         </Stack>
     );
 }

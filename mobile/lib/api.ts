@@ -1,5 +1,5 @@
 import {ConfigData} from "@/models/ConfigData";
-import {AxiosDeviceResponse, EmailConfig} from "@/store/store";
+import {AxiosDeviceResponse, EmailConfig, GatewayConfig} from "@/store/store";
 import ky from "ky";
 
 const DEFAULT_TIMEOUT_MS = 12_000;
@@ -12,6 +12,44 @@ const buildURL = (baseURL: string, path: string): string => {
     return normalizeBaseURL(baseURL) + path;
 };
 
+type GatewayInput = GatewayConfig | string;
+
+const resolveGateway = (gateway: GatewayInput): GatewayConfig => {
+    if (typeof gateway === "string") {
+        return {
+            baseURL: gateway,
+            username: "",
+            password: ""
+        };
+    }
+    return {
+        baseURL: gateway.baseURL,
+        username: gateway.username ?? "",
+        password: gateway.password ?? "",
+        label: gateway.label
+    };
+};
+
+const basicAuthHeader = (gateway: GatewayConfig): Record<string, string> => {
+    if (!gateway.username || !gateway.password) {
+        return {};
+    }
+
+    const credential = `${gateway.username}:${gateway.password}`;
+    const token = typeof globalThis.btoa === "function"
+        ? globalThis.btoa(credential)
+        : (globalThis as {Buffer?: {from: (value: string, encoding: string) => {toString: (encoding: string) => string}}}).Buffer
+            ?.from(credential, "utf-8")
+            .toString("base64");
+
+    if (!token) {
+        return {};
+    }
+    return {
+        Authorization: `Basic ${token}`
+    };
+};
+
 const apiClient = ky.create({
     timeout: DEFAULT_TIMEOUT_MS,
     retry: {
@@ -19,30 +57,47 @@ const apiClient = ky.create({
     }
 });
 
-export const fetchAPIConfig = async (baseURL: string) => {
-    const endpoint = buildURL(baseURL, "/api/server");
+export const fetchAPIConfig = async (gatewayInput: GatewayInput) => {
+    const gateway = resolveGateway(gatewayInput);
+    const endpoint = buildURL(gateway.baseURL, "/api/server");
 
     try {
-        return await apiClient.get(endpoint).json<ConfigData>();
+        return await apiClient.get(endpoint, {
+            headers: basicAuthHeader(gateway)
+        }).json<ConfigData>();
     } catch (error) {
         throw new Error("API config could not be loaded");
     }
 }
 
 
-export const fetchAPIAll = async (baseURL: string): Promise<AxiosDeviceResponse>=> {
-    const endpoint = buildURL(baseURL, "/api/all");
+export const fetchAPIAll = async (gatewayInput: GatewayInput): Promise<AxiosDeviceResponse>=> {
+    const gateway = resolveGateway(gatewayInput);
+    const endpoint = buildURL(gateway.baseURL, "/api/all");
     try {
-        return await apiClient.get(endpoint).json<AxiosDeviceResponse>();
+        return await apiClient.get(endpoint, {
+            headers: basicAuthHeader(gateway)
+        }).json<AxiosDeviceResponse>();
     } catch (error) {
         throw new Error("Device data could not be loaded");
     }
 }
 
 
-export const saveEmailSettings = async (baseURL: string, emailConfig: EmailConfig) =>{
-    const endpoint = buildURL(baseURL, "/email/settings");
+export const saveEmailSettings = async (gatewayInput: GatewayInput, emailConfig: EmailConfig) =>{
+    const gateway = resolveGateway(gatewayInput);
+    const endpoint = buildURL(gateway.baseURL, "/email/settings");
     await apiClient.put(endpoint, {
-       json: emailConfig
+       json: emailConfig,
+       headers: basicAuthHeader(gateway)
     });
 }
+
+export const sendDeviceAction = async (gatewayInput: GatewayInput, payload: unknown) => {
+    const gateway = resolveGateway(gatewayInput);
+    const endpoint = buildURL(gateway.baseURL, "/action");
+    await apiClient.post(endpoint, {
+        json: payload,
+        headers: basicAuthHeader(gateway)
+    });
+};

@@ -1,204 +1,222 @@
-import {Image, StyleSheet, Platform, ScrollView, Text, View, Dimensions, RefreshControl} from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import {useContentModel} from "@/store/store";
 import {useMemo, useState} from "react";
+import {Pressable, RefreshControl, ScrollView, StyleSheet, Text, View} from "react-native";
+import {MaterialCommunityIcons} from "@expo/vector-icons";
+import {useContentModel} from "@/store/store";
 import {Device} from "@/models/Device";
-import {
-    FENSTERKONTAKT,
-    HEATING, RAUCHMELDER,
-    TYPES,
-    WANDSENDER,
-    ZWISCHENSTECKER,
-    ZWISCHENSTECKER_OUTDOOR
-} from "@/constants/FieldConstants";
-import { List } from 'react-native-paper';
-import i18n from "@/i18n/i18n";
-import {Colors} from "@/constants/Colors";
-import {StatusBar} from "expo-status-bar";
-import {ListItemIsland} from "@/components/ListItemIsland";
-import {ListItem} from "@/components/ListItem";
-import {ListSeparator} from "@/components/ListSeparator";
-import {Href, router} from "expo-router";
-import {SafeAreaView} from "react-native-safe-area-context";
-import {Chip} from "@/components/Chip";
-import Feather from '@expo/vector-icons/Feather';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import Entypo from '@expo/vector-icons/Entypo';
-import {DeviceDecider} from "@/components/DeviceDecider";
 import {LocationResponse} from "@/models/Location";
+import {DeviceDecider} from "@/components/DeviceDecider";
 import {useAllThingsRefresh} from "@/hooks/useAllThingsRefresh";
 import {ErrorBanner} from "@/components/ErrorBanner";
+import {AppScreen} from "@/components/ui/AppScreen";
+import {SurfaceCard} from "@/components/ui/SurfaceCard";
+import {SectionHeader} from "@/components/ui/SectionHeader";
+import {StatusPill} from "@/components/ui/StatusPill";
+import {Colors} from "@/constants/Colors";
+import {TYPES, ZWISCHENSTECKER, ZWISCHENSTECKER_OUTDOOR} from "@/constants/FieldConstants";
+import i18n from "@/i18n/i18n";
+
+type RoomGroup = {
+    id: string;
+    name: string;
+    devices: Device[];
+};
+
+const compareByName = (a: string, b: string) =>
+    a.localeCompare(b, "de", {sensitivity: "base"});
+
+const normalizeType = (type: string) => type === ZWISCHENSTECKER_OUTDOOR ? ZWISCHENSTECKER : type;
+
+const getDeviceName = (device: Device) =>
+    device.config?.name || device.config?.friendlyName || device.id;
 
 export default function HomeScreen() {
-    const allthings = useContentModel(state=>state.allThings)
-    const [selectedDeviceTypes, setSelectedDeviceTypes] = useState<string>()
+    const allThings = useContentModel((state) => state.allThings);
     const {refreshing, refreshError, refreshAllThings} = useAllThingsRefresh();
+    const [selectedType, setSelectedType] = useState<string | undefined>(undefined);
+    const [expandedRooms, setExpandedRooms] = useState<Record<string, boolean>>({});
 
-    const mappedDevicesToType = useMemo(() => {
-        if (!allthings?.devices) return new Map<any, any>()
-        const map = new Map<string, Device[]>
-        TYPES.forEach(type=>{
-            if(type === ZWISCHENSTECKER_OUTDOOR) {
-                return
-            }
-            map.set(type,[])
-        })
-        for (const devDevice of Object.entries(allthings?.devices!)) {
-            if(devDevice[1].type! === ZWISCHENSTECKER_OUTDOOR) {
-                map.get(ZWISCHENSTECKER)?.push(devDevice[1])
-                continue
-            }
-            map.get(devDevice[1].type!)?.push(devDevice[1])
+    const locationMap = useMemo(() => {
+        const map = new Map<string, LocationResponse>();
+        for (const location of allThings?.locations ?? []) {
+            map.set(location.id, location);
         }
-        return map
-    }, [allthings?.devices]);
+        return map;
+    }, [allThings?.locations]);
 
-
-    const mappedLocations = useMemo(()=>{
-        if (!allthings?.locations || !allthings?.devices) {
+    const groupedRooms = useMemo<RoomGroup[]>(() => {
+        if (!allThings?.devices) {
             return [];
         }
-        if (selectedDeviceTypes === undefined||selectedDeviceTypes?.length == 0) {
-            return allthings?.locations
-        } else {
-            const locations: LocationResponse[] = []
-            for (let location of allthings?.locations!) {
-                const newLocation = {...location}
-                newLocation.devices = []
+        const rooms = new Map<string, RoomGroup>();
+        const devices = Object.values(allThings.devices);
 
-                if (location.devices) {
-                    for (let deviceInLocation of location.devices!) {
-                        if (allthings?.devices[deviceInLocation]?.type === selectedDeviceTypes) {
-                            newLocation.devices.push(allthings?.devices[deviceInLocation].id)
-                        }
-                    }
-                }
-                locations.push(newLocation)
+        for (const device of devices) {
+            const normalizedType = normalizeType(device.type);
+            if (!TYPES.includes(device.type) && !TYPES.includes(normalizedType)) {
+                continue;
             }
-            return locations
+            if (selectedType && normalizedType !== selectedType) {
+                continue;
+            }
+
+            const location = locationMap.get(device.location);
+            const roomId = location?.id ?? "unassigned";
+            const roomName = location?.config.name ?? "Ohne Raum";
+            const existing = rooms.get(roomId);
+            const nextDevice: Device = {
+                ...device,
+                locationData: location
+            };
+
+            if (existing) {
+                existing.devices.push(nextDevice);
+            } else {
+                rooms.set(roomId, {
+                    id: roomId,
+                    name: roomName,
+                    devices: [nextDevice]
+                });
+            }
         }
-    }, [allthings?.devices, allthings?.locations, selectedDeviceTypes])
 
+        return [...rooms.values()]
+            .map((room) => ({
+                ...room,
+                devices: room.devices.sort((a, b) => compareByName(getDeviceName(a), getDeviceName(b)))
+            }))
+            .sort((a, b) => compareByName(a.name, b.name));
+    }, [allThings?.devices, locationMap, selectedType]);
 
-    const colorChecker = (key: string)=>{
-        if (key === selectedDeviceTypes) {
-            return "black"
-        } else {
-            return "white"
+    const typeCounts = useMemo(() => {
+        const map = new Map<string, number>();
+        for (const device of Object.values(allThings?.devices ?? {})) {
+            const type = normalizeType(device.type);
+            if (!TYPES.includes(type)) {
+                continue;
+            }
+            map.set(type, (map.get(type) ?? 0) + 1);
         }
-    }
+        return [...map.entries()].sort((a, b) => compareByName(i18n.t(a[0]), i18n.t(b[0])));
+    }, [allThings?.devices]);
 
-    const getIcon = (key: string)=>{
-        if (key == WANDSENDER) {
-            return <Feather name="send" color={colorChecker(key)} size={17} style={{marginTop: 3}} />
-        } else if (key === ZWISCHENSTECKER||key === ZWISCHENSTECKER_OUTDOOR){
-            return <FontAwesome name="plug" size={17} color={colorChecker(key)} style={{marginTop: 2}} />
-        } else if (key === HEATING) {
-            return <MaterialIcons name="heat-pump" size={20} color={colorChecker(key)} style={{marginTop: 1}} />
-        } else if (key === FENSTERKONTAKT) {
-            return <MaterialCommunityIcons name="window-open" color={colorChecker(key)} size={17} />
-        } else if (key === RAUCHMELDER) {
-            return <MaterialCommunityIcons name="smoke-detector" size={17} color={colorChecker(key)} />
-        }
-        return <View></View>
-    }
-    let width = Dimensions.get('window').width
-
-    if (!allthings) {
-        return (
-            <SafeAreaView style={styles.stepContainer}>
-                <View style={{flex: 1, justifyContent: "center", alignItems: "center"}}>
-                    <ThemedText>Lade Gerätedaten...</ThemedText>
-                    {refreshError && <ErrorBanner message={refreshError} onRetry={() => {
-                        void refreshAllThings();
-                    }}/>}
-                </View>
-            </SafeAreaView>
-        );
-    }
+    const toggleRoom = (roomId: string) => {
+        setExpandedRooms((current) => ({
+            ...current,
+            [roomId]: !current[roomId]
+        }));
+    };
 
     return (
-        <SafeAreaView style={styles.stepContainer}>
-            <StatusBar style="light" />
-            <View>
-                <Image style={{  width: width, position: 'absolute', top:0, left:0 }} source={require('../../../../assets/images/caucasus.jpg')} />
-            </View>
+        <AppScreen
+            title="Zuhause"
+            subtitle={`${Object.keys(allThings?.devices ?? {}).length} Geräte`}
+            scroll={false}
+        >
             <ScrollView
-                style={{}}
-                overScrollMode="never"
-                indicatorStyle="white"
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => {
                     void refreshAllThings();
                 }}/>}
+                showsVerticalScrollIndicator={false}
             >
                 {refreshError && <ErrorBanner message={refreshError} onRetry={() => {
                     void refreshAllThings();
                 }}/>}
-                <ThemedText type="title" style={{marginLeft: 20}}>Mein Zuhause</ThemedText>
-                <ListSeparator/>
-                <View style={{display: 'flex', flexDirection: 'row', gap: 10, marginLeft: 20, flexWrap: "wrap", marginTop: 10}}>
-                    {[...mappedDevicesToType.keys()].filter(key=>mappedDevicesToType.get(key).length>0).map(k=>{
-                        return <Chip key={k} icon={getIcon(k)} text={i18n.t(k)} selected={selectedDeviceTypes == k} onClick={()=>{
-                            if(selectedDeviceTypes === k) {
-                                setSelectedDeviceTypes(undefined)
-                            } else {
-                                setSelectedDeviceTypes(k)
-                            }
-                        }}/>
-                    })}
-                </View>
 
+                <SectionHeader title="Filter"/>
+                <SurfaceCard style={{marginBottom: 14}}>
+                    <View style={styles.chipWrap}>
+                        {typeCounts.map(([type, count]) => {
+                            const selected = selectedType === type;
+                            return (
+                                <Pressable
+                                    key={type}
+                                    onPress={() => setSelectedType(selected ? undefined : type)}
+                                    style={[styles.chip, selected ? styles.chipSelected : null]}
+                                >
+                                    <Text style={[styles.chipText, selected ? styles.chipTextSelected : null]}>
+                                        {i18n.t(type)} ({count})
+                                    </Text>
+                                </Pressable>
+                            );
+                        })}
+                    </View>
+                </SurfaceCard>
 
-                <View style={{display: 'flex', flexDirection: 'column', gap: 20, marginTop: 20}}>
-                    {
-                        mappedLocations&& Object.entries(mappedLocations).filter(([_,l])=>l.devices&&l.devices.length>0).map(([_,location])=>{
-                            return <ListItemIsland key={location.id}>
-                                <View style={{display: 'flex', flexDirection: 'row', padding: 10}}>
-                                    <ThemedText type="subtitle">{location.config.name}</ThemedText>
-                                    <Entypo name="chevron-right" size={24} color="white" style={{alignSelf: 'center', display: 'flex'}} />
+                <SectionHeader title="Räume" subtitle="Aufklappen für Gerätesteuerung"/>
+                {groupedRooms.length === 0 && (
+                    <SurfaceCard>
+                        <Text style={{color: Colors.app.textMuted}}>Keine Geräte für den aktuellen Filter gefunden.</Text>
+                    </SurfaceCard>
+                )}
+
+                {groupedRooms.map((room) => {
+                    const isExpanded = expandedRooms[room.id] ?? true;
+                    return (
+                        <SurfaceCard key={room.id} style={{marginBottom: 12}}>
+                            <Pressable onPress={() => toggleRoom(room.id)} style={styles.roomHeader}>
+                                <View>
+                                    <Text style={styles.roomName}>{room.name}</Text>
+                                    <Text style={styles.roomMeta}>{room.devices.length} Geräte</Text>
                                 </View>
-                                <View style={{display: 'flex', flexDirection: 'row', flexWrap: 'wrap', padding: 10, gap: 10}}>
-                                    {
-                                        location.devices?.filter(device=>{
-                                            return TYPES.includes(allthings?.devices[device]?.type!)
-                                        }).map(device=>{
-                                            const deviceData = allthings?.devices[device];
-                                            if (!deviceData) {
-                                                return null;
-                                            }
-                                            return <DeviceDecider device={deviceData} key={device}/>
-                                        })
-                                    }
+                                <MaterialCommunityIcons
+                                    name={isExpanded ? "chevron-up" : "chevron-down"}
+                                    size={22}
+                                    color={Colors.app.textMuted}
+                                />
+                            </Pressable>
+                            {isExpanded && (
+                                <View style={{marginTop: 10}}>
+                                    {room.devices.map((device) => (
+                                        <DeviceDecider key={device.id} device={device}/>
+                                    ))}
                                 </View>
-                            </ListItemIsland>
-                        })
-                    }
-                </View>
+                            )}
+                            {!isExpanded && <StatusPill label="Eingeklappt" tone="neutral"/>}
+                        </SurfaceCard>
+                    );
+                })}
             </ScrollView>
-        </SafeAreaView>
-);
+        </AppScreen>
+    );
 }
 
 const styles = StyleSheet.create({
-    titleContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
+    chipWrap: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        gap: 8
     },
-    stepContainer: {
-        backgroundColor: Colors.background,
-        gap: 8,
-        marginBottom: 8,
-        height: '100%'
+    chip: {
+        backgroundColor: Colors.app.surfaceSoft,
+        borderColor: Colors.app.border,
+        borderWidth: 1,
+        borderRadius: 999,
+        paddingHorizontal: 12,
+        paddingVertical: 7
     },
-    reactLogo: {
-        height: 178,
-        width: 290,
-        bottom: 0,
-        left: 0,
-        position: 'absolute',
+    chipSelected: {
+        backgroundColor: Colors.app.primarySoft,
+        borderColor: Colors.app.primary
     },
+    chipText: {
+        color: Colors.app.textMuted,
+        fontWeight: "600"
+    },
+    chipTextSelected: {
+        color: Colors.app.primary
+    },
+    roomHeader: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between"
+    },
+    roomName: {
+        color: Colors.app.text,
+        fontSize: 19,
+        fontWeight: "700"
+    },
+    roomMeta: {
+        color: Colors.app.textMuted,
+        marginTop: 2
+    }
 });

@@ -10,19 +10,19 @@ type UseAllThingsRefreshResult = {
 }
 
 export const useAllThingsRefresh = (): UseAllThingsRefreshResult => {
-    const baseURL = useContentModel((state) => state.baseURL);
+    const gateway = useContentModel((state) => state.gateway);
     const setAllThings = useContentModel((state) => state.setAllThings);
     const [refreshing, setRefreshing] = useState(false);
     const [refreshError, setRefreshError] = useState<string | undefined>(undefined);
 
     const refreshAllThings = useCallback(async () => {
-        if (!baseURL || refreshing) {
+        if (!gateway?.baseURL || refreshing) {
             return;
         }
 
         setRefreshing(true);
         try {
-            const data = await fetchAPIAll(baseURL);
+            const data = await fetchAPIAll(gateway);
             setAllThings(data);
             setRefreshError(undefined);
         } catch (error) {
@@ -30,7 +30,7 @@ export const useAllThingsRefresh = (): UseAllThingsRefreshResult => {
         } finally {
             setRefreshing(false);
         }
-    }, [baseURL, refreshing, setAllThings]);
+    }, [gateway, refreshing, setAllThings]);
 
     const clearRefreshError = useCallback(() => {
         setRefreshError(undefined);

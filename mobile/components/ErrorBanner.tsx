@@ -1,5 +1,6 @@
 import {Pressable, StyleSheet, Text, View} from "react-native";
 import {FC} from "react";
+import {Colors} from "@/constants/Colors";
 
 type ErrorBannerProps = {
     message: string,
@@ -19,22 +20,21 @@ export const ErrorBanner: FC<ErrorBannerProps> = ({message, onRetry}) => {
 
 const styles = StyleSheet.create({
     container: {
-        marginHorizontal: 20,
         marginTop: 12,
-        marginBottom: 4,
-        borderRadius: 8,
+        marginBottom: 8,
+        borderRadius: 12,
         paddingHorizontal: 12,
         paddingVertical: 10,
-        backgroundColor: "#5f1f1f",
-        borderColor: "#ff6b6b",
+        backgroundColor: Colors.app.warningSoft,
+        borderColor: Colors.app.warningBorder,
         borderWidth: 1
     },
     message: {
-        color: "#ffe0e0",
+        color: Colors.app.warningText,
         fontSize: 14
     },
     retry: {
-        color: "#ffd9d9",
+        color: Colors.app.warningText,
         textDecorationLine: "underline",
         marginTop: 8,
         fontWeight: "600"

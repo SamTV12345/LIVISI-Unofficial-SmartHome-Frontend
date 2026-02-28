@@ -1,15 +1,17 @@
-import {SafeAreaView} from "react-native-safe-area-context";
 import {RefreshControl, ScrollView, Text, View} from "react-native";
 import {useMemo} from "react";
+import {router} from "expo-router";
 import {useContentModel} from "@/store/store";
-import {ListItemIsland} from "@/components/ListItemIsland";
-import {ListItem} from "@/components/ListItem";
-import {ListSeparator} from "@/components/ListSeparator";
-import i18n from "@/i18n/i18n";
 import {TYPES, ZWISCHENSTECKER, ZWISCHENSTECKER_OUTDOOR} from "@/constants/FieldConstants";
-import {Colors} from "@/constants/Colors";
+import i18n from "@/i18n/i18n";
 import {useAllThingsRefresh} from "@/hooks/useAllThingsRefresh";
 import {ErrorBanner} from "@/components/ErrorBanner";
+import {AppScreen} from "@/components/ui/AppScreen";
+import {SectionHeader} from "@/components/ui/SectionHeader";
+import {SurfaceCard} from "@/components/ui/SurfaceCard";
+import {NavRow} from "@/components/ui/NavRow";
+
+const normalizeType = (type: string) => type === ZWISCHENSTECKER_OUTDOOR ? ZWISCHENSTECKER : type;
 
 export default function RoomsTabScreen() {
     const allThings = useContentModel((state) => state.allThings);
@@ -20,59 +22,56 @@ export default function RoomsTabScreen() {
         const devices = Object.values(allThings?.devices ?? {});
 
         for (const device of devices) {
-            if (!TYPES.includes(device.type)) {
+            const normalized = normalizeType(device.type);
+            if (!TYPES.includes(normalized)) {
                 continue;
             }
-
-            const normalizedType = device.type === ZWISCHENSTECKER_OUTDOOR ? ZWISCHENSTECKER : device.type;
-            const currentCount = countMap.get(normalizedType) ?? 0;
-            countMap.set(normalizedType, currentCount + 1);
+            countMap.set(normalized, (countMap.get(normalized) ?? 0) + 1);
         }
 
         return [...countMap.entries()]
-            .sort((a, b) => a[0].localeCompare(b[0]));
+            .sort((a, b) => i18n.t(a[0]).localeCompare(i18n.t(b[0]), "de", {sensitivity: "base"}));
     }, [allThings?.devices]);
 
-    if (!allThings) {
-        return (
-            <SafeAreaView style={{flex: 1, backgroundColor: Colors.background}}>
-                <View style={{flex: 1, justifyContent: "center", alignItems: "center"}}>
-                    <Text style={{color: "white"}}>Lade Gerätedaten...</Text>
-                    {refreshError && <ErrorBanner message={refreshError} onRetry={() => {
-                        void refreshAllThings();
-                    }}/>}
-                </View>
-            </SafeAreaView>
-        );
-    }
-
     return (
-        <SafeAreaView style={{flex: 1, backgroundColor: Colors.background}}>
+        <AppScreen title="Gerätetypen" subtitle="Alphabetisch sortiert" scroll={false}>
             <ScrollView
-                style={{paddingTop: 20}}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => {
                     void refreshAllThings();
                 }}/>}
+                showsVerticalScrollIndicator={false}
             >
                 {refreshError && <ErrorBanner message={refreshError} onRetry={() => {
                     void refreshAllThings();
                 }}/>}
-                <ListItemIsland>
-                    {deviceTypeCounts.length === 0 && <ListItem title="Keine Geräte gefunden"/>}
+
+                <SectionHeader title="Typenübersicht"/>
+                <SurfaceCard>
+                    {deviceTypeCounts.length === 0 && (
+                        <Text style={{color: "#5f7388"}}>Keine Geräte gefunden.</Text>
+                    )}
                     {deviceTypeCounts.map(([type, count], index) => (
-                        <View key={type}>
-                            {index > 0 && <ListSeparator/>}
-                            <ListItem
-                                title={`${i18n.t(type)} (${count})`}
-                                to={{
-                                    pathname: "/main/devices/(tabs)/devices/[deviceTypeList]",
-                                    params: {deviceTypeList: type}
+                        <View
+                            key={type}
+                            style={{
+                                borderBottomWidth: index < deviceTypeCounts.length - 1 ? 1 : 0,
+                                borderBottomColor: "#e7edf3"
+                            }}
+                        >
+                            <NavRow
+                                title={i18n.t(type)}
+                                subtitle={`${count} Gerät${count > 1 ? "e" : ""}`}
+                                onPress={() => {
+                                    router.push({
+                                        pathname: "/main/devices/(tabs)/devices/[deviceTypeList]",
+                                        params: {deviceTypeList: type}
+                                    });
                                 }}
                             />
                         </View>
                     ))}
-                </ListItemIsland>
+                </SurfaceCard>
             </ScrollView>
-        </SafeAreaView>
+        </AppScreen>
     );
 }

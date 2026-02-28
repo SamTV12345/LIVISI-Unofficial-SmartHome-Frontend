@@ -1,13 +1,9 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
+import {DefaultTheme, ThemeProvider} from '@react-navigation/native';
 import * as SplashScreen from 'expo-splash-screen';
-import {useEffect, useState} from 'react';
+import {useEffect} from 'react';
 import 'react-native-reanimated';
-import { useColorScheme } from '@/hooks/useColorScheme';
-import { StatusBar } from 'expo-status-bar';
-import {getBaseURL, getServerConfig, updateServerConfig} from "@/utils/sqlite";
-import {Redirect, Slot, Stack, useNavigationContainerRef, useRootNavigationState, useRouter} from 'expo-router';
-import {SafeAreaView} from "react-native-safe-area-context";
+import {getBaseURL, getServerConfig, init, updateServerConfig} from "@/utils/sqlite";
+import {Slot, useRouter} from 'expo-router';
 import {useContentModel} from "@/store/store";
 import {fetchAPIConfig} from "@/lib/api";
 
@@ -16,53 +12,53 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
 
   useEffect(() => {
-    getBaseURL().then(c=> {
-        if (c == null) {
-            console.log("config is null")
-            SplashScreen.hideAsync();
-            setImmediate(() => {
-                router.replace('/login')
-            })
-        } else {
-            useContentModel.getState().setBaseURL(c.id!)
-            let oldConfig: any
-            try {
-                 oldConfig = getServerConfig(c.id!)
-            } catch (e) {
-                console.log("Error getting config")
-            }
-            fetchAPIConfig(c.id!)
-                .then(r => {
-                    if (JSON.stringify(oldConfig) === JSON.stringify(r)) {
-                        setImmediate(() => {
-                            SplashScreen.hideAsync();
-                            return router.replace('/main/devices/(tabs)');
-                        })
-                    } else {
-                        updateServerConfig(r, c.id!)
-                        setImmediate(() => {
-                            SplashScreen.hideAsync();
-                            return router.replace('/main/devices/(tabs)');
-                        })
-                    }
-                    useContentModel.getState().setConfig(r)
-                }).catch((reason) => {
-                SplashScreen.hideAsync();
-                return router.replace('/login');
-            })
+    const bootstrap = async () => {
+      init();
+
+      try {
+        const activeGateway = await getBaseURL();
+        if (!activeGateway) {
+          router.replace("/login");
+          return;
+        }
+
+        const gateway = {
+          baseURL: activeGateway.id,
+          username: activeGateway.username ?? "",
+          password: activeGateway.password ?? "",
+          label: activeGateway.label ?? ""
+        };
+
+        useContentModel.getState().setGateway(gateway);
+
+        let oldConfig: unknown;
+        try {
+          oldConfig = getServerConfig(activeGateway.id);
+        } catch {
+          oldConfig = undefined;
+        }
+
+        const config = await fetchAPIConfig(gateway);
+        if (JSON.stringify(oldConfig) !== JSON.stringify(config)) {
+          updateServerConfig(config, gateway.baseURL);
+        }
+
+        useContentModel.getState().setConfig(config);
+        router.replace("/main/devices/(tabs)");
+      } catch {
+        router.replace("/login");
+      } finally {
+        SplashScreen.hideAsync();
       }
-    })
-  }, []);
+    };
+
+    void bootstrap();
+  }, [router]);
 
   return (
-    <ThemeProvider value= {DarkTheme}>
+    <ThemeProvider value={DefaultTheme}>
         <Slot>
         </Slot>
     </ThemeProvider>

@@ -2,7 +2,6 @@ FROM alpine AS cache
 RUN apk add -U --no-cache ca-certificates
 
 FROM scratch as base
-COPY ./static/ /app/static
 COPY --from=cache /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 WORKDIR /app/

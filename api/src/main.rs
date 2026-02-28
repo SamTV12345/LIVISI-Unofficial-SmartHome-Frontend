@@ -7,7 +7,6 @@ mod store;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::env::var;
-use std::path::PathBuf;
 use std::sync::{Mutex, OnceLock};
 use std::thread;
 use std::thread::spawn;
@@ -24,13 +23,13 @@ use base64::engine::general_purpose;
 use base64::Engine;
 use clap::Parser;
 use clokwerk::{Job, Scheduler, TimeUnits};
+use include_dir::{include_dir, Dir};
 use kv::Config;
 use path_clean::clean;
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sunrise::{Coordinates, SolarDay, SolarEvent};
-use tokio::fs;
 use tokio::sync::broadcast;
 use tungstenite::connect;
 
@@ -60,6 +59,7 @@ use crate::store::{Data, DeviceStore, Store};
 use crate::utils::connection::{Args, MemPrefill};
 use crate::utils::logging::init_logging;
 static WS_BROADCAST: OnceLock<broadcast::Sender<String>> = OnceLock::new();
+static EMBEDDED_UI_DIR: Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR/static");
 
 pub static CLIENT_DATA: OnceLock<Mutex<ClientData>> = OnceLock::new();
 pub static STORE_DATA: OnceLock<Store> = OnceLock::new();
@@ -240,13 +240,13 @@ async fn main() -> std::io::Result<()> {
         .route("/websocket", get(start_connection))
         .route("/images/*tail", get(get_images))
         .route("/resources/*tail", get(get_resources))
-        .route("/ui", get(index))
+        .route("/ui", get(ui_redirect))
         .route("/ui/", get(index))
         .route("/ui/*path", get(get_ui_file))
         .merge(secured_router)
         .with_state(state);
 
-    log::info!("Starting Axum server at port 8000. The ui is at /");
+    log::info!("Starting Axum server at port 8000. The UI is served at /ui/");
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8000").await?;
     axum::serve(listener, app).await
 }
@@ -346,6 +346,10 @@ async fn root_redirect() -> impl IntoResponse {
     Redirect::temporary("/ui/")
 }
 
+async fn ui_redirect() -> impl IntoResponse {
+    Redirect::temporary("/ui/")
+}
+
 async fn index() -> Response {
     serve_ui_asset("index.html".to_string(), true).await
 }
@@ -355,7 +359,6 @@ async fn get_ui_file(Path(path): Path<String>) -> Response {
 }
 
 async fn serve_ui_asset(path: String, fallback_to_index: bool) -> Response {
-    let static_root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("static");
     let requested_path = clean("/".to_owned() + path.trim_start_matches('/'));
     let requested_str = requested_path.to_string_lossy().replace('\\', "/");
 
@@ -365,39 +368,34 @@ async fn serve_ui_asset(path: String, fallback_to_index: bool) -> Response {
 
     let relative_path = requested_str.trim_start_matches('/');
     let has_file_extension = relative_path.contains('.');
-    let target_file = static_root.join(relative_path);
 
     if has_file_extension {
-        return match fs::read(&target_file).await {
-            Ok(content) => (
-                [(header::CONTENT_TYPE, content_type_from_path(relative_path))],
-                content,
-            )
-                .into_response(),
-            Err(_) => (StatusCode::NOT_FOUND, "Not found").into_response(),
-        };
+        return serve_embedded_ui_file(relative_path)
+            .unwrap_or_else(|| (StatusCode::NOT_FOUND, "Not found").into_response());
     }
 
     if fallback_to_index {
-        let index_file = static_root.join("index.html");
-        return match fs::read(index_file).await {
-            Ok(content) => (
-                [(header::CONTENT_TYPE, "text/html; charset=utf-8")],
-                content,
+        return serve_embedded_ui_file("index.html").unwrap_or_else(|| {
+            log::warn!("No embedded UI build found. index.html missing in api/static at compile time.");
+            (
+                StatusCode::SERVICE_UNAVAILABLE,
+                "Embedded UI missing. Build ui-new and rebuild the Rust binary.",
             )
-                .into_response(),
-            Err(err) => {
-                log::warn!("No UI build found in ./static: {}", err);
-                (
-                    StatusCode::SERVICE_UNAVAILABLE,
-                    "UI build missing. Run `pnpm -C ui-new build:copy`.",
-                )
-                    .into_response()
-            }
-        };
+                .into_response()
+        });
     }
 
     (StatusCode::NOT_FOUND, "Not found").into_response()
+}
+
+fn serve_embedded_ui_file(path: &str) -> Option<Response> {
+    EMBEDDED_UI_DIR.get_file(path).map(|file| {
+        (
+            [(header::CONTENT_TYPE, content_type_from_path(path))],
+            file.contents().to_vec(),
+        )
+            .into_response()
+    })
 }
 
 async fn get_images(State(state): State<AxumState>, Path(tail): Path<String>) -> Response {
@@ -1142,8 +1140,10 @@ fn content_type_from_path(path: &str) -> &'static str {
         "image/svg+xml"
     } else if path.ends_with(".html") {
         "text/html; charset=utf-8"
-    } else if path.ends_with(".js") {
+    } else if path.ends_with(".js") || path.ends_with(".mjs") {
         "application/javascript; charset=utf-8"
+    } else if path.ends_with(".map") {
+        "application/json; charset=utf-8"
     } else if path.ends_with(".css") {
         "text/css; charset=utf-8"
     } else if path.ends_with(".json") {
@@ -1156,6 +1156,12 @@ fn content_type_from_path(path: &str) -> &'static str {
         "image/gif"
     } else if path.ends_with(".webp") {
         "image/webp"
+    } else if path.ends_with(".woff") {
+        "font/woff"
+    } else if path.ends_with(".woff2") {
+        "font/woff2"
+    } else if path.ends_with(".ttf") {
+        "font/ttf"
     } else if path.ends_with(".ico") {
         "image/x-icon"
     } else {

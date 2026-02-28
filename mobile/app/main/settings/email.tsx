@@ -1,138 +1,151 @@
-import {View, Text, TextInput, ScrollView, RefreshControl} from "react-native";
-import {ListItemIsland} from "@/components/ListItemIsland";
-import {ListItemDescription} from "@/components/ListItemDescription";
-import {Link} from "@/components/Link";
-import {ListItemInfo} from "@/components/ListItemInfo";
-import {ListItemInput} from "@/components/ListItemInput";
-import {SafeAreaView} from "react-native-safe-area-context";
-import {ListItemInfoOutside} from "@/components/ListItemInfoOutside";
-import {useContentModel} from "@/store/store";
-import {useEffect, useState} from "react";
-import {ListItemInfoHeading} from "@/components/ListItemInfoHeading";
-import {ListItemList} from "@/components/ListItemList";
+import {useEffect, useMemo, useState} from "react";
+import {RefreshControl, ScrollView, StyleSheet, Text, TextInput} from "react-native";
+import {useContentModel, type EmailConfig} from "@/store/store";
 import {useAllThingsRefresh} from "@/hooks/useAllThingsRefresh";
 import {ErrorBanner} from "@/components/ErrorBanner";
+import {AppScreen} from "@/components/ui/AppScreen";
+import {SurfaceCard} from "@/components/ui/SurfaceCard";
+import {FormField} from "@/components/ui/FormField";
+import {SectionHeader} from "@/components/ui/SectionHeader";
+import {Colors} from "@/constants/Colors";
 
-export type EmailConfig = {
-    server_address: string,
-    server_port_number: number,
-    email_username: string,
-    email_password: string,
-    recipient_list: string[]
-    notifications_device_unreachable: boolean,
-    notification_device_low_battery: boolean,
-}
+const emptyConfig: EmailConfig = {
+    server_address: "",
+    server_port_number: 0,
+    email_username: "",
+    email_password: "",
+    recipient_list: [],
+    notifications_device_unreachable: true,
+    notification_device_low_battery: true
+};
 
-export default function () {
-    const allthings = useContentModel(state=>state.allThings)
-    const [emailConfig, setEmailConfig] = useState<EmailConfig>()
+const parseRecipients = (value: string): string[] => {
+    return value
+        .split(/[,\n;]/)
+        .map((entry) => entry.trim())
+        .filter((entry) => entry.length > 0);
+};
+
+export default function EmailSettingsScreen() {
+    const allThings = useContentModel((state) => state.allThings);
+    const setAllThings = useContentModel((state) => state.setAllThings);
     const {refreshing, refreshError, refreshAllThings} = useAllThingsRefresh();
+
+    const [emailConfig, setEmailConfig] = useState<EmailConfig>(emptyConfig);
+    const recipientsText = useMemo(() => emailConfig.recipient_list.join(", "), [emailConfig.recipient_list]);
+
+    useEffect(() => {
+        if (!allThings?.email) {
+            return;
+        }
+        setEmailConfig(allThings.email);
+    }, [allThings?.email]);
 
     const updateEmailConfig = (nextConfig: EmailConfig) => {
         setEmailConfig(nextConfig);
-        const currentAllThings = useContentModel.getState().allThings;
-        if (currentAllThings) {
-            useContentModel.getState().setAllThings({
-                ...currentAllThings,
-                email: nextConfig
-            });
-        }
-    };
-    const withEmailConfig = (updater: (current: EmailConfig) => EmailConfig) => {
-        if (!emailConfig) {
+        if (!allThings) {
             return;
         }
-        updateEmailConfig(updater(emailConfig));
+        setAllThings({
+            ...allThings,
+            email: nextConfig
+        });
     };
 
-    useEffect(() => {
-        if (!allthings) return
-        setEmailConfig(allthings.email)
+    const setField = <T extends keyof EmailConfig>(field: T, value: EmailConfig[T]) => {
+        updateEmailConfig({
+            ...emailConfig,
+            [field]: value
+        });
+    };
 
-    }, [allthings]);
+    return (
+        <AppScreen title="E-Mail" subtitle="SMTP-Konfiguration des Gateways" scroll={false}>
+            <ScrollView
+                overScrollMode="never"
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => {
+                    void refreshAllThings();
+                }}/>}
+                showsVerticalScrollIndicator={false}
+            >
+                {refreshError && <ErrorBanner message={refreshError} onRetry={() => {
+                    void refreshAllThings();
+                }}/>}
+                {!allThings?.email && <ErrorBanner message="E-Mail-Konfiguration wird geladen."/>}
 
+                <SurfaceCard muted style={{marginBottom: 14}}>
+                    <Text style={styles.infoText}>
+                        Das Gateway sendet Benachrichtigungen direkt per SMTP. Trage hier die Daten deines Providers ein.
+                        Speichern erfolgt über den Header-Button.
+                    </Text>
+                </SurfaceCard>
 
-    return <SafeAreaView>
-        <ScrollView
-            overScrollMode="never"
-            style={{display: 'flex', flexDirection: 'column', gap: 10}}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => {
-                void refreshAllThings();
-            }}/>}
-        >
-        {refreshError && <ErrorBanner message={refreshError} onRetry={() => {
-            void refreshAllThings();
-        }}/>}
-        {!emailConfig && <ErrorBanner message="E-Mail-Konfiguration wird geladen."/>}
-        <ListItemDescription title="Info" description={<Text>Dieses Binding ermöglicht eine direkte Verbindung der Zentrale zum SMTP Server des
-            bevorzugten E-Mail Providers. Die Daten zur SMTP-Serveradresse, dem Port usw. müssen beim jeweiligen
-            Provider erfragt werden.
-            Hilfe zu diesem Binding findest Du am schnellsten in unserer  <Link href="https://lsh.community">Community</Link>
-        </Text>
-        }>
-        </ListItemDescription>
-        <ListItemIsland style={{marginTop: 20}}>
-            <ListItemInput title="SMTP-Serveradresse" onChange={(v)=>{
-                withEmailConfig((current) => ({
-                    ...current,
-                    server_address: v
-                }));
-            }}  value={emailConfig?emailConfig.server_address: ''}></ListItemInput>
-        </ListItemIsland>
+                <SectionHeader title="SMTP"/>
+                <SurfaceCard style={{marginBottom: 14}}>
+                    <FormField
+                        label="SMTP-Server"
+                        value={emailConfig.server_address}
+                        onChangeText={(value) => setField("server_address", value)}
+                        placeholder="smtp.example.org"
+                    />
+                    <FormField
+                        label="SMTP-Port"
+                        value={String(emailConfig.server_port_number || "")}
+                        onChangeText={(value) => setField("server_port_number", Number.parseInt(value, 10) || 0)}
+                        placeholder="465"
+                        keyboardType="number-pad"
+                    />
+                    <FormField
+                        label="Benutzername"
+                        value={emailConfig.email_username}
+                        onChangeText={(value) => setField("email_username", value)}
+                        placeholder="dein.name@example.org"
+                    />
+                    <FormField
+                        label="Passwort"
+                        value={emailConfig.email_password}
+                        onChangeText={(value) => setField("email_password", value)}
+                        secureTextEntry
+                        placeholder="********"
+                    />
+                </SurfaceCard>
 
-            <ListItemInfoOutside>
-                Geben Sie die SMTP-Serveradresse Deines Providers ein.
-                In den meisten Fällen ist dies eine Adresse der Form „smtp.deintolleranbieter.de"
-            </ListItemInfoOutside>
-
-            <ListItemIsland style={{marginTop: 20}}>
-                <ListItemInput title="SMTP-Port" onChange={(v)=>{
-                    withEmailConfig((current) => ({
-                        ...current,
-                        server_port_number: Number.isNaN(parseInt(v)) ? 0 : parseInt(v)
-                    }));
-                }}  value={emailConfig?String(emailConfig.server_port_number): ''}></ListItemInput>
-            </ListItemIsland>
-
-            <ListItemInfoOutside>
-                Geben Sie den Port des SMTP-Servers ein. Normalerweise ist dies 465 oder 587.
-            </ListItemInfoOutside>
-
-            <ListItemIsland style={{marginTop: 20}}>
-                <ListItemInput title="Benutzername" onChange={(v)=>{
-                    withEmailConfig((current) => ({
-                        ...current,
-                        email_username: v
-                    }));
-                }}  value={emailConfig?String(emailConfig.email_username): ''}></ListItemInput>
-            </ListItemIsland>
-
-            <ListItemInfoOutside>
-                Benutzername für die Authentifizierung gegenüber dem SMTP-Server. Dies ist in der Regel Deine E-Mail-Adresse.
-            </ListItemInfoOutside>
-
-            <ListItemIsland style={{marginTop: 20}}>
-                <ListItemInput title="Passwort" secureTextEntry={true} onChange={(v)=>{
-                    withEmailConfig((current) => ({
-                        ...current,
-                        email_password: v
-                    }));
-                }}  value={emailConfig?String(emailConfig.email_password): ''}></ListItemInput>
-            </ListItemIsland>
-
-            <ListItemInfoOutside>
-                Gib das Passwort für die Authentifizierung gegenüber dem SMTP-Server ein.
-            </ListItemInfoOutside>
-
-            <ListItemInfoHeading>Empfänger</ListItemInfoHeading>
-            <ListItemIsland>
-                <ListItemList values={emailConfig?emailConfig.recipient_list:[]} onChange={(v)=>{
-                    withEmailConfig((current) => ({
-                        ...current,
-                        recipient_list: v
-                    }));
-                }} addNewItemText={"Neuen Empfänger hinzufügen"}/>
-            </ListItemIsland>
-        </ScrollView>
-    </SafeAreaView>
+                <SectionHeader title="Empfänger"/>
+                <SurfaceCard>
+                    <Text style={styles.fieldLabel}>Empfänger (Komma, Semikolon oder Zeilenumbruch)</Text>
+                    <TextInput
+                        value={recipientsText}
+                        onChangeText={(value) => setField("recipient_list", parseRecipients(value))}
+                        multiline
+                        placeholder="mail1@example.org, mail2@example.org"
+                        placeholderTextColor={Colors.app.textMuted}
+                        style={styles.textArea}
+                    />
+                </SurfaceCard>
+            </ScrollView>
+        </AppScreen>
+    );
 }
+
+const styles = StyleSheet.create({
+    infoText: {
+        color: Colors.app.text,
+        lineHeight: 21
+    },
+    fieldLabel: {
+        color: Colors.app.text,
+        fontWeight: "600",
+        marginBottom: 6
+    },
+    textArea: {
+        minHeight: 100,
+        borderWidth: 1,
+        borderColor: Colors.app.border,
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        backgroundColor: Colors.app.surfaceSoft,
+        color: Colors.app.text,
+        textAlignVertical: "top"
+    }
+});

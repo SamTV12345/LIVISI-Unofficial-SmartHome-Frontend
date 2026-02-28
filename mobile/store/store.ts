@@ -4,6 +4,13 @@ import {Message} from "@/models/Messages";
 import { create } from "zustand";
 import {ConfigData} from "@/models/ConfigData";
 
+export type GatewayConfig = {
+    baseURL: string,
+    username?: string,
+    password?: string,
+    label?: string
+}
+
 type Status = {
     appVersion: string,
     configVersion: number,
@@ -56,6 +63,8 @@ interface ContentModelState {
     setAllThings(data: AxiosDeviceResponse): void;
     baseURL: string|undefined,
     setBaseURL (url: string):void,
+    gateway: GatewayConfig | undefined,
+    setGateway(gateway: GatewayConfig | undefined): void,
     setConfig(c: ConfigData):void
     config: ConfigData|undefined
 }
@@ -67,7 +76,22 @@ export const useContentModel = create<ContentModelState>((set)=>({
     },
     baseURL: undefined,
     setBaseURL: (baseURL)=> {
-        set(()=>({baseURL}))
+        set((state)=>({
+            baseURL,
+            gateway: baseURL ? {
+                baseURL,
+                username: state.gateway?.username ?? "",
+                password: state.gateway?.password ?? "",
+                label: state.gateway?.label ?? ""
+            } : undefined
+        }))
+    },
+    gateway: undefined,
+    setGateway: (gateway) => {
+        set(() => ({
+            gateway,
+            baseURL: gateway?.baseURL
+        }));
     },
     setConfig: (c)=>{
         set(()=>({config: c}))

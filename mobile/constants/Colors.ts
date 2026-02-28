@@ -8,10 +8,27 @@ const tintColorDark = '#fff';
 
 export const Colors = {
   color: {
-    green:'#88ba14',
+    green:'#2fa36b',
     white: '#fff',
     black: '#000',
     beige: '#e5eadc'
+  },
+  app: {
+    background: "#edf4fa",
+    backgroundStrong: "#e3eef8",
+    surface: "#ffffff",
+    surfaceSoft: "#f5f9fd",
+    border: "#d3e2ef",
+    text: "#102a43",
+    textMuted: "#5f7388",
+    primary: "#1273cf",
+    primarySoft: "#e6f1ff",
+    success: "#2fa36b",
+    successSoft: "#def4e8",
+    warningSoft: "#fff1dd",
+    warningBorder: "#ffd8a4",
+    warningText: "#8a5600",
+    shadow: "rgba(16, 42, 67, 0.12)"
   },
   light: {
     text: '#11181C',
@@ -22,8 +39,8 @@ export const Colors = {
     tabIconSelected: tintColorLight,
   },
   accent: 'rgb(39, 39, 42)',
-  background: 'rgb(9, 9, 11)',
-  borderColor: 'hsl(240 3.7% 15.9%)',
+  background: '#edf4fa',
+  borderColor: '#d3e2ef',
   dark: {
     text: '#ECEDEE',
     background: '#151718',
