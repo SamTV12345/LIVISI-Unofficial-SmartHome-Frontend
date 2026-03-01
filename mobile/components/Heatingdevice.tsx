@@ -4,13 +4,11 @@ import {CapabilityState} from "@/models/CapabilityState";
 import {ACTION_ENDPOINT, CAPABILITY_PREFIX} from "@/constants/FieldConstants";
 import {useDebounce} from "@/utils/useDebounce";
 import {useContentModel} from "@/store/store";
-import {StyleSheet, View, Text, Modal, TouchableOpacity} from "react-native";
+import {ImageBackground, Modal, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {FontAwesome} from "@expo/vector-icons";
 import {ThemedText} from "@/components/ThemedText";
 import {Colors} from "@/constants/Colors";
-import {ImageBackground} from "react-native";
 import {RadialSlider} from "react-native-radial-slider";
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 
 type HeatingdeviceProps = {

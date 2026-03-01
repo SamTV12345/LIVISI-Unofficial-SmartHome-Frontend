@@ -1,11 +1,9 @@
-import {Pressable, StyleSheet, Text, View} from "react-native";
+import {Text, View} from "react-native";
 import {Device} from "@/models/Device";
-import {FC, useState} from "react";
+import {FC, useMemo} from "react";
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import AntDesign from "@expo/vector-icons/AntDesign";
 import {ThemedText} from "@/components/ThemedText";
 import {ThemedView} from "@/components/ThemedView";
-import {Colors} from "@/constants/Colors";
 import {OnOffDeviceLayout} from "@/components/Heatingdevice";
 
 type OnOffDeviceProps = {
@@ -14,14 +12,14 @@ type OnOffDeviceProps = {
 }
 
 export const  WindowContactDevice:FC<OnOffDeviceProps> =  ({device,showRoom})=> {
-    const [isOpen, _] = useState<boolean>(()=>{
+    const isOpen = useMemo(() => {
         for (const dev of device.capabilityState!){
             if (dev.state && dev.state.isOpen && dev.state.isOpen.value){
                 return true
             }
         }
         return false
-    })
+    }, [device.capabilityState])
 
     return <ThemedView style={[OnOffDeviceLayout.box, {
          flexDirection: 'column',

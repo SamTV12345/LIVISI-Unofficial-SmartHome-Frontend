@@ -1,17 +1,13 @@
 import {FC, useState} from "react";
 import {Device} from "@/models/Device";
 import {CapabilityState} from "@/models/CapabilityState";
-import {View, Text, StyleSheet, Pressable, TouchableOpacity, Image, Modal, ImageBackground} from "react-native";
+import {ImageBackground, Modal, TouchableOpacity, View} from "react-native";
 import {ThemedText} from "@/components/ThemedText";
-import AntDesign from '@expo/vector-icons/AntDesign';
-import {ThemedView} from "@/components/ThemedView";
 import {ACTION_ENDPOINT} from "@/constants/FieldConstants";
 import {useDebounce} from "@/utils/useDebounce";
 import {useContentModel} from "@/store/store";
-import {Colors} from "@/constants/Colors";
-import {CURRENT_TEMPERATURE, OnOffDeviceLayout} from "@/components/Heatingdevice";
+import {OnOffDeviceLayout} from "@/components/Heatingdevice";
 import {TurnedOn} from "@/components/TurnedOn";
-import {RadialSlider} from "react-native-radial-slider";
 import {FontAwesome} from "@expo/vector-icons";
 import {TurnedOnGlow} from "@/components/TurnedOnGlow";
 

@@ -1,8 +1,6 @@
-import {ThemedText} from "@/components/ThemedText";
 import {Device} from "@/models/Device";
 import {FC} from "react";
-import {FontAwesome6} from "@expo/vector-icons";
-import {StyleSheet, TouchableOpacity, View, Text} from "react-native";
+import {TouchableOpacity, Text} from "react-native";
 import {OnOffDeviceLayout} from "@/components/Heatingdevice";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 

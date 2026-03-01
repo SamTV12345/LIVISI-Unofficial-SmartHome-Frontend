@@ -1,4 +1,4 @@
-import {StyleProp, StyleSheet, View, ViewStyle, Text, Button, TouchableOpacity} from "react-native";
+import {StyleProp, StyleSheet, View, ViewStyle, Text, TouchableOpacity} from "react-native";
 import {FC} from "react";
 
 type ChipStyle = {

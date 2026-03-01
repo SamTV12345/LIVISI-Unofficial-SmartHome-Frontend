@@ -1,5 +1,5 @@
 import {StyleProp, StyleSheet, View, ViewStyle} from "react-native"
-import {FC, PropsWithChildren} from "react";
+import {FC} from "react";
 
 type ListItemIslandProp = {
     children:any,

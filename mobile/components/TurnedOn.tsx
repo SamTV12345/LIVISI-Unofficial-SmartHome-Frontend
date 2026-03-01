@@ -1,5 +1,5 @@
 import Svg, {G, Path} from "react-native-svg";
-import {StyleProp, ViewStyle} from "react-native";
+import {StyleProp} from "react-native";
 import {FC} from "react";
 
 export type SVGProps = {

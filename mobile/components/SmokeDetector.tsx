@@ -4,7 +4,6 @@ import {Device} from "@/models/Device";
 import {useDebounce} from "@/utils/useDebounce";
 import {ACTION_ENDPOINT} from "@/constants/FieldConstants";
 import {useContentModel} from "@/store/store";
-import {ThemedView} from "@/components/ThemedView";
 import {OnOffDeviceLayout} from "@/components/Heatingdevice";
 import {ThemedText} from "@/components/ThemedText";
 import {Pressable, View} from "react-native";
@@ -36,14 +35,6 @@ export const SmokeDetector:FC<OnOffDeviceProps> = ({
             }
         }
         return false
-    })
-    const [alarmCap] = useState<CapabilityState|undefined>(() => {
-        for (const dev of device.capabilityState!) {
-            if (dev.state && dev.state.onState) {
-                return dev
-            }
-        }
-        return undefined
     })
 
 

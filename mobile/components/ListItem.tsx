@@ -1,14 +1,12 @@
-import {View, Text, Button, Pressable} from "react-native"
-import {Colors} from "@/constants/Colors";
+import {Pressable, Text, View} from "react-native"
 import {FC} from "react";
-import {ThemedText} from "@/components/ThemedText";
 import {Href, router} from "expo-router";
 import AntDesign from '@expo/vector-icons/AntDesign';
 
 
 type ListItemProps = {
     title: string,
-    to?:  Href<string | object>,
+    to?: Href,
     type?: 'action',
     onClick?: ()=>void
 }
@@ -20,7 +18,7 @@ export const ListItem: FC<ListItemProps> = ({title, to, type, onClick})=>{
             onClick && onClick()
         }}>
             <Text style={[{marginLeft: 20, color: 'white', fontSize: 17, lineHeight: 22},
-                type == 'action' && {
+                type === 'action' && {
                 color: '#0385FF'
                 }]}>{title}</Text>
             <Text style={{flexGrow: 1}}></Text>

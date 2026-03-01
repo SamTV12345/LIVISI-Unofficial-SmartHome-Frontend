@@ -1,4 +1,4 @@
-import {View, Text, Button, Pressable} from "react-native"
+import {Text, View} from "react-native"
 import {FC} from "react";
 
 

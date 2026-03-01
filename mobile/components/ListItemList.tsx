@@ -1,4 +1,4 @@
-import {FC, useEffect, useMemo} from "react";
+import {FC} from "react";
 import {Text, TextInput, TouchableOpacity, View} from "react-native";
 
 type ListItemListProps = {
@@ -30,10 +30,6 @@ const TextInputForList: FC<{
     text: string,
     onChange: (v: string)=>void
 }> = ({text, onChange})=>{
-    const displayedText  = useMemo(()=>{
-        return text
-    }, [text])
-
     return <TextInput onChangeText={(v)=>{
         onChange(v)
     }} style={{paddingTop: 10, paddingBottom: 10, marginLeft: 30, color: 'white'}} value={text}/>
@@ -46,14 +42,8 @@ export const ListItemList: FC<ListItemListProps> = ({onChange,values, addNewItem
             values.map((v,index)=>{
                 return <View key={index} style={{position: 'relative'}}>
                     <RemoveLogo onPress={()=>{
-                        const newArr  = []
-                        for (let i = 0;i<values.length;i++) {
-                            if (index === i) {
-                                continue
-                            }
-                            newArr.push(values[i])
-                            onChange(newArr)
-                        }
+                        const newArr = values.filter((_, i) => i !== index)
+                        onChange(newArr)
                     }}/>
                     <TextInputForList text={v} onChange={(v)=>{
                         const newArr  = []
@@ -65,7 +55,6 @@ export const ListItemList: FC<ListItemListProps> = ({onChange,values, addNewItem
                             newArr.push(values[i])
 
                         }
-                        console.log(newArr)
                         onChange(newArr)
                     }}/>
                 </View>
