@@ -154,14 +154,14 @@ async fn main() -> std::io::Result<()> {
         .route("/product/hash", get(get_hash))
         .route("/message", get(get_messages))
         .route(
-            "/message/:message_id",
+            "/message/{message_id}",
             get(get_message_by_id)
                 .put(update_message_by_id)
                 .delete(delete_message_by_id),
         )
         .route("/location", get(get_locations).post(create_location))
         .route(
-            "/location/:id",
+            "/location/{id}",
             get(get_location_by_id)
                 .put(update_location)
                 .delete(delete_location),
@@ -175,10 +175,10 @@ async fn main() -> std::io::Result<()> {
         .route("/relationship", get(get_relationship))
         .route("/interaction", get(get_interactions))
         .route(
-            "/interaction/:id",
+            "/interaction/{id}",
             get(get_interaction_by_id).put(update_interaction_by_id),
         )
-        .route("/interaction/:id/trigger", post(trigger_interaction))
+        .route("/interaction/{id}/trigger", post(trigger_interaction))
         .route("/api/all", get(get_all_api))
         .route("/unmount", get(unmount_usb_storage))
         .route("/usb_storage", get(get_usb_status))
@@ -194,11 +194,11 @@ async fn main() -> std::io::Result<()> {
         .route("/health/live", get(liveness_probe))
         .route("/health/ready", get(readiness_probe))
         .route("/login", post(login))
-        .route("/images/*tail", get(get_images))
-        .route("/resources/*tail", get(get_resources))
+        .route("/images/{*tail}", get(get_images))
+        .route("/resources/{*tail}", get(get_resources))
         .route("/ui", get(ui_redirect))
         .route("/ui/", get(index))
-        .route("/ui/*path", get(get_ui_file))
+        .route("/ui/{*path}", get(get_ui_file))
         .merge(secured_router)
         .with_state(state);
 

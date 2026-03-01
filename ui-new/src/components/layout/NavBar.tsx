@@ -32,27 +32,27 @@ export const NavBar = () => {
         </>
     }
 
-    return <div className="border-b border-cyan-100 bg-white/85 px-4 pb-3 pt-3 backdrop-blur md:px-6">
+    return <div className="border-b border-cyan-100 bg-white/85 px-4 pb-3 pt-3 backdrop-blur md:px-6 dark:border-cyan-900/40 dark:bg-slate-950/80">
         <div className="mb-3 hidden items-center gap-4 md:flex">
             <img src={logo} className="w-10" alt="LIVISI Smarthome logo"/>
             <div className="flex flex-wrap items-center gap-2 text-lg">
                 <NavLinks/>
             </div>
             <div className="ml-auto flex items-center gap-4">
-                <div className="hidden items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-sm text-slate-600 lg:flex">
+                <div className="hidden items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 lg:flex">
                     <span className={socketConnected ? "h-2 w-2 rounded-full bg-emerald-500" : "h-2 w-2 rounded-full bg-red-500"}></span>
                     <span>{socketConnected ? "Live verbunden" : "Offline"}</span>
                 </div>
                 <button
                     type="button"
-                    className={cn("rounded-lg px-3 py-1 text-sm font-medium text-slate-600 hover:bg-gray-100", location.pathname.includes('settings') && "bg-cyan-100/80 text-cyan-800")}
+                    className={cn("rounded-lg px-3 py-1 text-sm font-medium text-slate-600 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-800", location.pathname.includes('settings') && "bg-cyan-100/80 text-cyan-800 dark:bg-cyan-900/60 dark:text-cyan-100")}
                     onClick={() => navigate('/settings')}
                 >
                     Einstellungen
                 </button>
                 <button
                     type="button"
-                    className={cn("rounded-lg px-3 py-1 text-sm font-medium text-slate-600 hover:bg-gray-100", location.pathname.includes('help') && "bg-cyan-100/80 text-cyan-800")}
+                    className={cn("rounded-lg px-3 py-1 text-sm font-medium text-slate-600 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-800", location.pathname.includes('help') && "bg-cyan-100/80 text-cyan-800 dark:bg-cyan-900/60 dark:text-cyan-100")}
                     onClick={() => navigate('/help')}
                 >
                     Hilfe
@@ -61,21 +61,21 @@ export const NavBar = () => {
         </div>
 
         <div className="flex items-center justify-between md:hidden">
-            <button type="button" className="rounded-lg border border-gray-200 bg-white p-2" onClick={() => setOpen(true)}><Menu/></button>
+            <button type="button" className="rounded-lg border border-gray-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" onClick={() => setOpen(true)}><Menu/></button>
             <img src={logo} className="w-9" alt="LIVISI Smarthome logo"/>
             <div className="flex items-center gap-2">
                 <span className={socketConnected ? "h-2 w-2 rounded-full bg-emerald-500" : "h-2 w-2 rounded-full bg-red-500"}></span>
-                <span className="text-xs text-slate-600">{socketConnected ? "Live" : "Offline"}</span>
+                <span className="text-xs text-slate-600 dark:text-slate-300">{socketConnected ? "Live" : "Offline"}</span>
             </div>
         </div>
 
         <Dialog.Root open={open} onOpenChange={setOpen}>
             <Dialog.Portal>
                 <Dialog.Overlay className="fixed inset-0 z-[80] bg-slate-950/45 md:hidden" onClick={() => setOpen(false)}/>
-                <Dialog.Content className={cn("fixed inset-y-0 left-0 z-[90] h-dvh w-[85%] max-w-[340px] overflow-y-auto border-r border-gray-200 bg-white p-4 shadow-2xl md:hidden", open ? "drawer-custom" : "drawer-custom-close")}>
+                <Dialog.Content className={cn("fixed inset-y-0 left-0 z-[90] h-dvh w-[85%] max-w-[340px] overflow-y-auto border-r border-gray-200 bg-white p-4 shadow-2xl md:hidden dark:border-slate-700 dark:bg-slate-950", open ? "drawer-custom" : "drawer-custom-close")}>
                     <Dialog.Title className="mb-4 flex items-center justify-between">
                         <img src={logo} className="w-10" alt="LIVISI Smarthome logo"/>
-                        <button type="button" className="rounded-md border border-gray-200 p-1" onClick={() => setOpen(false)}>
+                        <button type="button" className="rounded-md border border-gray-200 p-1 dark:border-slate-700 dark:text-slate-200" onClick={() => setOpen(false)}>
                             <X/>
                         </button>
                     </Dialog.Title>
@@ -84,14 +84,14 @@ export const NavBar = () => {
                         <NavLinks/>
                         <button
                             type="button"
-                            className="mt-3 rounded-lg border border-gray-200 px-3 py-2 text-left text-sm font-medium text-slate-700"
+                            className="mt-3 rounded-lg border border-gray-200 px-3 py-2 text-left text-sm font-medium text-slate-700 dark:border-slate-700 dark:text-slate-200"
                             onClick={() => navigate('/settings')}
                         >
                             Einstellungen
                         </button>
                         <button
                             type="button"
-                            className="rounded-lg border border-gray-200 px-3 py-2 text-left text-sm font-medium text-slate-700"
+                            className="rounded-lg border border-gray-200 px-3 py-2 text-left text-sm font-medium text-slate-700 dark:border-slate-700 dark:text-slate-200"
                             onClick={() => navigate('/help')}
                         >
                             Hilfe

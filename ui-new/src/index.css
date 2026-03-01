@@ -1,9 +1,9 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../tailwind.config.cjs";
 
 @layer base {
   :root {
+    color-scheme: light;
     --background: 0 0% 100%;
     --foreground: 222.2 47.4% 11.2%;
 
@@ -37,6 +37,7 @@
   }
 
   .dark {
+    color-scheme: dark;
     --background: 224 71% 4%;
     --foreground: 213 31% 91%;
 
@@ -92,6 +93,13 @@ body {
   color: hsl(var(--foreground));
 }
 
+.dark body {
+  background:
+          radial-gradient(1200px 700px at 12% -20%, #1c2f49 0%, transparent 60%),
+          radial-gradient(1000px 600px at 100% 0%, #11353c 0%, transparent 55%),
+          linear-gradient(160deg, #0a1422 0%, #0b1a2a 45%, #0b1320 100%);
+}
+
 #root {
   width: min(96%, 1360px);
   min-height: 100vh;
@@ -104,6 +112,129 @@ body {
     margin: 0;
     min-height: 100vh;
   }
+}
+
+.dark .bg-white {
+  background-color: rgba(13, 23, 35, 0.9);
+}
+
+.dark .bg-white\/85,
+.dark .bg-white\/80 {
+  background-color: rgba(11, 20, 32, 0.86);
+}
+
+.dark .bg-gray-50,
+.dark .bg-slate-50 {
+  background-color: rgba(19, 32, 48, 0.72);
+}
+
+.dark .bg-gray-100,
+.dark .bg-slate-100 {
+  background-color: rgba(27, 43, 62, 0.88);
+}
+
+.dark .border-gray-100,
+.dark .border-gray-200,
+.dark .border-gray-300,
+.dark .border-slate-200,
+.dark .border-slate-300,
+.dark .border-cyan-100 {
+  border-color: rgba(78, 100, 126, 0.55);
+}
+
+.dark .text-gray-900,
+.dark .text-slate-900 {
+  color: #e2e8f0;
+}
+
+.dark .text-gray-800,
+.dark .text-slate-800 {
+  color: #d3deeb;
+}
+
+.dark .text-gray-700,
+.dark .text-slate-700 {
+  color: #c1d0e1;
+}
+
+.dark .text-gray-600,
+.dark .text-slate-600 {
+  color: #9fb2c8;
+}
+
+.dark .text-gray-500,
+.dark .text-slate-500 {
+  color: #91a5bb;
+}
+
+.dark .hover\:bg-gray-100:hover,
+.dark .hover\:bg-slate-50:hover {
+  background-color: rgba(36, 54, 76, 0.84);
+}
+
+.dark .hover\:bg-cyan-50\/30:hover {
+  background-color: rgba(13, 66, 80, 0.22);
+}
+
+.dark .hover\:border-cyan-200:hover {
+  border-color: rgba(45, 142, 165, 0.55);
+}
+
+.dark .bg-black\/10 {
+  background-color: rgba(10, 18, 28, 0.35);
+}
+
+.dark .bg-black\/15 {
+  background-color: rgba(7, 12, 20, 0.34);
+}
+
+.dark .border-white\/25,
+.dark .border-white\/40 {
+  border-color: rgba(174, 204, 233, 0.3);
+}
+
+.dark .bg-cyan-100\/80 {
+  background-color: rgba(22, 88, 110, 0.5);
+}
+
+.dark .text-cyan-800 {
+  color: #9ad8eb;
+}
+
+.dark .text-red-700 {
+  color: #fda4af;
+}
+
+.dark .text-emerald-700 {
+  color: #86efac;
+}
+
+.dark .text-amber-700 {
+  color: #fcd34d;
+}
+
+.dark .bg-red-50 {
+  background-color: rgba(85, 26, 40, 0.36);
+}
+
+.dark .bg-emerald-50 {
+  background-color: rgba(15, 61, 45, 0.4);
+}
+
+.dark .bg-amber-50 {
+  background-color: rgba(74, 54, 17, 0.42);
+}
+
+.dark .border-red-200 {
+  border-color: rgba(190, 68, 90, 0.58);
+}
+
+.dark .border-emerald-200 {
+  border-color: rgba(45, 140, 102, 0.56);
+}
+
+.dark .border-amber-200 {
+  border-color: rgba(176, 130, 40, 0.6);
 }
 
 .cyan {

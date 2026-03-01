@@ -1,3 +1,5 @@
+@reference "./index.css";
+
 body{
   @apply min-h-screen font-sans;
 }
@@ -24,6 +26,11 @@ body{
   border-radius: 24px;
   overflow: hidden;
   min-height: calc(100vh - 40px);
+}
+
+.dark #content {
+  background: linear-gradient(180deg, rgba(8, 16, 26, 0.96) 0%, rgba(8, 18, 30, 0.94) 100%) !important;
+  border: 1px solid rgba(63, 91, 120, 0.42);
 }
 
 @media (max-width: 1000px) {

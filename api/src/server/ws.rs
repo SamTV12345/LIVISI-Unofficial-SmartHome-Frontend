@@ -151,7 +151,7 @@ pub(crate) async fn init_socket(base_url: String, x: &Args) {
         let max_retry_delay = Duration::from_secs(60);
 
         loop {
-            match connect(url.clone()) {
+            match connect(url.as_str()) {
                 Ok((mut socket, _response)) => {
                     log::info!("Connected to Livisi websocket.");
                     retry_delay = Duration::from_secs(1);

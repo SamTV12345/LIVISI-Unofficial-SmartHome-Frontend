@@ -55,12 +55,14 @@ export const DeviceScreen = () => {
                 ]}
             />
 
-            <div className="inline-flex rounded-lg border border-gray-200 bg-white p-1">
+            <div className="inline-flex rounded-lg border border-gray-200 bg-white p-1 dark:border-slate-700 dark:bg-slate-900">
                 <button
                     type="button"
                     className={cn(
                         "rounded-md px-4 py-2 text-sm font-semibold transition",
-                        selectedTab === "location" ? "bg-cyan-100 text-cyan-800" : "text-slate-600 hover:bg-gray-100"
+                        selectedTab === "location"
+                            ? "bg-cyan-100 text-cyan-800 dark:bg-cyan-900/60 dark:text-cyan-100"
+                            : "text-slate-600 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-800"
                     )}
                     onClick={() => setSelectedTab("location")}
                 >
@@ -70,7 +72,9 @@ export const DeviceScreen = () => {
                     type="button"
                     className={cn(
                         "rounded-md px-4 py-2 text-sm font-semibold transition",
-                        selectedTab === "type" ? "bg-cyan-100 text-cyan-800" : "text-slate-600 hover:bg-gray-100"
+                        selectedTab === "type"
+                            ? "bg-cyan-100 text-cyan-800 dark:bg-cyan-900/60 dark:text-cyan-100"
+                            : "text-slate-600 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-800"
                     )}
                     onClick={() => setSelectedTab("type")}
                 >

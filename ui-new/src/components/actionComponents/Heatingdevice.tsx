@@ -70,6 +70,7 @@ export const Heatingdevice: FC<HeatingdeviceProps> = ({device}) => {
             setError(undefined);
 
             postJson(ACTION_ENDPOINT, {
+                id: setpointCapability.id,
                 target: CAPABILITY_PREFIX + setpointCapability.id,
                 type: "SetState",
                 namespace: "core." + device.manufacturer,
@@ -137,6 +138,7 @@ export const Heatingdevice: FC<HeatingdeviceProps> = ({device}) => {
                         max={30}
                         min={6.5}
                         step={0.5}
+                        variant="climate"
                         value={[setpointValue]}
                         onValueChange={(value) => {
                             setSetpointValue(value[0]);

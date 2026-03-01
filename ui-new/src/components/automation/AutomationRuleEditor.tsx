@@ -17,8 +17,8 @@ type AutomationRuleEditorProps = {
     onChange: (nextDrafts: AutomationRuleDraft[]) => void
 };
 
-const selectClassName = "w-full rounded-lg border border-slate-300 bg-white p-2 text-sm focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-100";
-const inputClassName = "w-full rounded-lg border border-slate-300 bg-white p-2 text-sm focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-100";
+const selectClassName = "w-full rounded-lg border border-slate-300 bg-white p-2 text-sm focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-100 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-cyan-500 dark:focus:ring-cyan-900/50";
+const inputClassName = "w-full rounded-lg border border-slate-300 bg-white p-2 text-sm focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-100 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-cyan-500 dark:focus:ring-cyan-900/50";
 
 const targetOptionsForAction = (kind: AutomationRuleDraft["action"]["kind"], catalog: CapabilityCatalog) => {
     if (kind === "onState" || kind === "switchTimer") return catalog.switchTargets;
@@ -45,7 +45,7 @@ export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRule
     if (drafts.length === 0) {
         return (
             <div className="space-y-3">
-                <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-500">
+                <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
                     Noch keine Regeln vorhanden.
                 </div>
                 <PrimaryButton onClick={addRule}>
@@ -64,12 +64,12 @@ export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRule
                 const actionTargetValue = draft.action.kind !== "unknown" ? draft.action.target : "";
 
                 return (
-                    <div key={`rule-editor-${ruleIndex}`} className="rounded-xl border border-slate-200 bg-gradient-to-b from-slate-50 to-white p-4">
+                    <div key={`rule-editor-${ruleIndex}`} className="rounded-xl border border-slate-200 bg-gradient-to-b from-slate-50 to-white p-4 dark:border-slate-700 dark:from-slate-900 dark:to-slate-950">
                         <div className="flex items-center gap-2">
-                            <div className="text-sm font-semibold text-slate-900">Regel {ruleIndex + 1}</div>
+                            <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">Regel {ruleIndex + 1}</div>
                             <button
                                 type="button"
-                                className="ml-auto rounded-md border border-red-200 bg-red-50 p-1.5 text-red-600 hover:bg-red-100"
+                                className="ml-auto rounded-md border border-red-200 bg-red-50 p-1.5 text-red-600 hover:bg-red-100 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-950/60"
                                 onClick={() => onChange(drafts.filter((_, index) => index !== ruleIndex))}
                                 aria-label="Regel entfernen"
                             >
@@ -78,17 +78,17 @@ export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRule
                         </div>
 
                         {!draft.editable && (
-                            <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
+                            <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900/70 dark:bg-amber-950/40 dark:text-amber-300">
                                 <div className="inline-flex items-center gap-2"><TriangleAlert size={14}/>Diese Regel hat ein komplexes Format und kann hier nicht direkt bearbeitet werden. Sie bleibt beim Speichern unveraendert.</div>
                             </div>
                         )}
 
                         {draft.editable && (
                             <div className="mt-3 space-y-4">
-                                <div className="rounded-lg border border-cyan-100 bg-cyan-50/50 p-3">
-                                    <div className="text-xs font-semibold uppercase tracking-wide text-cyan-700">Wenn</div>
+                                <div className="rounded-lg border border-cyan-100 bg-cyan-50/50 p-3 dark:border-cyan-900/70 dark:bg-cyan-950/30">
+                                    <div className="text-xs font-semibold uppercase tracking-wide text-cyan-700 dark:text-cyan-300">Wenn</div>
                                     <div className="mt-3 grid gap-3 md:grid-cols-2">
-                                        <label className="text-xs font-medium text-slate-700">
+                                        <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
                                             Ausloeser
                                             <select
                                                 className={selectClassName}
@@ -103,7 +103,7 @@ export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRule
                                             </select>
                                         </label>
 
-                                        <label className="text-xs font-medium text-slate-700">
+                                        <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
                                             Quelle
                                             <select
                                                 className={selectClassName}
@@ -147,7 +147,7 @@ export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRule
 
                                     {draft.trigger.kind === "button" && (
                                         <div className="mt-3 grid gap-3 md:grid-cols-2">
-                                            <label className="text-xs font-medium text-slate-700">
+                                            <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
                                                 Taste
                                                 <select
                                                     className={selectClassName}
@@ -175,7 +175,7 @@ export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRule
 
                                     {draft.trigger.kind === "weekly" && (
                                         <div className="mt-3 grid gap-3 md:grid-cols-2">
-                                            <label className="text-xs font-medium text-slate-700">
+                                            <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
                                                 Zeit
                                                 <input
                                                     type="time"
@@ -197,7 +197,7 @@ export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRule
                                                     }}
                                                 />
                                             </label>
-                                            <label className="text-xs font-medium text-slate-700">
+                                            <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
                                                 Tage
                                                 <select
                                                     className={selectClassName}
@@ -226,10 +226,10 @@ export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRule
                                     )}
                                 </div>
 
-                                <div className="rounded-lg border border-emerald-100 bg-emerald-50/50 p-3">
-                                    <div className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Dann</div>
+                                <div className="rounded-lg border border-emerald-100 bg-emerald-50/50 p-3 dark:border-emerald-900/70 dark:bg-emerald-950/30">
+                                    <div className="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Dann</div>
                                     <div className="mt-3 grid gap-3 md:grid-cols-2">
-                                        <label className="text-xs font-medium text-slate-700">
+                                        <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
                                             Aktion
                                             <select
                                                 className={selectClassName}
@@ -244,7 +244,7 @@ export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRule
                                             </select>
                                         </label>
 
-                                        <label className="text-xs font-medium text-slate-700">
+                                        <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
                                             Ziel
                                             <select
                                                 className={selectClassName}
@@ -310,7 +310,7 @@ export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRule
 
                                     {draft.action.kind === "onState" && (
                                         <div className="mt-3 grid gap-3 md:grid-cols-2">
-                                            <label className="text-xs font-medium text-slate-700">
+                                            <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
                                                 Zustand
                                                 <select
                                                     className={selectClassName}
@@ -337,7 +337,7 @@ export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRule
 
                                     {draft.action.kind === "switchTimer" && (
                                         <div className="mt-3 grid gap-3 md:grid-cols-2">
-                                            <label className="text-xs font-medium text-slate-700">
+                                            <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
                                                 Timer (Sekunden)
                                                 <input
                                                     type="number"
@@ -362,16 +362,17 @@ export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRule
                                     )}
 
                                     {draft.action.kind === "setpoint" && (
-                                        <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3">
+                                        <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
                                             <div className="flex items-center justify-between gap-3">
-                                                <div className="text-xs font-medium text-slate-700">Solltemperatur</div>
-                                                <div className="text-sm font-semibold text-slate-800">{draft.action.temperature.toFixed(1)} °C</div>
+                                                <div className="text-xs font-medium text-slate-700 dark:text-slate-300">Solltemperatur</div>
+                                                <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">{draft.action.temperature.toFixed(1)} °C</div>
                                             </div>
                                             <div className="mt-3">
                                                 <SliderCDN
                                                     min={6}
                                                     max={30}
                                                     step={0.5}
+                                                    variant="climate"
                                                     value={[draft.action.temperature]}
                                                     onValueChange={(values) => {
                                                         if (draft.action.kind !== "setpoint") return;
@@ -392,7 +393,7 @@ export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRule
 
                                     {draft.action.kind === "notify" && (
                                         <div className="mt-3 grid gap-3">
-                                            <label className="text-xs font-medium text-slate-700">
+                                            <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
                                                 Nachricht (optional)
                                                 <input
                                                     className={inputClassName}
@@ -421,7 +422,7 @@ export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRule
                         )}
 
                         {draft.editable && (
-                            <div className="mt-3 text-xs text-slate-500">
+                            <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">
                                 {draft.trigger.kind === "weekly"
                                     ? `Ausloeser: ${getDayMaskLabel(draft.trigger.dayOfWeek)} um ${draft.trigger.startTime}`
                                     : "Ausloeser: Tastendruck"}

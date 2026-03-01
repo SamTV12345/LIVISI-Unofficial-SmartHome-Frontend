@@ -72,11 +72,11 @@ export const ModernHero = ({title, subtitle, badges = [], stats = [], actionSlot
 
 export const ModernSection = ({title, description, icon, actionSlot, children, className}: ModernSectionProps) => {
     return (
-        <div className={cn("rounded-xl border border-gray-200 bg-white", className)}>
-            <div className="flex flex-wrap items-center gap-2 border-b border-gray-100 px-4 py-3">
+        <div className={cn("rounded-xl border border-gray-200 bg-white dark:border-slate-700 dark:bg-slate-900", className)}>
+            <div className="flex flex-wrap items-center gap-2 border-b border-gray-100 px-4 py-3 dark:border-slate-700">
                 {icon}
-                <div className="font-semibold text-gray-900">{title}</div>
-                {description && <div className="text-sm text-gray-500">{description}</div>}
+                <div className="font-semibold text-gray-900 dark:text-slate-100">{title}</div>
+                {description && <div className="text-sm text-gray-500 dark:text-slate-300">{description}</div>}
                 {actionSlot && <div className="ml-auto">{actionSlot}</div>}
             </div>
             <div className="p-4">{children}</div>

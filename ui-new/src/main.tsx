@@ -37,6 +37,31 @@ import {queryClient} from "@/src/api/queryClient.ts";
 import {PageSkeleton} from "@/src/components/layout/PageSkeleton.tsx";
 import {AppErrorBoundary} from "@/src/components/layout/AppErrorBoundary.tsx";
 
+const applySystemTheme = () => {
+    if (typeof window === "undefined") return;
+
+    const root = document.documentElement;
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+
+    const sync = (isDark: boolean) => {
+        root.classList.toggle("dark", isDark);
+    };
+
+    sync(media.matches);
+
+    if (typeof media.addEventListener === "function") {
+        media.addEventListener("change", (event) => {
+            sync(event.matches);
+        });
+    } else {
+        media.addListener((event) => {
+            sync(event.matches);
+        });
+    }
+};
+
+applySystemTheme();
+
 const router = createBrowserRouter(createRoutesFromElements(
     <Route path="/">
         <Route path="" element={<AuthWrapper>

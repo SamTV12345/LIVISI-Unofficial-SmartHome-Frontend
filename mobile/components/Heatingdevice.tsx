@@ -51,6 +51,7 @@ export const Heatingdevice: FC<HeatingdeviceProps> = ({
 
     const constructHeatingModel = (newState: CapabilityState) => {
         return {
+            id: newState.id,
             target: CAPABILITY_PREFIX+newState.id,
             type: "SetState",
             namespace: "core."+device.manufacturer,

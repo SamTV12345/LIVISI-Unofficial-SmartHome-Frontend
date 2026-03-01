@@ -285,6 +285,7 @@ export const DeviceDetailPage = () => {
             setSetpointPending(true);
             setSetpointError(undefined);
             postJson(ACTION_ENDPOINT, {
+                id: setpointCapability.id,
                 target: CAPABILITY_PREFIX + setpointCapability.id,
                 type: "SetState",
                 namespace: "core." + device.manufacturer,
@@ -411,6 +412,7 @@ export const DeviceDetailPage = () => {
                                             min={6.5}
                                             max={30}
                                             step={0.5}
+                                            variant="climate"
                                             value={[setpointValue]}
                                             onValueChange={(values) => {
                                                 setSetpointValue(values[0]);
@@ -584,7 +586,7 @@ export const DeviceDetailPage = () => {
                         <AccordionContent className="px-4 pb-4 space-y-3">
                             {!onStateCapability && (!setpointCapability || setpointValue === undefined) && <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-500">Dieses Gerät hat aktuell keine direkten Steuerfunktionen.</div>}
                             {onStateCapability && <Card className="border-gray-200 shadow-none"><CardHeader className="pb-3"><CardTitle className="text-base">Schalter</CardTitle><CardDescription>Direkte Ein/Aus-Steuerung.</CardDescription></CardHeader><CardContent className="flex flex-wrap items-center gap-3"><div className="rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-700">Aktueller Zustand: <span className="font-semibold text-slate-900">{onStateValue ? "An" : "Aus"}</span></div><button type="button" onClick={() => { void toggleOnState(); }} disabled={switchPending} className={cn("rounded-lg border px-3 py-2 text-sm font-semibold", onStateValue ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-slate-50 text-slate-700", switchPending && "cursor-not-allowed opacity-70")}>{switchPending ? "Speichert..." : onStateValue ? "Ausschalten" : "Einschalten"}</button></CardContent></Card>}
-                            {setpointCapability && setpointValue !== undefined && <Card className="border-gray-200 shadow-none"><CardHeader className="pb-3"><CardTitle className="text-base">Solltemperatur</CardTitle><CardDescription>Speichert automatisch nach kurzer Pause.</CardDescription></CardHeader><CardContent><div className="flex items-end justify-between"><div className="inline-flex items-center gap-2 text-3xl font-semibold text-slate-900"><Thermometer size={24}/>{setpointValue.toFixed(1)} °C</div><div className="text-xs text-slate-500">{setpointPending ? "Speichere..." : "Live"}</div></div><div className="mt-4"><SliderCDN min={6.5} max={30} step={0.5} value={[setpointValue]} onValueChange={(values) => { setSetpointValue(values[0]); }}/></div><div className="mt-2 flex justify-between text-xs text-slate-500"><span>6.5 °C</span><span>30.0 °C</span></div></CardContent></Card>}
+                            {setpointCapability && setpointValue !== undefined && <Card className="border-gray-200 shadow-none"><CardHeader className="pb-3"><CardTitle className="text-base">Solltemperatur</CardTitle><CardDescription>Speichert automatisch nach kurzer Pause.</CardDescription></CardHeader><CardContent><div className="flex items-end justify-between"><div className="inline-flex items-center gap-2 text-3xl font-semibold text-slate-900"><Thermometer size={24}/>{setpointValue.toFixed(1)} °C</div><div className="text-xs text-slate-500">{setpointPending ? "Speichere..." : "Live"}</div></div><div className="mt-4"><SliderCDN min={6.5} max={30} step={0.5} variant="climate" value={[setpointValue]} onValueChange={(values) => { setSetpointValue(values[0]); }}/></div><div className="mt-2 flex justify-between text-xs text-slate-500"><span>6.5 °C</span><span>30.0 °C</span></div></CardContent></Card>}
                         </AccordionContent>
                     </AccordionItem>
 
