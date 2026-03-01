@@ -19,7 +19,7 @@ uuid = { version = "1.21.0", features = ["v4", "serde"] }
 clokwerk = "0.4.0"
 base64 = "0.22.1"
 kv = "0.24.0"
-jsonwebtoken = "10.3.0"
+jsonwebtoken = { version = "10.3.0", features = ["rust_crypto"] }
 env_logger = "0.11.9"
 path-clean = "1.0.1"
 clap = { version = "4.5.60", features = ["derive"] }
