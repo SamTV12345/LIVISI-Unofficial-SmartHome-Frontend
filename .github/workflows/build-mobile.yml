@@ -36,6 +36,34 @@ jobs:
           node-version: 20
           cache: "pnpm"
           cache-dependency-path: mobile/pnpm-lock.yaml
+      - name: Set package version from tag
+        working-directory: mobile
+        run: |
+          node - <<'NODE'
+          const fs = require("fs");
+          const packagePath = "package.json";
+          const appConfigPath = "app.json";
+          const tag = process.env.GITHUB_REF_NAME || "";
+          const version = tag.replace(/^v/, "");
+          const semverPattern = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
+
+          if (!semverPattern.test(version)) {
+            throw new Error(`Tag '${tag}' does not resolve to a valid semver version.`);
+          }
+
+          const packageJson = JSON.parse(fs.readFileSync(packagePath, "utf8"));
+          packageJson.version = version;
+          fs.writeFileSync(packagePath, `${JSON.stringify(packageJson, null, 2)}\n`, "utf8");
+          console.log(`Set ${packagePath} version to ${version}`);
+
+          const appJson = JSON.parse(fs.readFileSync(appConfigPath, "utf8"));
+          if (!appJson.expo || typeof appJson.expo !== "object") {
+            throw new Error(`${appConfigPath} does not contain an 'expo' object.`);
+          }
+          appJson.expo.version = version;
+          fs.writeFileSync(appConfigPath, `${JSON.stringify(appJson, null, 2)}\n`, "utf8");
+          console.log(`Set ${appConfigPath} expo.version to ${version}`);
+          NODE
       - name: Install dependencies
         working-directory: mobile
         run: pnpm install --frozen-lockfile
