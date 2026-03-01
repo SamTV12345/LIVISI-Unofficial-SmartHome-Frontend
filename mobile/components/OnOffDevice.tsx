@@ -3,13 +3,12 @@ import {Device} from "@/models/Device";
 import {CapabilityState} from "@/models/CapabilityState";
 import {ImageBackground, Modal, TouchableOpacity, View} from "react-native";
 import {ThemedText} from "@/components/ThemedText";
-import {ACTION_ENDPOINT} from "@/constants/FieldConstants";
 import {useDebounce} from "@/utils/useDebounce";
-import {useContentModel} from "@/store/store";
 import {OnOffDeviceLayout} from "@/components/Heatingdevice";
 import {TurnedOn} from "@/components/TurnedOn";
 import {FontAwesome} from "@expo/vector-icons";
 import {TurnedOnGlow} from "@/components/TurnedOnGlow";
+import {useGatewayApi} from "@/hooks/useGatewayApi";
 
 type OnOffDeviceProps = {
     device: Device,
@@ -17,6 +16,8 @@ type OnOffDeviceProps = {
 }
 
 export const OnOffDevice:FC<OnOffDeviceProps> = ({device, showRoom})=>{
+    const gatewayApi = useGatewayApi();
+    const actionMutation = gatewayApi.useMutation("post", "/action");
     const [turnedOn, setTurnedOn] = useState<boolean>(()=>{
         for (const dev of device.capabilityState!){
             if (dev.state.onState.value){
@@ -26,22 +27,19 @@ export const OnOffDevice:FC<OnOffDeviceProps> = ({device, showRoom})=>{
         return false
     })
     const [modalDeviceOpen, setModalDeviceOpen] = useState<boolean>(false)
-    const baseURL = useContentModel(state=>state.baseURL)
 
 
     useDebounce(()=>{
-        const switchModel = constructSwitchPostModel(device.capabilityState![0])
-        console.log(switchModel)
-        fetch(baseURL+ACTION_ENDPOINT,{
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(switchModel)
-        })
-            .then((e)=>e.text())
-            .then(e=>console.log(e))
+        const capabilityState = device.capabilityState?.[0];
+        if (!capabilityState) {
+            return;
+        }
+        const switchModel = constructSwitchPostModel(capabilityState);
+        void actionMutation.mutateAsync({
+            body: switchModel
+        }).catch(() => {
+            // keep local toggle state; background refresh will reconcile with gateway
+        });
     },200,[turnedOn])
 
     const constructSwitchPostModel = (newStatus: CapabilityState)=>{

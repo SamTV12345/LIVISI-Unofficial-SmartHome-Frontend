@@ -8,7 +8,6 @@ import {ActionButton} from "@/components/ui/ActionButton";
 import {ErrorBanner} from "@/components/ErrorBanner";
 import {StatusPill} from "@/components/ui/StatusPill";
 import {Colors} from "@/constants/Colors";
-import {fetchInteractionById, triggerInteraction} from "@/lib/api";
 import {useContentModel} from "@/store/store";
 import {Interaction} from "@/models/Interaction";
 import {
@@ -18,18 +17,46 @@ import {
     summarizeInteraction
 } from "@/utils/automationPresentation";
 import {formatTime} from "@/utils/timeUtils";
+import {SkeletonBlock, SkeletonCard} from "@/components/ui/Skeleton";
+import {useGatewayApi} from "@/hooks/useGatewayApi";
 
 export default function AutomationDetailScreen() {
     const {interactionId} = useLocalSearchParams<{interactionId: string}>();
+    const activeInteractionId = Array.isArray(interactionId) ? interactionId[0] : interactionId;
     const gateway = useContentModel((state) => state.gateway);
     const allThings = useContentModel((state) => state.allThings);
     const setAllThings = useContentModel((state) => state.setAllThings);
+    const gatewayApi = useGatewayApi();
+    const interactionQuery = gatewayApi.useQuery(
+        "get",
+        "/interaction/{id}",
+        {
+            params: {
+                path: {
+                    id: activeInteractionId ?? ""
+                }
+            }
+        },
+        {
+            enabled: Boolean(gateway?.baseURL && activeInteractionId)
+        }
+    );
+    const triggerInteractionMutation = gatewayApi.useMutation("post", "/interaction/{id}/trigger");
 
-    const [interaction, setInteraction] = useState<Interaction | undefined>(undefined);
-    const [refreshing, setRefreshing] = useState(false);
     const [triggerPending, setTriggerPending] = useState(false);
     const [error, setError] = useState<string | undefined>(undefined);
     const [successMessage, setSuccessMessage] = useState<string | undefined>(undefined);
+
+    const interaction = useMemo(() => {
+        const queryInteraction = interactionQuery.data as Interaction | undefined;
+        if (queryInteraction) {
+            return queryInteraction;
+        }
+        if (!activeInteractionId) {
+            return undefined;
+        }
+        return allThings?.interactions?.find((entry) => entry.id === activeInteractionId);
+    }, [activeInteractionId, allThings?.interactions, interactionQuery.data]);
 
     const presentationLookup = useMemo(() => {
         return buildAutomationPresentationLookup(allThings);
@@ -65,27 +92,20 @@ export default function AutomationDetailScreen() {
         });
     }, [setAllThings]);
 
-    const loadInteraction = useCallback(async () => {
-        if (!gateway?.baseURL || !interactionId) {
+    useEffect(() => {
+        if (!interactionQuery.data) {
             return;
         }
-
-        setRefreshing(true);
-        try {
-            const nextInteraction = await fetchInteractionById(gateway, interactionId);
-            setInteraction(nextInteraction);
-            saveInteractionIntoStore(nextInteraction);
-            setError(undefined);
-        } catch {
-            setError("Details konnten nicht geladen werden.");
-        } finally {
-            setRefreshing(false);
-        }
-    }, [gateway, interactionId, saveInteractionIntoStore]);
+        saveInteractionIntoStore(interactionQuery.data as Interaction);
+        setError(undefined);
+    }, [interactionQuery.data, saveInteractionIntoStore]);
 
     useEffect(() => {
-        void loadInteraction();
-    }, [loadInteraction]);
+        if (!interactionQuery.isError) {
+            return;
+        }
+        setError("Details konnten nicht geladen werden.");
+    }, [interactionQuery.isError]);
 
     const onTrigger = async () => {
         if (!gateway?.baseURL || !interaction?.id || triggerPending) {
@@ -94,7 +114,14 @@ export default function AutomationDetailScreen() {
 
         setTriggerPending(true);
         try {
-            await triggerInteraction(gateway, interaction.id);
+            await triggerInteractionMutation.mutateAsync({
+                params: {
+                    path: {
+                        id: interaction.id
+                    }
+                }
+            });
+            void interactionQuery.refetch();
             setSuccessMessage("Automation wurde ausgefuehrt.");
             setError(undefined);
         } catch {
@@ -105,7 +132,7 @@ export default function AutomationDetailScreen() {
         }
     };
 
-    if (!interactionId) {
+    if (!activeInteractionId) {
         return (
             <AppScreen title="Automation" subtitle="Keine Automation-ID uebergeben.">
                 <ErrorBanner message="Automation-ID fehlt."/>
@@ -116,13 +143,24 @@ export default function AutomationDetailScreen() {
     return (
         <AppScreen scroll={false}>
             <ScrollView
-                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => {
-                    void loadInteraction();
+                refreshControl={<RefreshControl refreshing={interactionQuery.isFetching} onRefresh={() => {
+                    void interactionQuery.refetch();
                 }}/>}
                 showsVerticalScrollIndicator={false}
             >
+                {!interaction && (
+                    <SkeletonCard style={{marginBottom: 14}}>
+                        <SkeletonBlock height={30} width="48%"/>
+                        <SkeletonBlock height={18} width="72%" style={{marginTop: 10}}/>
+                        <View style={{marginTop: 14, flexDirection: "row", gap: 8}}>
+                            <SkeletonBlock height={28} width="34%" radius={999}/>
+                            <SkeletonBlock height={28} width="34%" radius={999}/>
+                        </View>
+                    </SkeletonCard>
+                )}
+
                 <ModernHero
-                    title={interaction?.name ?? interactionId}
+                    title={interaction?.name ?? activeInteractionId}
                     subtitle={interaction ? "Details zur ausgewaehlten Livisi-Automation." : "Lade Automationsdetails..."}
                     badges={[
                         {
@@ -160,7 +198,7 @@ export default function AutomationDetailScreen() {
                             label={state}
                             tone={state === "Aktiv" ? "success" : state === "Inaktiv" ? "warning" : "neutral"}
                         />
-                        <Text style={styles.metaLine}>ID: {interaction?.id ?? interactionId}</Text>
+                        <Text style={styles.metaLine}>ID: {interaction?.id ?? activeInteractionId}</Text>
                         <Text style={styles.metaLine}>Zuletzt geaendert: {interaction ? formatTime(interaction.modified) : "-"}</Text>
                     </View>
                     <View style={{marginTop: 10}}>

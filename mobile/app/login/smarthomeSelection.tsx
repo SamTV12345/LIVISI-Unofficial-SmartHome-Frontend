@@ -3,15 +3,19 @@ import {Alert, Text, View} from "react-native";
 import {useFocusEffect, useRouter} from "expo-router";
 import {AppconfigData, deleteBaseURL, getAllBaseURLs, saveGatewayConfig} from "@/utils/sqlite";
 import {useContentModel} from "@/store/store";
-import {fetchAPIConfig} from "@/lib/api";
 import {AppScreen} from "@/components/ui/AppScreen";
 import {SurfaceCard} from "@/components/ui/SurfaceCard";
 import {ActionButton} from "@/components/ui/ActionButton";
 import {NavRow} from "@/components/ui/NavRow";
 import {StatusPill} from "@/components/ui/StatusPill";
+import {resolveAuthMode} from "@/utils/authMode";
+import {useQueryClient} from "@tanstack/react-query";
+import {ConfigData} from "@/models/ConfigData";
+import {createGatewayQueryClient} from "@/lib/openapi/client";
 
 export default function SmartHomeSelection() {
     const router = useRouter();
+    const queryClient = useQueryClient();
     const [savedGateways, setSavedGateways] = useState<AppconfigData[]>([]);
     const [isConnecting, setIsConnecting] = useState<string | null>(null);
     const setGateway = useContentModel((state) => state.setGateway);
@@ -32,10 +36,40 @@ export default function SmartHomeSelection() {
             password: entry.password ?? "",
             label: entry.label ?? ""
         };
+        const probeApi = createGatewayQueryClient({
+            baseURL: entry.id,
+            username: "",
+            password: ""
+        });
+        const activeApi = createGatewayQueryClient({
+            baseURL: entry.id,
+            username: entry.username ?? "",
+            password: entry.password ?? ""
+        });
 
         setIsConnecting(entry.id);
         try {
-            const config = await fetchAPIConfig(gateway);
+            const config = await queryClient.fetchQuery(
+                probeApi.queryOptions("get", "/api/server", undefined, {staleTime: 0})
+            ) as ConfigData;
+            const authMode = resolveAuthMode(config);
+
+            if (authMode === "oidc") {
+                Alert.alert("Nicht unterstützt", "Dieses Gateway nutzt OIDC und kann in der Mobile-App aktuell nicht verbunden werden.");
+                return;
+            }
+
+            if (authMode === "basic") {
+                await queryClient.fetchQuery(
+                    activeApi.queryOptions("post", "/login", {
+                        body: {
+                            username: gateway.username,
+                            password: gateway.password
+                        }
+                    }, {staleTime: 0})
+                );
+            }
+
             saveGatewayConfig({
                 id: entry.id,
                 username: entry.username,

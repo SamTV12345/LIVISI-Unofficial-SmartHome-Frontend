@@ -87,6 +87,41 @@ pub struct LocationDoc {
 }
 
 #[derive(Default, Serialize, Deserialize, Clone, Debug, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct MessagePropertiesDoc {
+    pub device_location: Option<String>,
+    pub device_name: Option<String>,
+    pub device_serial: Option<String>,
+    pub namespace: Option<String>,
+    pub requester_info: Option<String>,
+    pub shc_remote_reboot_reason: Option<String>,
+    pub read: Option<bool>,
+    pub change_reason: Option<String>,
+    pub expires_after_minutes: Option<i32>,
+    pub timestamp: Option<String>,
+}
+
+#[derive(Default, Serialize, Deserialize, Clone, Debug, ToSchema)]
+pub struct MessageResponseDoc {
+    pub id: String,
+    #[serde(rename = "type")]
+    pub r#type: String,
+    pub class: Option<String>,
+    pub namespace: Option<String>,
+    pub timestamp: String,
+    pub read: bool,
+    pub devices: Option<Vec<String>>,
+    pub messages: Option<Vec<String>>,
+    pub capabilities: Option<Vec<String>>,
+    pub properties: Option<MessagePropertiesDoc>,
+}
+
+#[derive(Default, Serialize, Deserialize, Clone, Debug, ToSchema)]
+pub struct MessageReadDoc {
+    pub read: bool,
+}
+
+#[derive(Default, Serialize, Deserialize, Clone, Debug, ToSchema)]
 pub struct EmailSettingsDoc {
     pub server_address: String,
     pub server_port_number: i32,
@@ -179,7 +214,7 @@ fn trigger_interaction_doc() {}
 #[utoipa::path(
     get,
     path = "/message",
-    responses((status = 200, description = "Messages", body = Value))
+    responses((status = 200, description = "Messages", body = [MessageResponseDoc]))
 )]
 fn get_messages_doc() {}
 
@@ -227,7 +262,7 @@ fn delete_location_doc() {}
     get,
     path = "/message/{message_id}",
     params(("message_id" = String, Path, description = "Message id")),
-    responses((status = 200, description = "Single message", body = Value))
+    responses((status = 200, description = "Single message", body = MessageResponseDoc))
 )]
 fn get_message_doc() {}
 
@@ -235,8 +270,8 @@ fn get_message_doc() {}
     put,
     path = "/message/{message_id}",
     params(("message_id" = String, Path, description = "Message id")),
-    request_body = Value,
-    responses((status = 200, description = "Message updated", body = Value))
+    request_body = MessageReadDoc,
+    responses((status = 200, description = "Message updated", body = MessageResponseDoc))
 )]
 fn put_message_doc() {}
 
@@ -340,7 +375,10 @@ fn get_capability_history_doc() {}
             CapabilityHistoryDoc,
             LocationDoc,
             EmailSettingsDoc,
-            EmailTestDoc
+            EmailTestDoc,
+            MessageResponseDoc,
+            MessagePropertiesDoc,
+            MessageReadDoc
         )
     ),
     tags(

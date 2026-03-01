@@ -1,5 +1,5 @@
 import * as SQLite from "expo-sqlite";
-import {ConfigData} from "@/models/ConfigData";
+import {AuthMode, ConfigData} from "@/models/ConfigData";
 
 export let db: SQLite.SQLiteDatabase;
 
@@ -136,18 +136,19 @@ export const deleteBaseURL = (baseURL: string) => {
 
 export const updateServerConfig = (c: ConfigData, baseURL: string) => {
     init();
+    const oidcConfigValue = c.oidcConfig ? JSON.stringify(c.oidcConfig) : null;
     ensureDb().runSync(
         "INSERT OR REPLACE INTO serverconfig (id, basicAuth, oidcConfig, oidcConfigured) VALUES (?,?,?,?)",
         baseURL,
         c.basicAuth,
-        c.oidcConfig,
+        oidcConfigValue,
         c.oidcConfigured
     );
 };
 
 type ConfigDataDB = {
     basicAuth: number;
-    oidcConfig: null;
+    oidcConfig: string | null;
     oidcConfigured: number;
 };
 
@@ -165,9 +166,23 @@ export const getServerConfig = (baseUrl: string) => {
         throw new Error("Server config is not present");
     }
 
+    const basicAuth = convertToBoolean(data.basicAuth);
+    const oidcConfigured = convertToBoolean(data.oidcConfigured);
+    const authMode: AuthMode = oidcConfigured ? "oidc" : basicAuth ? "basic" : "none";
+
+    let oidcConfig: ConfigData["oidcConfig"] = null;
+    if (data.oidcConfig) {
+        try {
+            oidcConfig = JSON.parse(data.oidcConfig) as NonNullable<ConfigData["oidcConfig"]>;
+        } catch {
+            oidcConfig = null;
+        }
+    }
+
     return {
-        basicAuth: convertToBoolean(data.basicAuth),
-        oidcConfigured: convertToBoolean(data.oidcConfigured),
-        oidcConfig: data.oidcConfig
+        authMode,
+        basicAuth,
+        oidcConfigured,
+        oidcConfig
     } as ConfigData;
 };

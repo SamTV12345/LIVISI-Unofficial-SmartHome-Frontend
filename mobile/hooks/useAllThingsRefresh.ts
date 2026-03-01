@@ -1,6 +1,7 @@
 import {useCallback, useState} from "react";
-import {fetchAPIAll} from "@/lib/api";
-import {useContentModel} from "@/store/store";
+import {AxiosDeviceResponse, useContentModel} from "@/store/store";
+import {useQueryClient} from "@tanstack/react-query";
+import {useGatewayApi} from "@/hooks/useGatewayApi";
 
 type UseAllThingsRefreshResult = {
     refreshing: boolean,
@@ -12,6 +13,8 @@ type UseAllThingsRefreshResult = {
 export const useAllThingsRefresh = (): UseAllThingsRefreshResult => {
     const gateway = useContentModel((state) => state.gateway);
     const setAllThings = useContentModel((state) => state.setAllThings);
+    const queryClient = useQueryClient();
+    const gatewayApi = useGatewayApi();
     const [refreshing, setRefreshing] = useState(false);
     const [refreshError, setRefreshError] = useState<string | undefined>(undefined);
 
@@ -22,15 +25,17 @@ export const useAllThingsRefresh = (): UseAllThingsRefreshResult => {
 
         setRefreshing(true);
         try {
-            const data = await fetchAPIAll(gateway);
-            setAllThings(data);
+            const data = await queryClient.fetchQuery(
+                gatewayApi.queryOptions("get", "/api/all", undefined, {staleTime: 0})
+            );
+            setAllThings(data as AxiosDeviceResponse);
             setRefreshError(undefined);
         } catch {
             setRefreshError("Aktualisierung fehlgeschlagen.");
         } finally {
             setRefreshing(false);
         }
-    }, [gateway, refreshing, setAllThings]);
+    }, [gateway, gatewayApi, queryClient, refreshing, setAllThings]);
 
     const clearRefreshError = useCallback(() => {
         setRefreshError(undefined);

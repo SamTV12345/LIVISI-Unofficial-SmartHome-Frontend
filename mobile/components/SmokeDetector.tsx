@@ -2,13 +2,12 @@ import {FC, useState} from "react";
 import {CapabilityState} from "@/models/CapabilityState";
 import {Device} from "@/models/Device";
 import {useDebounce} from "@/utils/useDebounce";
-import {ACTION_ENDPOINT} from "@/constants/FieldConstants";
-import {useContentModel} from "@/store/store";
 import {OnOffDeviceLayout} from "@/components/Heatingdevice";
 import {ThemedText} from "@/components/ThemedText";
 import {Pressable, View} from "react-native";
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import {Colors} from "@/constants/Colors";
+import {useGatewayApi} from "@/hooks/useGatewayApi";
 
 type OnOffDeviceProps = {
     device: Device,
@@ -19,7 +18,8 @@ export const SmokeDetector:FC<OnOffDeviceProps> = ({
     device,
     showRoom
                                                    })=>{
-    const baseURL = useContentModel(state=>state.baseURL)
+    const gatewayApi = useGatewayApi();
+    const actionMutation = gatewayApi.useMutation("post", "/action");
     const [isAlarming, setAlarming] = useState<boolean>(() => {
         for (const dev of device.capabilityState!) {
             if (dev.state && dev.state.onState && dev.state.onState.value) {
@@ -54,18 +54,16 @@ export const SmokeDetector:FC<OnOffDeviceProps> = ({
     }
 
     useDebounce(()=>{
-        const switchModel = constructSmokeDetectorPostModel(device.capabilityState![0])
-        console.log(switchModel)
-        fetch(baseURL+ACTION_ENDPOINT,{
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(switchModel)
-        })
-            .then((e)=>e.text())
-            .then(e=>console.log(e))
+        const capabilityState = device.capabilityState?.[0];
+        if (!capabilityState) {
+            return;
+        }
+        const switchModel = constructSmokeDetectorPostModel(capabilityState)
+        void actionMutation.mutateAsync({
+            body: switchModel
+        }).catch(() => {
+            // keep local toggle state; background refresh will reconcile with gateway
+        });
     },200,[isAlarming])
 
     return <View style={[OnOffDeviceLayout.box, {

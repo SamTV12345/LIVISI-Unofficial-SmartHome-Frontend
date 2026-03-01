@@ -35,7 +35,7 @@ export const AppScreen = ({
     );
 
     return (
-        <SafeAreaView style={styles.safeArea}>
+        <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
             <View style={styles.backgroundBlobTop}/>
             <View style={styles.backgroundBlobBottom}/>
             {scroll ? (
@@ -47,7 +47,9 @@ export const AppScreen = ({
                     {content}
                 </ScrollView>
             ) : (
-                content
+                <View style={styles.nonScrollWrap}>
+                    {content}
+                </View>
             )}
         </SafeAreaView>
     );
@@ -77,10 +79,13 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.app.backgroundStrong
     },
     scrollContent: {
-        flexGrow: 1,
-        paddingBottom: 28
+        flexGrow: 1
+    },
+    nonScrollWrap: {
+        flex: 1
     },
     contentWrap: {
+        flex: 1,
         paddingHorizontal: 18,
         paddingTop: 10
     },

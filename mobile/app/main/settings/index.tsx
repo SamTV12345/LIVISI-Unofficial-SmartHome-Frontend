@@ -77,6 +77,12 @@ export default function SettingsPage() {
                     style={{marginBottom: 14}}
                 >
                     <NavRow
+                        title="Nachrichten"
+                        subtitle="Systemmeldungen und Warnungen"
+                        onPress={() => router.push("/main/news")}
+                    />
+                    <View style={{height: 1, backgroundColor: "#e7edf3"}}/>
+                    <NavRow
                         title="E-Mail"
                         subtitle="SMTP und Empfänger konfigurieren"
                         onPress={() => router.push("/main/settings/email")}

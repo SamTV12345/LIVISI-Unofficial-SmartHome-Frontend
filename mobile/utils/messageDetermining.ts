@@ -1,29 +1,21 @@
-import {Message} from "@/models/Messages";
+import {components} from "@/lib/openapi/schema";
 import {formatAsHourMinute} from "@/utils/timeUtils";
+
+type MessageResponse = components["schemas"]["MessageResponseDoc"];
 
 export type MessagePresentation = {
     title: string;
     description: string;
 };
 
-const readString = (properties: Record<string, unknown> | undefined, key: string): string => {
-    const value = properties?.[key];
-    return typeof value === "string" ? value : "";
-};
-
-const readNumber = (properties: Record<string, unknown> | undefined, key: string): number => {
-    const value = properties?.[key];
-    return typeof value === "number" ? value : 0;
-};
-
-export const determineTitleAndDescription = (message: Message): MessagePresentation => {
+export const determineTitleAndDescription = (message: MessageResponse): MessagePresentation => {
     const properties = message.properties;
 
     switch (message.type) {
         case "DeviceUnreachable":
             return {
                 title: "Geraet nicht erreichbar",
-                description: `Das Geraet ${readString(properties, "deviceName")} im Raum ${readString(properties, "deviceLocation")} ist nicht erreichbar.`
+                description: `Das Geraet ${properties?.deviceName ?? ""} im Raum ${properties?.deviceLocation ?? ""} ist nicht erreichbar.`
             };
         case "ShcRemoteRebooted":
             return {
@@ -33,7 +25,7 @@ export const determineTitleAndDescription = (message: Message): MessagePresentat
         case "LogLevelChanged":
             return {
                 title: "Erweiterte Fehlersuche",
-                description: `Der Zeitraum fuer die Aktivitaetsaufzeichnung wurde um ${formatAsHourMinute(message.timestamp)} Uhr angefragt und ist fuer ${readNumber(properties, "expiresAfterMinutes")} Minuten aktiv.`
+                description: `Der Zeitraum fuer die Aktivitaetsaufzeichnung wurde um ${formatAsHourMinute(message.timestamp)} Uhr angefragt und ist fuer ${properties?.expiresAfterMinutes ?? 0} Minuten aktiv.`
             };
         default:
             return {

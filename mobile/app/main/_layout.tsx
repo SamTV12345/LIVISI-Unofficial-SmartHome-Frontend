@@ -1,13 +1,15 @@
 import {DefaultTheme, ThemeProvider} from "@react-navigation/native";
 import {useCallback, useEffect, useMemo, useState} from "react";
 import "react-native-reanimated";
-import {ActivityIndicator, Pressable, Text, View} from "react-native";
+import {Pressable, Text, View} from "react-native";
 import {GestureHandlerRootView} from "react-native-gesture-handler";
-import {fetchAPIAll, saveEmailSettings} from "@/lib/api";
-import {useContentModel} from "@/store/store";
+import {AxiosDeviceResponse, useContentModel} from "@/store/store";
 import {Colors} from "@/constants/Colors";
 import {FontAwesome, MaterialCommunityIcons} from "@expo/vector-icons";
 import {Tabs} from "expo-router";
+import {useSafeAreaInsets} from "react-native-safe-area-context";
+import {createGatewayQueryClient} from "@/lib/openapi/client";
+import {MainLoadingSkeleton} from "@/components/ui/Skeleton";
 
 const REFRESH_INTERVAL_MS = 30_000;
 
@@ -15,45 +17,49 @@ export default function RootLayout() {
     const setAllThings = useContentModel((state) => state.setAllThings);
     const gateway = useContentModel((state) => state.gateway);
     const allThings = useContentModel((state) => state.allThings);
-    const [isLoading, setIsLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | undefined>(undefined);
     const [isSavingEmail, setIsSavingEmail] = useState(false);
+    const insets = useSafeAreaInsets();
     const unreadMessageCount = useMemo(
         () => (allThings?.messages ?? []).filter((message) => !message.read).length,
         [allThings?.messages]
     );
 
-    const loadAllThings = useCallback(async () => {
-        if (!gateway?.baseURL) {
-            return;
-        }
+    const gatewayIdentity = useMemo(() => ({
+        baseURL: gateway?.baseURL ?? "http://127.0.0.1",
+        username: gateway?.username ?? "",
+        password: gateway?.password ?? ""
+    }), [gateway?.baseURL, gateway?.password, gateway?.username]);
 
-        try {
-            const data = await fetchAPIAll(gateway);
-            setAllThings(data);
-            setLoadError(undefined);
-        } catch {
-            setLoadError("Daten konnten nicht geladen werden.");
-        } finally {
-            setIsLoading(false);
-        }
-    }, [gateway, setAllThings]);
+    const gatewayApi = useMemo(() => {
+        return createGatewayQueryClient(gatewayIdentity);
+    }, [gatewayIdentity]);
+    const saveEmailMutation = gatewayApi.useMutation("put", "/email/settings");
+
+    const allThingsQuery = gatewayApi.useQuery("get", "/api/all", undefined, {
+        enabled: Boolean(gateway?.baseURL),
+        refetchInterval: REFRESH_INTERVAL_MS
+    });
+
+    const refetchAllThings = useCallback(() => {
+        void allThingsQuery.refetch();
+    }, [allThingsQuery]);
 
     useEffect(() => {
-        if (!gateway?.baseURL) {
+        const data = allThingsQuery.data as AxiosDeviceResponse | undefined;
+        if (!data) {
             return;
         }
+        setAllThings(data);
+        setLoadError(undefined);
+    }, [allThingsQuery.data, setAllThings]);
 
-        setIsLoading(true);
-        void loadAllThings();
-        const interval = setInterval(() => {
-            void loadAllThings();
-        }, REFRESH_INTERVAL_MS);
-
-        return () => {
-            clearInterval(interval);
-        };
-    }, [gateway?.baseURL, loadAllThings]);
+    useEffect(() => {
+        if (!allThingsQuery.isError) {
+            return;
+        }
+        setLoadError("Daten konnten nicht geladen werden.");
+    }, [allThingsQuery.isError]);
 
     const onSaveEmail = useCallback(async () => {
         if (!gateway?.baseURL || !allThings?.email || isSavingEmail) {
@@ -62,31 +68,46 @@ export default function RootLayout() {
 
         setIsSavingEmail(true);
         try {
-            await saveEmailSettings(gateway, allThings.email);
+            await saveEmailMutation.mutateAsync({
+                body: allThings.email
+            });
             setLoadError(undefined);
         } catch {
             setLoadError("E-Mail-Einstellungen konnten nicht gespeichert werden.");
         } finally {
             setIsSavingEmail(false);
         }
-    }, [allThings?.email, gateway, isSavingEmail]);
+    }, [allThings?.email, gateway?.baseURL, isSavingEmail, saveEmailMutation]);
 
+    const tabBottomPadding = Math.max(insets.bottom, 8);
+    const tabBarHeight = 56 + tabBottomPadding + 6;
     const tabScreenOptions = useMemo(() => ({
         headerShown: false,
         tabBarActiveTintColor: Colors.app.primary,
         tabBarInactiveTintColor: Colors.app.textMuted,
         tabBarHideOnKeyboard: true,
+        sceneStyle: {
+            backgroundColor: Colors.app.background,
+            paddingBottom: tabBarHeight
+        },
         tabBarStyle: {
+            position: "absolute" as const,
+            left: 0,
+            right: 0,
+            bottom: 0,
             borderTopColor: Colors.app.border,
             borderTopWidth: 1,
             backgroundColor: Colors.app.surface,
-            height: 70,
-            paddingBottom: 8,
-            paddingTop: 8,
+            height: tabBarHeight,
+            paddingBottom: tabBottomPadding,
+            paddingTop: 6,
             paddingHorizontal: 4
         },
+        tabBarItemStyle: {
+            paddingHorizontal: 2
+        },
         tabBarLabelStyle: {
-            fontSize: 11,
+            fontSize: 10,
             fontWeight: "600" as const
         },
         tabBarBadgeStyle: {
@@ -95,20 +116,12 @@ export default function RootLayout() {
             fontSize: 10,
             fontWeight: "700" as const
         }
-    }), []);
+    }), [tabBarHeight, tabBottomPadding]);
 
-    if (isLoading && !allThings) {
+    if ((allThingsQuery.isLoading || allThingsQuery.isFetching) && !allThings) {
         return (
             <ThemeProvider value={DefaultTheme}>
-                <View style={{
-                    flex: 1,
-                    backgroundColor: Colors.app.background,
-                    justifyContent: "center",
-                    alignItems: "center"
-                }}>
-                    <ActivityIndicator color={Colors.app.primary} size="large"/>
-                    <Text style={{color: Colors.app.text, marginTop: 12}}>Lade SmartHome-Daten...</Text>
-                </View>
+                <MainLoadingSkeleton/>
             </ThemeProvider>
         );
     }
@@ -122,11 +135,10 @@ export default function RootLayout() {
                     justifyContent: "center",
                     alignItems: "center",
                     padding: 20
-                }}>
+                    }}>
                     <Text style={{color: Colors.app.text, textAlign: "center", marginBottom: 20}}>{loadError}</Text>
                     <Pressable onPress={() => {
-                        setIsLoading(true);
-                        void loadAllThings();
+                        refetchAllThings();
                     }} style={{
                         backgroundColor: Colors.app.primary,
                         borderRadius: 999,
@@ -153,12 +165,12 @@ export default function RootLayout() {
                     paddingHorizontal: 12,
                     paddingVertical: 10
                 }}>
-                    <Text style={{color: Colors.app.warningText}}>{loadError}</Text>
-                    <Pressable onPress={() => {
-                        void loadAllThings();
-                    }}>
-                        <Text style={{
-                            color: Colors.app.warningText,
+                        <Text style={{color: Colors.app.warningText}}>{loadError}</Text>
+                        <Pressable onPress={() => {
+                            refetchAllThings();
+                        }}>
+                            <Text style={{
+                                color: Colors.app.warningText,
                             textDecorationLine: "underline",
                             marginTop: 6
                         }}>
@@ -189,20 +201,14 @@ export default function RootLayout() {
                         }}
                     />
                     <Tabs.Screen
-                        name="news/index"
-                        options={{
-                            title: "Nachrichten",
-                            tabBarBadge: unreadMessageCount > 0 ? unreadMessageCount : undefined,
-                            tabBarIcon: ({color}) => <MaterialCommunityIcons size={22} name="bell-outline" color={color}/>
-                        }}
-                    />
-                    <Tabs.Screen
                         name="settings/index"
                         options={{
                             title: "Einstellungen",
+                            tabBarBadge: unreadMessageCount > 0 ? unreadMessageCount : undefined,
                             tabBarIcon: ({color}) => <FontAwesome size={20} name="cog" color={color}/>
                         }}
                     />
+                    <Tabs.Screen name="news/index" options={{href: null}}/>
                     <Tabs.Screen name="devices/(tabs)/devices" options={{href: null, headerShown: false}} />
                     <Tabs.Screen name="home/index" options={{href: null}}/>
                     <Tabs.Screen

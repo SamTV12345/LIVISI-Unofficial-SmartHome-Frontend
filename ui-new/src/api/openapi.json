@@ -1,4 +1,4 @@
-{
+﻿{
   "openapi": "3.1.0",
   "info": {
     "title": "api",
@@ -429,7 +429,12 @@
             "description": "Messages",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MessageResponseDoc"
+                  }
+                }
               }
             }
           }
@@ -456,7 +461,9 @@
             "description": "Single message",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponseDoc"
+                }
               }
             }
           }
@@ -479,7 +486,9 @@
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {}
+              "schema": {
+                "$ref": "#/components/schemas/MessageReadDoc"
+              }
             }
           },
           "required": true
@@ -489,7 +498,9 @@
             "description": "Message updated",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponseDoc"
+                }
               }
             }
           }
@@ -774,6 +785,155 @@
             "type": "string"
           },
           "tags": {}
+        }
+      },
+      "MessagePropertiesDoc": {
+        "type": "object",
+        "properties": {
+          "changeReason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "deviceLocation": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "deviceName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "deviceSerial": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expiresAfterMinutes": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          },
+          "namespace": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "read": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "requesterInfo": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "shcRemoteRebootReason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "timestamp": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "MessageReadDoc": {
+        "type": "object",
+        "required": [
+          "read"
+        ],
+        "properties": {
+          "read": {
+            "type": "boolean"
+          }
+        }
+      },
+      "MessageResponseDoc": {
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "timestamp",
+          "read"
+        ],
+        "properties": {
+          "capabilities": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "class": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "devices": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "id": {
+            "type": "string"
+          },
+          "messages": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "namespace": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "properties": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/MessagePropertiesDoc"
+              }
+            ]
+          },
+          "read": {
+            "type": "boolean"
+          },
+          "timestamp": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
         }
       },
       "OidcConfigDoc": {

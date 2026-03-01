@@ -8,7 +8,6 @@ import {ActionButton} from "@/components/ui/ActionButton";
 import {StatusPill} from "@/components/ui/StatusPill";
 import {ErrorBanner} from "@/components/ErrorBanner";
 import {Colors} from "@/constants/Colors";
-import {fetchInteractions, triggerInteraction} from "@/lib/api";
 import {useContentModel} from "@/store/store";
 import {Interaction} from "@/models/Interaction";
 import {
@@ -18,6 +17,7 @@ import {
     summarizeInteraction
 } from "@/utils/automationPresentation";
 import {formatTime} from "@/utils/timeUtils";
+import {useGatewayApi} from "@/hooks/useGatewayApi";
 
 const ALL_CATEGORIES = "Alle Kategorien";
 
@@ -25,6 +25,11 @@ export default function AutomationScreen() {
     const gateway = useContentModel((state) => state.gateway);
     const allThings = useContentModel((state) => state.allThings);
     const setAllThings = useContentModel((state) => state.setAllThings);
+    const gatewayApi = useGatewayApi();
+    const interactionsQuery = gatewayApi.useQuery("get", "/interaction", undefined, {
+        enabled: Boolean(gateway?.baseURL)
+    });
+    const triggerInteractionMutation = gatewayApi.useMutation("post", "/interaction/{id}/trigger");
 
     const [refreshing, setRefreshing] = useState(false);
     const [syncPending, setSyncPending] = useState(false);
@@ -33,9 +38,25 @@ export default function AutomationScreen() {
     const [selectedCategory, setSelectedCategory] = useState(ALL_CATEGORIES);
     const [error, setError] = useState<string | undefined>(undefined);
 
+    useEffect(() => {
+        if (!interactionsQuery.data) {
+            return;
+        }
+
+        const nextInteractions = interactionsQuery.data as Interaction[];
+        const currentState = useContentModel.getState().allThings;
+        if (currentState) {
+            setAllThings({
+                ...currentState,
+                interactions: nextInteractions
+            });
+        }
+    }, [interactionsQuery.data, setAllThings]);
+
     const interactions = useMemo(() => {
-        return [...(allThings?.interactions ?? [])].sort((left, right) => (left.name ?? left.id).localeCompare(right.name ?? right.id));
-    }, [allThings?.interactions]);
+        const data = (interactionsQuery.data as Interaction[] | undefined) ?? allThings?.interactions ?? [];
+        return [...data].sort((left, right) => (left.name ?? left.id).localeCompare(right.name ?? right.id));
+    }, [allThings?.interactions, interactionsQuery.data]);
 
     const presentationLookup = useMemo(() => {
         return buildAutomationPresentationLookup(allThings);
@@ -87,7 +108,8 @@ export default function AutomationScreen() {
 
         setSyncPending(true);
         try {
-            const nextInteractions = await fetchInteractions(gateway);
+            const result = await interactionsQuery.refetch();
+            const nextInteractions = (result.data as Interaction[] | undefined) ?? [];
             const currentState = useContentModel.getState().allThings;
             if (currentState) {
                 setAllThings({
@@ -101,7 +123,7 @@ export default function AutomationScreen() {
         } finally {
             setSyncPending(false);
         }
-    }, [gateway, setAllThings, syncPending]);
+    }, [gateway?.baseURL, interactionsQuery, setAllThings, syncPending]);
 
     const refreshAll = useCallback(async () => {
         if (refreshing) {
@@ -134,7 +156,13 @@ export default function AutomationScreen() {
 
         setActiveInteractionId(interaction.id);
         try {
-            await triggerInteraction(gateway, interaction.id);
+            await triggerInteractionMutation.mutateAsync({
+                params: {
+                    path: {
+                        id: interaction.id
+                    }
+                }
+            });
             setError(undefined);
         } catch {
             setError("Automation konnte nicht ausgeloest werden.");

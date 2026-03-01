@@ -1,7 +1,6 @@
 import {FC, useMemo, useState} from "react";
 import {Alert, Pressable, StyleSheet, Text, View} from "react-native";
 import {Device} from "@/models/Device";
-import {sendDeviceAction} from "@/lib/api";
 import {useContentModel} from "@/store/store";
 import {SurfaceCard} from "@/components/ui/SurfaceCard";
 import {StatusPill} from "@/components/ui/StatusPill";
@@ -11,6 +10,7 @@ import {Href, router} from "expo-router";
 import {FENSTERKONTAKT, HEATING, RAUCHMELDER, WANDSENDER, ZWISCHENSTECKER, ZWISCHENSTECKER_OUTDOOR} from "@/constants/FieldConstants";
 import i18n from "@/i18n/i18n";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
+import {useGatewayApi} from "@/hooks/useGatewayApi";
 
 type DeviceDeciderProps = {
     device: Device;
@@ -60,6 +60,8 @@ const displayName = (device: Device): string => {
 export const DeviceDecider: FC<DeviceDeciderProps> = ({device}) => {
     const gateway = useContentModel((state) => state.gateway);
     const allThings = useContentModel((state) => state.allThings);
+    const gatewayApi = useGatewayApi();
+    const actionMutation = gatewayApi.useMutation("post", "/action");
     const [isSaving, setIsSaving] = useState(false);
     const [localOnState, setLocalOnState] = useState<boolean | undefined>(undefined);
     const [localSetpoint, setLocalSetpoint] = useState<number | undefined>(undefined);
@@ -100,7 +102,9 @@ export const DeviceDecider: FC<DeviceDeciderProps> = ({device}) => {
         }
         setIsSaving(true);
         try {
-            await sendDeviceAction(gateway, buildPayload(device, capabilityId, params));
+            await actionMutation.mutateAsync({
+                body: buildPayload(device, capabilityId, params)
+            });
         } catch {
             Alert.alert("Aktion fehlgeschlagen", "Das Gateway hat die Änderung nicht übernommen.");
         } finally {

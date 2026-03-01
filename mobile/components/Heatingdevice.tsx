@@ -1,14 +1,14 @@
 import {Device} from "@/models/Device";
 import {FC, useMemo, useState} from "react";
 import {CapabilityState} from "@/models/CapabilityState";
-import {ACTION_ENDPOINT, CAPABILITY_PREFIX} from "@/constants/FieldConstants";
+import {CAPABILITY_PREFIX} from "@/constants/FieldConstants";
 import {useDebounce} from "@/utils/useDebounce";
-import {useContentModel} from "@/store/store";
 import {ImageBackground, Modal, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {FontAwesome} from "@expo/vector-icons";
 import {ThemedText} from "@/components/ThemedText";
 import {Colors} from "@/constants/Colors";
 import {RadialSlider} from "react-native-radial-slider";
+import {useGatewayApi} from "@/hooks/useGatewayApi";
 
 
 type HeatingdeviceProps = {
@@ -22,7 +22,8 @@ export const HUMIDITY = "humidity"
 export const Heatingdevice: FC<HeatingdeviceProps> = ({
     device
                                                       })=>{
-    const baseURL = useContentModel(state=>state.baseURL)
+    const gatewayApi = useGatewayApi();
+    const actionMutation = gatewayApi.useMutation("post", "/action");
     const devMap = useMemo(()=>{
         const devMap = new Map<string, CapabilityState>()
         for (const devState of device.capabilityState!) {
@@ -63,25 +64,24 @@ export const Heatingdevice: FC<HeatingdeviceProps> = ({
     }
 
     const updatePointTemperature = async () => {
-        const heatingModel = constructHeatingModel(devMap.get(HEATING_TEMPERATURE)!)
-        fetch(baseURL+ACTION_ENDPOINT, {
-            body: JSON.stringify(heatingModel),
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-        })
-            .then(() => {
-                console.log("Changed temp")
-                //mapOfStates.get(CAPABILITY_PREFIX + state.id).state.setpointTemperature.value = currentTemperature
-                device.capabilityState!
-                    .find(state => state.id === devMap.get(HEATING_TEMPERATURE)!.id)!.state.setpointTemperature.value = currentTemperature
-            })
+        const heatingCapability = devMap.get(HEATING_TEMPERATURE);
+        if (!heatingCapability) {
+            return;
+        }
+        const heatingModel = constructHeatingModel(heatingCapability);
+        try {
+            await actionMutation.mutateAsync({
+                body: heatingModel
+            });
+            device.capabilityState!
+                .find(state => state.id === heatingCapability.id)!.state.setpointTemperature.value = currentTemperature;
+        } catch {
+            // keep local UI state; next refresh will resync values from gateway
+        }
     }
 
     useDebounce(() => {
-        updatePointTemperature()
+        void updatePointTemperature()
     }, 2000, [currentTemperature])
 
     return <TouchableOpacity style={[OnOffDeviceLayout.box, OnOffDeviceLayout.boxSelected]} onPress={()=>{

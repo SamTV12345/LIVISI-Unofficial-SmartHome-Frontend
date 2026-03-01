@@ -1,102 +1,47 @@
-import {useCallback, useEffect, useMemo, useState} from "react";
-import {RefreshControl, ScrollView, StyleSheet, Text} from "react-native";
+import {useEffect, useMemo, useState} from "react";
+import {RefreshControl, ScrollView, StyleSheet, Text, View} from "react-native";
 import {useLocalSearchParams} from "expo-router";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import {AppScreen} from "@/components/ui/AppScreen";
 import {ModernHero, ModernSection} from "@/components/ui/ModernSurface";
 import {ErrorBanner} from "@/components/ErrorBanner";
 import {Colors} from "@/constants/Colors";
-import {fetchMessageById, markMessageAsRead} from "@/lib/api";
 import {useContentModel} from "@/store/store";
-import {Message} from "@/models/Messages";
 import {determineTitleAndDescription} from "@/utils/messageDetermining";
 import {formatTime} from "@/utils/timeUtils";
+import {SkeletonBlock, SkeletonCard} from "@/components/ui/Skeleton";
+import {useGatewayApi} from "@/hooks/useGatewayApi";
 
 export default function NewsDetailScreen() {
     const {messageId} = useLocalSearchParams<{messageId: string}>();
+    const activeMessageId = Array.isArray(messageId) ? messageId[0] : messageId;
     const gateway = useContentModel((state) => state.gateway);
-    const allThings = useContentModel((state) => state.allThings);
-    const setAllThings = useContentModel((state) => state.setAllThings);
+    const gatewayApi = useGatewayApi();
 
-    const [refreshing, setRefreshing] = useState(false);
+    const {data: message, isError, isFetching, refetch} = gatewayApi.useQuery("get", "/message/{message_id}", {
+        params: {path: {message_id: activeMessageId ?? ""}}
+    }, {
+        enabled: Boolean(gateway?.baseURL && activeMessageId)
+    });
+
+    const markReadMutation = gatewayApi.useMutation("put", "/message/{message_id}");
     const [error, setError] = useState<string | undefined>(undefined);
-    const [message, setMessage] = useState<Message | undefined>(undefined);
-
-    const persistMessage = useCallback((nextMessage: Message) => {
-        const currentState = useContentModel.getState().allThings;
-        if (!currentState) {
-            return;
-        }
-        const currentMessages = currentState.messages ?? [];
-        const nextMessages = currentMessages.some((entry) => entry.id === nextMessage.id)
-            ? currentMessages.map((entry) => entry.id === nextMessage.id ? nextMessage : entry)
-            : [...currentMessages, nextMessage];
-
-        setAllThings({
-            ...currentState,
-            messages: nextMessages
-        });
-    }, [setAllThings]);
-
-    const loadMessage = useCallback(async () => {
-        if (!gateway?.baseURL || !messageId) {
-            return;
-        }
-        setRefreshing(true);
-        try {
-            const fetchedMessage = await fetchMessageById(gateway, messageId);
-            setMessage(fetchedMessage);
-            persistMessage(fetchedMessage);
-            setError(undefined);
-        } catch {
-            setError("Nachricht konnte nicht geladen werden.");
-        } finally {
-            setRefreshing(false);
-        }
-    }, [gateway, messageId, persistMessage]);
 
     useEffect(() => {
-        if (!messageId) {
-            return;
-        }
+        if (!message || message.read) return;
 
-        const localMessage = allThings?.messages?.find((entry) => entry.id === messageId);
-        if (localMessage) {
-            setMessage(localMessage);
-        }
-    }, [allThings?.messages, messageId]);
-
-    useEffect(() => {
-        void loadMessage();
-    }, [loadMessage]);
-
-    useEffect(() => {
-        if (!gateway?.baseURL || !message || message.read) {
-            return;
-        }
-
-        const markRead = async () => {
-            try {
-                await markMessageAsRead(gateway, message.id);
-                const nextMessage = {
-                    ...message,
-                    read: true
-                };
-                setMessage(nextMessage);
-                persistMessage(nextMessage);
-            } catch {
-                setError("Nachricht konnte nicht als gelesen markiert werden.");
-            }
-        };
-
-        void markRead();
-    }, [gateway, message, persistMessage]);
+        markReadMutation.mutateAsync({
+            params: {path: {message_id: message.id}},
+            body: {read: true}
+        }).then(() => void refetch())
+          .catch(() => setError("Nachricht konnte nicht als gelesen markiert werden."));
+    }, [message?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const presentation = useMemo(() => {
         return message ? determineTitleAndDescription(message) : undefined;
     }, [message]);
 
-    if (!messageId) {
+    if (!activeMessageId) {
         return (
             <AppScreen title="Nachricht" subtitle="Nachrichten-ID fehlt.">
                 <ErrorBanner message="Nachrichten-ID fehlt."/>
@@ -107,11 +52,20 @@ export default function NewsDetailScreen() {
     return (
         <AppScreen scroll={false}>
             <ScrollView
-                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => {
-                    void loadMessage();
-                }}/>}
+                refreshControl={<RefreshControl refreshing={isFetching} onRefresh={() => void refetch()}/>}
                 showsVerticalScrollIndicator={false}
             >
+                {!message && !isError && (
+                    <SkeletonCard style={{marginBottom: 14}}>
+                        <SkeletonBlock height={30} width="56%"/>
+                        <SkeletonBlock height={18} width="74%" style={{marginTop: 10}}/>
+                        <View style={{marginTop: 14, flexDirection: "row", gap: 8}}>
+                            <SkeletonBlock height={28} width="34%" radius={999}/>
+                            <SkeletonBlock height={28} width="34%" radius={999}/>
+                        </View>
+                    </SkeletonCard>
+                )}
+
                 <ModernHero
                     title={presentation?.title ?? "Nachricht"}
                     subtitle="Detailansicht einer Systemnachricht."
@@ -133,7 +87,8 @@ export default function NewsDetailScreen() {
                     ]}
                 />
 
-                {error ? <ErrorBanner message={error}/> : null}
+                {error && <ErrorBanner message={error}/>}
+                {isError && <ErrorBanner message="Nachricht konnte nicht geladen werden." onRetry={() => void refetch()}/>}
 
                 <ModernSection
                     title="Beschreibung"

@@ -7,12 +7,12 @@ import {SectionHeader} from "@/components/ui/SectionHeader";
 import {SurfaceCard} from "@/components/ui/SurfaceCard";
 import {StatusPill} from "@/components/ui/StatusPill";
 import {ActionButton} from "@/components/ui/ActionButton";
-import {sendDeviceAction} from "@/lib/api";
 import {Device} from "@/models/Device";
 import {useAllThingsRefresh} from "@/hooks/useAllThingsRefresh";
 import {ErrorBanner} from "@/components/ErrorBanner";
 import i18n from "@/i18n/i18n";
 import {FENSTERKONTAKT, HEATING, RAUCHMELDER, ZWISCHENSTECKER, ZWISCHENSTECKER_OUTDOOR} from "@/constants/FieldConstants";
+import {useGatewayApi} from "@/hooks/useGatewayApi";
 
 type CapabilityEntry = {
     id: string;
@@ -51,6 +51,8 @@ export default function DeviceDetailScreen() {
     const {deviceId} = useLocalSearchParams<{deviceId: string}>();
     const allThings = useContentModel((state) => state.allThings);
     const gateway = useContentModel((state) => state.gateway);
+    const gatewayApi = useGatewayApi();
+    const actionMutation = gatewayApi.useMutation("post", "/action");
     const {refreshing, refreshError, refreshAllThings} = useAllThingsRefresh();
 
     const [isSaving, setIsSaving] = useState(false);
@@ -102,7 +104,9 @@ export default function DeviceDetailScreen() {
         }
         setIsSaving(true);
         try {
-            await sendDeviceAction(gateway, buildAction(device, capabilityId, params));
+            await actionMutation.mutateAsync({
+                body: buildAction(device, capabilityId, params)
+            });
         } catch {
             Alert.alert("Aktion fehlgeschlagen", "Die Änderung konnte nicht gespeichert werden.");
         } finally {

@@ -6,35 +6,38 @@ import {AppScreen} from "@/components/ui/AppScreen";
 import {ModernHero, ModernSection} from "@/components/ui/ModernSurface";
 import {Colors} from "@/constants/Colors";
 import {useContentModel} from "@/store/store";
-import {useAllThingsRefresh} from "@/hooks/useAllThingsRefresh";
 import {ErrorBanner} from "@/components/ErrorBanner";
 import {determineTitleAndDescription} from "@/utils/messageDetermining";
 import {formatTime} from "@/utils/timeUtils";
+import {useGatewayApi} from "@/hooks/useGatewayApi";
 
 export default function NewsScreen() {
-    const allThings = useContentModel((state) => state.allThings);
-    const {refreshing, refreshError, refreshAllThings} = useAllThingsRefresh();
+    const gateway = useContentModel((state) => state.gateway);
+    const gatewayApi = useGatewayApi();
 
-    const sortedMessages = useMemo(() => {
-        return [...(allThings?.messages ?? [])].sort((left, right) => right.timestamp.localeCompare(left.timestamp));
-    }, [allThings?.messages]);
+    const {data, isError, isFetching, refetch} = gatewayApi.useQuery("get", "/message", undefined, {
+        enabled: Boolean(gateway?.baseURL)
+    });
 
-    const unreadCount = useMemo(() => sortedMessages.filter((message) => !message.read).length, [sortedMessages]);
+    const messages = useMemo(() => {
+        if (!data) return [];
+        return [...data].sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+    }, [data]);
+
+    const unreadCount = useMemo(() => messages.filter((m) => !m.read).length, [messages]);
 
     return (
         <AppScreen scroll={false}>
             <ScrollView
-                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => {
-                    void refreshAllThings();
-                }}/>}
+                refreshControl={<RefreshControl refreshing={isFetching} onRefresh={() => void refetch()}/>}
                 showsVerticalScrollIndicator={false}
             >
                 <ModernHero
                     title="Nachrichten"
-                    subtitle="Systemmeldungen, Warnungen und Statusupdates an einem Ort."
+                    subtitle="Systemmeldungen, Warnungen und Statusupdates."
                     badges={[
                         {
-                            label: `${sortedMessages.length} Nachrichten`,
+                            label: `${messages.length} Nachrichten`,
                             icon: <MaterialCommunityIcons size={12} color="white" name="email-outline"/>
                         },
                         {
@@ -43,14 +46,16 @@ export default function NewsScreen() {
                         }
                     ]}
                     stats={[
-                        {label: "Gesamt", value: sortedMessages.length},
+                        {label: "Gesamt", value: messages.length},
                         {label: "Ungelesen", value: unreadCount},
-                        {label: "Gelesen", value: Math.max(0, sortedMessages.length - unreadCount)},
-                        {label: "Neueste", value: sortedMessages[0] ? formatTime(sortedMessages[0].timestamp) : "-"}
+                        {label: "Gelesen", value: messages.length - unreadCount},
+                        {label: "Neueste", value: messages[0] ? formatTime(messages[0].timestamp) : "-"}
                     ]}
                 />
 
-                {refreshError ? <ErrorBanner message={refreshError}/> : null}
+                {isError && (
+                    <ErrorBanner message="Nachrichten konnten nicht geladen werden." onRetry={() => void refetch()}/>
+                )}
 
                 <ModernSection
                     title="Nachrichtenliste"
@@ -58,29 +63,27 @@ export default function NewsScreen() {
                     icon={<MaterialCommunityIcons size={18} color={Colors.app.primary} name="text-box-outline"/>}
                     style={{marginBottom: 14}}
                 >
-                    {sortedMessages.length === 0 && (
+                    {messages.length === 0 && !isFetching && (
                         <Text style={styles.emptyText}>Keine Nachrichten vorhanden.</Text>
                     )}
-                    {sortedMessages.map((message, index) => {
+                    {messages.map((message, index) => {
                         const presentation = determineTitleAndDescription(message);
                         return (
                             <Pressable
                                 key={message.id}
-                                onPress={() => {
-                                    router.push({
-                                        pathname: "/main/news/[messageId]",
-                                        params: {messageId: message.id}
-                                    });
-                                }}
+                                onPress={() => router.push({
+                                    pathname: "/main/news/[messageId]",
+                                    params: {messageId: message.id}
+                                })}
                                 style={({pressed}) => [
                                     styles.messageCard,
-                                    index < sortedMessages.length - 1 ? styles.messageCardGap : null,
-                                    pressed ? {opacity: 0.84} : null
+                                    index < messages.length - 1 && styles.messageCardGap,
+                                    pressed && {opacity: 0.84}
                                 ]}
                             >
                                 <View style={styles.messageTopRow}>
                                     <View style={[styles.statusDot, message.read ? styles.statusDotRead : styles.statusDotUnread]}/>
-                                    <Text style={[styles.messageTitle, message.read ? styles.messageTitleRead : null]} numberOfLines={1}>
+                                    <Text style={[styles.messageTitle, message.read && styles.messageTitleRead]} numberOfLines={1}>
                                         {presentation.title}
                                     </Text>
                                     <Text style={styles.messageTime}>{formatTime(message.timestamp)}</Text>
