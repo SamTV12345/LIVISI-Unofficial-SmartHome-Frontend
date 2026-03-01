@@ -7,6 +7,7 @@ import {ACTION_ENDPOINT, CAPABILITY_PREFIX} from "@/src/constants/FieldConstants
 import {formatTime} from "@/src/utils/timeUtils.ts";
 import {useNavigate} from "react-router-dom";
 import {postJson} from "@/src/api/httpClient.ts";
+import {useTranslation} from "react-i18next";
 
 type HeatingdeviceProps = {
     device: Device
@@ -40,6 +41,7 @@ const readLatestChangedFromState = (device: Device): string | undefined => {
 
 export const Heatingdevice: FC<HeatingdeviceProps> = ({device}) => {
     const navigate = useNavigate();
+    const {t} = useTranslation();
 
     const setpointCapability = useMemo(() => {
         return (device.capabilityState ?? []).find((capability) => typeof capability.state?.setpointTemperature?.value === "number");
@@ -81,7 +83,7 @@ export const Heatingdevice: FC<HeatingdeviceProps> = ({device}) => {
                     }
                 }
             }).catch(() => {
-                setError("Solltemperatur konnte nicht gespeichert werden.");
+                setError(t("ui_new.heating_device.setpoint_save_failed"));
             }).finally(() => {
                 setPending(false);
             });
@@ -90,7 +92,7 @@ export const Heatingdevice: FC<HeatingdeviceProps> = ({device}) => {
         return () => {
             clearTimeout(timeout);
         };
-    }, [device.manufacturer, setpointCapability, setpointFromStore, setpointValue]);
+    }, [device.manufacturer, setpointCapability, setpointFromStore, setpointValue, t]);
 
     return <Card
         key={device.id}
@@ -105,13 +107,13 @@ export const Heatingdevice: FC<HeatingdeviceProps> = ({device}) => {
                 {device.locationData && <CardDescription>{device.locationData?.config.name}</CardDescription>}
                 <div className="mt-2 flex flex-wrap gap-2">
                     <span className="inline-flex rounded-full border border-cyan-200 bg-cyan-100 px-2 py-0.5 text-xs font-semibold text-cyan-800">
-                        Ist: {typeof currentTemperature === "number" ? `${currentTemperature.toFixed(1)} °C` : "-"}
+                        {t("ui_new.heating_device.current")}: {typeof currentTemperature === "number" ? `${currentTemperature.toFixed(1)} °C` : "-"}
                     </span>
                     <span className="inline-flex rounded-full border border-blue-200 bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-800">
-                        Feuchte: {typeof humidity === "number" ? `${Math.round(humidity)} %` : "-"}
+                        {t("ui_new.heating_device.humidity")}: {typeof humidity === "number" ? `${Math.round(humidity)} %` : "-"}
                     </span>
                     <span className="inline-flex rounded-full border border-violet-200 bg-violet-100 px-2 py-0.5 text-xs font-semibold text-violet-700">
-                        Letztes Event: {latestEvent ? formatTime(latestEvent) : "-"}
+                        {t("ui_new.heating_device.last_event")}: {latestEvent ? formatTime(latestEvent) : "-"}
                     </span>
                 </div>
             </div>
@@ -125,7 +127,7 @@ export const Heatingdevice: FC<HeatingdeviceProps> = ({device}) => {
                 <div className="flex flex-wrap items-center gap-3">
                     <div className="inline-flex items-center gap-2 text-sm text-slate-600">
                         <Thermometer size={14}/>
-                        Solltemperatur
+                        {t("ui_new.heating_device.setpoint")}
                     </div>
                     <div className="ml-auto text-2xl font-semibold text-slate-900">{setpointValue.toFixed(1)} °C</div>
                 </div>
@@ -150,7 +152,7 @@ export const Heatingdevice: FC<HeatingdeviceProps> = ({device}) => {
                     </div>
                 </div>
                 <div className="mt-2 text-xs text-slate-500">
-                    {pending ? "Speichere..." : "Automatisch gespeichert"}
+                    {pending ? t("ui_new.heating_device.saving") : t("ui_new.heating_device.auto_saved")}
                 </div>
                 {error && (
                     <div className="mt-2 inline-flex items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs text-red-700">
@@ -162,15 +164,15 @@ export const Heatingdevice: FC<HeatingdeviceProps> = ({device}) => {
 
             <div className="mt-3 grid grid-cols-3 gap-2 text-sm">
                 <div className="rounded-md border border-gray-200 p-2 text-center">
-                    <div className="text-xs text-slate-500">Soll</div>
+                    <div className="text-xs text-slate-500">{t("ui_new.heating_device.target_short")}</div>
                     <div className="font-semibold text-slate-900">{setpointValue.toFixed(1)} °C</div>
                 </div>
                 <div className="rounded-md border border-gray-200 p-2 text-center">
-                    <div className="text-xs text-slate-500">Ist</div>
+                    <div className="text-xs text-slate-500">{t("ui_new.heating_device.current_short")}</div>
                     <div className="font-semibold text-slate-900">{typeof currentTemperature === "number" ? `${currentTemperature.toFixed(1)} °C` : "-"}</div>
                 </div>
                 <div className="rounded-md border border-gray-200 p-2 text-center">
-                    <div className="text-xs text-slate-500">Feuchte</div>
+                    <div className="text-xs text-slate-500">{t("ui_new.heating_device.humidity_short")}</div>
                     <div className="font-semibold text-slate-900">{typeof humidity === "number" ? `${Math.round(humidity)} %` : "-"}</div>
                 </div>
             </div>

@@ -1,26 +1,28 @@
 import {PageComponent} from "@/src/components/actionComponents/PageComponent.tsx";
 import {PageBox} from "@/src/components/actionComponents/PageBox.tsx";
 import {useNetworkStatus} from "@/src/hooks/useNetworkStatus.ts";
+import {useTranslation} from "react-i18next";
 
 export const LANPage = ()=>{
     const {network, activeConnection, loading, error, refresh} = useNetworkStatus();
+    const {t} = useTranslation();
 
-    return <PageComponent title="LAN" to="/settings">
+    return <PageComponent title={t("ui_new.lan.title")} to="/settings">
         <div className="space-y-4 p-4 md:p-6">
-            <PageBox variant="gray" description={activeConnection === "lan" ? "LAN ist aktuell der aktive Adapter." : "LAN ist aktuell nicht der aktive Adapter."}/>
+            <PageBox variant="gray" description={activeConnection === "lan" ? t("ui_new.lan.active_adapter") : t("ui_new.lan.inactive_adapter")}/>
             <PageBox>
             <div className="grid grid-cols-2">
-                <div>MAC</div>
+                <div>{t("ui_new.common.mac")}</div>
                 <div>{network?.ethMacAddress || "-"}</div>
-                <div>IP</div>
+                <div>{t("ui_new.common.ip")}</div>
                 <div>{network?.ethIpAddress || "-"}</div>
-                <div>Kabel</div>
-                <div>{network?.ethCableAttached ? "Eingesteckt" : "Nicht eingesteckt"}</div>
-                <div>Status</div>
-                <div>{activeConnection === "lan" ? "Verbunden" : "Nicht verbunden"}</div>
+                <div>{t("ui_new.lan.cable")}</div>
+                <div>{network?.ethCableAttached ? t("ui_new.lan.cable_plugged") : t("ui_new.lan.cable_unplugged")}</div>
+                <div>{t("ui_new.common.status")}</div>
+                <div>{activeConnection === "lan" ? t("ui_new.common.connected") : t("ui_new.common.not_connected")}</div>
             </div>
             </PageBox>
-            {(loading || error) && <PageBox variant="gray" description={loading ? "Lade LAN-Status..." : error}/>}
+            {(loading || error) && <PageBox variant="gray" description={loading ? t("ui_new.lan.loading_status") : error}/>}
             <div className="pt-1">
                 <button
                     type="button"
@@ -29,7 +31,7 @@ export const LANPage = ()=>{
                     }}
                     className="rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
                 >
-                    Aktualisieren
+                    {t("ui_new.common.refresh")}
                 </button>
             </div>
         </div>

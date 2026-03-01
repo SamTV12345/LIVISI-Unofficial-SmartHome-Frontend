@@ -4,6 +4,7 @@ import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/src/c
 import {LayoutGrid, Radio, Zap} from "lucide-react";
 import {useNavigate} from "react-router-dom";
 import {formatTime} from "@/src/utils/timeUtils.ts";
+import {useTranslation} from "react-i18next";
 
 type WandSenderProps = {
     device: Device
@@ -11,6 +12,7 @@ type WandSenderProps = {
 
 export const WandSender: FC<WandSenderProps> = ({device}) => {
     const navigate = useNavigate();
+    const {t} = useTranslation();
 
     const capabilityCount = (device.capabilityState ?? []).length;
     const latestChange = useMemo(() => {
@@ -38,10 +40,10 @@ export const WandSender: FC<WandSenderProps> = ({device}) => {
                 {device.locationData && <CardDescription>{device.locationData?.config.name}</CardDescription>}
                 <div className="mt-2 flex flex-wrap gap-2">
                     <span className="inline-flex rounded-full border border-violet-200 bg-violet-100 px-2 py-0.5 text-xs font-semibold text-violet-700">
-                        Wandtaster
+                        {t("ui_new.wand_sender.button_label")}
                     </span>
                     <span className="inline-flex rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
-                        {capabilityCount} Capabilities
+                        {t("ui_new.wand_sender.capabilities_count", {count: capabilityCount})}
                     </span>
                 </div>
             </div>
@@ -54,16 +56,16 @@ export const WandSender: FC<WandSenderProps> = ({device}) => {
             <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
                 <div className="grid grid-cols-2 gap-2">
                     <div className="rounded-md border border-gray-200 bg-white p-2 text-center">
-                        <div className="inline-flex items-center gap-1 text-xs text-slate-500"><LayoutGrid size={12}/>Typ</div>
+                        <div className="inline-flex items-center gap-1 text-xs text-slate-500"><LayoutGrid size={12}/>{t("ui_new.wand_sender.type")}</div>
                         <div className="mt-1 text-sm font-semibold text-slate-900">{device.type}</div>
                     </div>
                     <div className="rounded-md border border-gray-200 bg-white p-2 text-center">
-                        <div className="inline-flex items-center gap-1 text-xs text-slate-500"><Radio size={12}/>Letztes Event</div>
+                        <div className="inline-flex items-center gap-1 text-xs text-slate-500"><Radio size={12}/>{t("ui_new.wand_sender.last_event")}</div>
                         <div className="mt-1 text-sm font-semibold text-slate-900">{latestChange ? formatTime(latestChange) : "-"}</div>
                     </div>
                 </div>
                 <div className="mt-3 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-xs text-violet-800">
-                    Dieser Wandsender steuert Szenarien oder gekoppelte Aktionen.
+                    {t("ui_new.wand_sender.description")}
                 </div>
             </div>
         </CardContent>

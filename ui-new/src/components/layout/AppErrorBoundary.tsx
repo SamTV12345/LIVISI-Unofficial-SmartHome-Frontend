@@ -1,4 +1,5 @@
 import {Component, ReactNode} from "react";
+import {i18next} from "@/src/language/i18n.ts";
 
 type AppErrorBoundaryProps = {
     children: ReactNode
@@ -23,7 +24,7 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
             return (
                 <div className="p-6">
                     <div className="rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-700">
-                        Ein unerwarteter Fehler ist aufgetreten. Bitte Seite neu laden.
+                        {i18next.t("ui_new.app_error.unexpected")}
                     </div>
                 </div>
             );

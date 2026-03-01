@@ -10,6 +10,7 @@ import {
     normalizeHeatingPeriods,
     timeInputToMinutes
 } from "@/src/utils/heatingAutomation.ts";
+import {useTranslation} from "react-i18next";
 
 type HeatingAutomationEditorProps = {
     schedules: HeatingDaySchedule[],
@@ -41,10 +42,11 @@ const updateSchedulePeriods = (
 };
 
 export const HeatingAutomationEditor = ({schedules, roomName, onChange}: HeatingAutomationEditorProps) => {
+    const {t} = useTranslation();
     if (schedules.length === 0) {
         return (
             <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
-                Keine Heizplan-Daten gefunden.
+                {t("ui_new.heating_editor.no_data")}
             </div>
         );
     }
@@ -64,9 +66,9 @@ export const HeatingAutomationEditor = ({schedules, roomName, onChange}: Heating
                                 {getHeatingDayLabel(schedule.dayMask)}
                             </span>
                             <span className="inline-flex rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
-                                {periods.length} Zeitraeume
+                                {t("ui_new.heating_editor.time_spans_count", {count: periods.length})}
                             </span>
-                            {roomName && <span className="inline-flex rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">Raum: {roomName}</span>}
+                            {roomName && <span className="inline-flex rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">{t("ui_new.device_detail.room")}: {roomName}</span>}
                         </div>
 
                         <div className="mt-4 space-y-2">
@@ -98,7 +100,7 @@ export const HeatingAutomationEditor = ({schedules, roomName, onChange}: Heating
 
                         <div className="mt-4 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
                             <div className="flex items-center justify-between gap-3">
-                                <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">Grundtemperatur</div>
+                                <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t("ui_new.heating_editor.base_temperature")}</div>
                                 <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">{schedule.baseTemperature.toFixed(1)} °C</div>
                             </div>
                             <div className="mt-3">
@@ -125,21 +127,21 @@ export const HeatingAutomationEditor = ({schedules, roomName, onChange}: Heating
                         <div className="mt-4 space-y-3">
                             {periods.length === 0 && (
                                 <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 py-3 text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
-                                    Keine Zeitraeume gesetzt. Fuege einen Zeitraum hinzu.
+                                    {t("ui_new.heating_editor.no_periods")}
                                 </div>
                             )}
 
                             {periods.map((period, periodIndex) => (
                                 <div key={period.id} className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
                                     <div className="flex items-center">
-                                        <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Zeitraum {periodIndex + 1}</div>
+                                        <div className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{t("ui_new.heating_editor.period_number", {index: periodIndex + 1})}</div>
                                         <button
                                             type="button"
                                             className="ml-auto rounded-md border border-red-200 bg-red-50 p-1.5 text-red-600 hover:bg-red-100 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-950/60"
                                             onClick={() => {
                                                 onChange(updateSchedulePeriods(schedules, scheduleIndex, (current) => current.filter((entry) => entry.id !== period.id)));
                                             }}
-                                            aria-label="Zeitraum entfernen"
+                                            aria-label={t("ui_new.heating_editor.remove_period")}
                                         >
                                             <Trash2 size={14}/>
                                         </button>
@@ -147,7 +149,7 @@ export const HeatingAutomationEditor = ({schedules, roomName, onChange}: Heating
 
                                     <div className="mt-3 grid gap-3 md:grid-cols-2">
                                         <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                                            Von
+                                            {t("ui_new.common.from")}
                                             <input
                                                 type="time"
                                                 value={minutesToTimeInput(period.startMinutes)}
@@ -163,7 +165,7 @@ export const HeatingAutomationEditor = ({schedules, roomName, onChange}: Heating
                                             />
                                         </label>
                                         <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                                            Bis
+                                            {t("ui_new.common.to")}
                                             <input
                                                 type="time"
                                                 value={period.endMinutes === MINUTES_PER_DAY ? "23:59" : minutesToTimeInput(period.endMinutes)}
@@ -181,7 +183,7 @@ export const HeatingAutomationEditor = ({schedules, roomName, onChange}: Heating
                                     </div>
 
                                     <div className="mt-3 flex items-center justify-between">
-                                        <div className="text-xs font-medium text-slate-700 dark:text-slate-300">Temperatur</div>
+                                        <div className="text-xs font-medium text-slate-700 dark:text-slate-300">{t("ui_new.common.temperature")}</div>
                                         <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">{period.temperature.toFixed(1)} °C</div>
                                     </div>
                                     <div className="mt-2">
@@ -218,7 +220,7 @@ export const HeatingAutomationEditor = ({schedules, roomName, onChange}: Heating
                                     onChange(updateSchedulePeriods(schedules, scheduleIndex, (current) => [...current, nextPeriod]));
                                 }}
                             >
-                                <span className="inline-flex items-center gap-2"><Plus size={14}/>Zeitraum hinzufuegen</span>
+                                <span className="inline-flex items-center gap-2"><Plus size={14}/>{t("ui_new.heating_editor.add_period")}</span>
                             </PrimaryButton>
                         </div>
                     </div>

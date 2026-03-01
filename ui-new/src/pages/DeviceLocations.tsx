@@ -8,10 +8,12 @@ import {Suspense, useState} from "react";
 import {PortalDialog} from "@/src/components/actionComponents/PortalDialog.tsx";
 import {apiQueryClient} from "@/src/api/openapiClient.ts";
 import {PageSkeleton} from "@/src/components/layout/PageSkeleton.tsx";
+import {useTranslation} from "react-i18next";
 
 const DeviceLocationsContent = () => {
     const allthings = useContentModel((state) => state.allThings);
     const [deviceDialogOpen, setDeviceDialogOpen] = useState(false);
+    const {t} = useTranslation();
     const {data: locationsResponse} = apiQueryClient.useSuspenseQuery("get", "/location");
     const locations = (locationsResponse as LocationResponse[] | undefined) ?? [];
 
@@ -27,14 +29,14 @@ const DeviceLocationsContent = () => {
 
 
     const AddDialogComponent = () => {
-        return <PortalDialog setDeviceDialogOpen={setDeviceDialogOpen} deviceDialogOpen={deviceDialogOpen} title="Ort hinzufügen" description="Fügt einen Ort zur besseren Übersicht hinzu">
+        return <PortalDialog setDeviceDialogOpen={setDeviceDialogOpen} deviceDialogOpen={deviceDialogOpen} title={t("ui_new.locations.add_title")} description={t("ui_new.locations.add_description")}>
             <div className="mt-4 rounded-lg border border-dashed border-gray-300 bg-gray-50 p-3 text-sm text-gray-500">
-                Dieses Dialog-Formular wird im nächsten Schritt ergänzt.
+                {t("ui_new.locations.add_form_todo")}
             </div>
         </PortalDialog>
     };
 
-    return <PageComponent title={"Gerätestandorte"} to="/settings" actionButton={<button onClick={()=>{
+    return <PageComponent title={t("ui_new.locations.page_title")} to="/settings" actionButton={<button onClick={()=>{
         setDeviceDialogOpen(true)
     }}>
         <Plus/>

@@ -16,10 +16,12 @@ import {
     readAutomationState,
     summarizeInteraction
 } from "@/src/utils/automationPresentation.ts";
+import {useTranslation} from "react-i18next";
 
-const ALL_CATEGORIES = "Alle Kategorien";
+const ALL_CATEGORIES = "__all_categories__";
 
 const ScenarioScreenContent = () => {
+    const {t} = useTranslation();
     const allThings = useContentModel((state) => state.allThings);
     const setAllThings = useContentModel((state) => state.setAllThings);
     const [activeInteractionId, setActiveInteractionId] = useState<string | undefined>(undefined);
@@ -90,11 +92,11 @@ const ScenarioScreenContent = () => {
             }
         } catch (triggerError) {
             console.error("Could not trigger interaction", triggerError);
-            setActionError("Automation konnte nicht ausgelöst werden.");
+            setActionError(t("ui_new.automation.trigger_failed"));
         } finally {
             setActiveInteractionId(undefined);
         }
-    }, []);
+    }, [t]);
 
     const refreshFromBackend = useCallback(async () => {
         setRefreshPending(true);
@@ -113,21 +115,21 @@ const ScenarioScreenContent = () => {
             setActionError(undefined);
         } catch (refreshError) {
             console.error("Could not refresh interactions", refreshError);
-            setActionError("Automationen konnten nicht aktualisiert werden.");
+            setActionError(t("ui_new.automation.refresh_failed"));
         } finally {
             setRefreshPending(false);
         }
-    }, [setAllThings]);
+    }, [setAllThings, t]);
 
-    return <PageComponent title="Automation">
+    return <PageComponent title={t("ui_new.automation.page_title")}>
         <div className="space-y-5 p-4 md:p-6">
             <ModernHero
-                title="Automation"
-                subtitle="Livisi-Interaktionen als moderne Wenn-Dann-Automationen verwalten, ausführen und überblicken."
+                title={t("ui_new.automation.hero_title")}
+                subtitle={t("ui_new.automation.hero_subtitle")}
                 badges={[
-                    {label: `${filteredInteractions.length} Automationen`, icon: <Workflow size={14}/>},
-                    {label: `${aggregatedStats.rules} Regeln`, icon: <Layers size={14}/>},
-                    {label: `${aggregatedStats.actions} Aktionen`, icon: <Bolt size={14}/>}
+                    {label: t("ui_new.automation.count_automations", {count: filteredInteractions.length}), icon: <Workflow size={14}/>},
+                    {label: t("ui_new.automation.count_rules", {count: aggregatedStats.rules}), icon: <Layers size={14}/>},
+                    {label: t("ui_new.automation.count_actions", {count: aggregatedStats.actions}), icon: <Bolt size={14}/>}
                 ]}
                 actionSlot={
                     <div className="min-w-[180px]">
@@ -139,15 +141,15 @@ const ScenarioScreenContent = () => {
                             }}
                             className="bg-white/15 border-white/40 text-white hover:bg-white/25"
                         >
-                            {refreshPending ? "Aktualisiert..." : "Synchronisieren"}
+                            {refreshPending ? t("ui_new.automation.syncing") : t("ui_new.automation.sync")}
                         </PrimaryButton>
                     </div>
                 }
                 stats={[
-                    {label: "Gefiltert", value: filteredInteractions.length},
-                    {label: "Trigger", value: aggregatedStats.triggers},
-                    {label: "Aktionen", value: aggregatedStats.actions},
-                    {label: "Kategorien", value: categories.length - 1}
+                    {label: t("ui_new.automation.stats_filtered"), value: filteredInteractions.length},
+                    {label: t("ui_new.automation.stats_triggers"), value: aggregatedStats.triggers},
+                    {label: t("ui_new.automation.stats_actions"), value: aggregatedStats.actions},
+                    {label: t("ui_new.automation.stats_categories"), value: categories.length - 1}
                 ]}
             />
 
@@ -155,14 +157,14 @@ const ScenarioScreenContent = () => {
                 <div className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300">{actionError}</div>
             )}
 
-            <ModernSection title="Filter" description="Suche und Kategorisierung für Automationen." icon={<Search size={18}/>}>
+            <ModernSection title={t("ui_new.automation.filter_title")} description={t("ui_new.automation.filter_description")} icon={<Search size={18}/>}>
                 <div className="grid gap-3">
                     <label className="text-sm text-slate-700 dark:text-slate-300">
-                        <span className="mb-1 block font-medium">Suche</span>
+                        <span className="mb-1 block font-medium">{t("ui_new.automation.search_label")}</span>
                         <input
                             value={searchTerm}
                             onChange={(event) => setSearchTerm(event.target.value)}
-                            placeholder="Name, Beschreibung oder ID"
+                            placeholder={t("ui_new.automation.search_placeholder")}
                             className="w-full rounded-lg border border-gray-300 bg-white p-2 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-100 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-cyan-500 dark:focus:ring-cyan-900/50"
                         />
                     </label>
@@ -177,7 +179,7 @@ const ScenarioScreenContent = () => {
                                     : "rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
                                 }
                             >
-                                {category}
+                                {category === ALL_CATEGORIES ? t("ui_new.automation.all_categories") : category}
                             </button>
                         ))}
                     </div>
@@ -185,13 +187,13 @@ const ScenarioScreenContent = () => {
             </ModernSection>
 
             {filteredInteractions.length === 0 && (
-                <ModernSection title="Keine Automationen" description="Es wurde kein passender Eintrag gefunden.">
-                    <div className="text-sm text-gray-500 dark:text-slate-400">Passe Filter an oder synchronisiere die Interaktionen erneut.</div>
+                <ModernSection title={t("ui_new.automation.none_title")} description={t("ui_new.automation.none_description")}>
+                    <div className="text-sm text-gray-500 dark:text-slate-400">{t("ui_new.automation.none_hint")}</div>
                 </ModernSection>
             )}
 
             {filteredInteractions.length > 0 && (
-                <ModernSection title="Automationen" description="WENN/DANN Übersicht, direkte Ausführung und Bearbeitung." icon={<Sparkles size={18}/>}>
+                <ModernSection title={t("ui_new.automation.section_title")} description={t("ui_new.automation.section_description")} icon={<Sparkles size={18}/>}>
                     <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
                         {filteredInteractions.map((interaction) => {
                             const summary = summarizeInteraction(interaction, presentationLookup);
@@ -203,8 +205,8 @@ const ScenarioScreenContent = () => {
                                     <div className="flex items-start gap-2">
                                         <div>
                                             <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">{interaction.name ?? interaction.id}</h3>
-                                            <div className="mt-1 text-xs text-slate-500 dark:text-slate-300">Kategorie: {category}</div>
-                                            <div className="mt-1 text-xs text-slate-400 dark:text-slate-500">Aktualisiert: {formatTime(interaction.modified)}</div>
+                                            <div className="mt-1 text-xs text-slate-500 dark:text-slate-300">{t("ui_new.automation.category_label")}: {category}</div>
+                                            <div className="mt-1 text-xs text-slate-400 dark:text-slate-500">{t("ui_new.automation.updated_label", {time: formatTime(interaction.modified)})}</div>
                                         </div>
                                         <span className={state === "Aktiv"
                                             ? "ml-auto inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
@@ -216,24 +218,24 @@ const ScenarioScreenContent = () => {
                                         </span>
                                     </div>
 
-                                    <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-                                        <div className="rounded-lg border border-slate-200 bg-white px-2 py-2 text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">{summary.totalRuleCount} Regeln</div>
-                                        <div className="rounded-lg border border-slate-200 bg-white px-2 py-2 text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">{summary.totalTriggerCount} Trigger</div>
-                                        <div className="rounded-lg border border-slate-200 bg-white px-2 py-2 text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">{summary.totalActionCount} Aktionen</div>
+                                        <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                                        <div className="rounded-lg border border-slate-200 bg-white px-2 py-2 text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">{t("ui_new.automation.count_rules", {count: summary.totalRuleCount})}</div>
+                                        <div className="rounded-lg border border-slate-200 bg-white px-2 py-2 text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">{t("ui_new.automation.count_triggers", {count: summary.totalTriggerCount})}</div>
+                                        <div className="rounded-lg border border-slate-200 bg-white px-2 py-2 text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">{t("ui_new.automation.count_actions", {count: summary.totalActionCount})}</div>
                                     </div>
 
                                     <div className="mt-3 space-y-2">
                                         {summary.rulePreviews.slice(0, 2).map((rulePreview, index) => (
                                             <div key={`${interaction.id}-rule-${index}`} className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900/80">
-                                                <div className="text-[11px] font-semibold uppercase tracking-wide text-cyan-700 dark:text-cyan-300">Wenn</div>
+                                                <div className="text-[11px] font-semibold uppercase tracking-wide text-cyan-700 dark:text-cyan-300">{t("ui_new.automation.when")}</div>
                                                 <div className="mt-2 flex flex-wrap gap-2">
-                                                    {(rulePreview.whenChips.length > 0 ? rulePreview.whenChips : ["Kein Trigger"]).slice(0, 4).map((chip) => (
+                                                    {(rulePreview.whenChips.length > 0 ? rulePreview.whenChips : [t("ui_new.automation.no_trigger")]).slice(0, 4).map((chip) => (
                                                         <span key={chip} className="rounded-md border border-cyan-100 bg-cyan-50 px-2 py-1 text-[11px] text-cyan-800 dark:border-cyan-900/70 dark:bg-cyan-950/40 dark:text-cyan-200">{chip}</span>
                                                     ))}
                                                 </div>
-                                                <div className="mt-3 text-[11px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Dann</div>
+                                                <div className="mt-3 text-[11px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">{t("ui_new.automation.then")}</div>
                                                 <div className="mt-2 flex flex-wrap gap-2">
-                                                    {(rulePreview.thenChips.length > 0 ? rulePreview.thenChips : ["Keine Aktion"]).slice(0, 4).map((chip) => (
+                                                    {(rulePreview.thenChips.length > 0 ? rulePreview.thenChips : [t("ui_new.automation.no_action")]).slice(0, 4).map((chip) => (
                                                         <span key={chip} className="rounded-md border border-emerald-100 bg-emerald-50 px-2 py-1 text-[11px] text-emerald-800 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-200">{chip}</span>
                                                     ))}
                                                 </div>
@@ -250,7 +252,7 @@ const ScenarioScreenContent = () => {
                                                 void triggerInteraction(interaction.id);
                                             }}
                                         >
-                                            <span className="inline-flex items-center gap-2"><PlayCircle size={14}/>{activeInteractionId === interaction.id ? "Wird ausgeführt..." : "Jetzt ausführen"}</span>
+                                            <span className="inline-flex items-center gap-2"><PlayCircle size={14}/>{activeInteractionId === interaction.id ? t("ui_new.automation.executing") : t("ui_new.automation.execute_now")}</span>
                                         </PrimaryButton>
                                         <PrimaryButton
                                             status="warning"
@@ -258,7 +260,7 @@ const ScenarioScreenContent = () => {
                                                 navigate(`/automation/${interaction.id}`);
                                             }}
                                         >
-                                            Details
+                                            {t("ui_new.automation.details")}
                                         </PrimaryButton>
                                     </div>
                                 </div>

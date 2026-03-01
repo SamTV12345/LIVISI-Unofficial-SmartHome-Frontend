@@ -44,16 +44,16 @@ const LocationUpdateScreenContent = () => {
     }, [locationResponse]);
 
     if (!locationId) {
-        return <PageComponent title="Ort bearbeiten" to="/settings/deviceLocations">
+        return <PageComponent title={t("ui_new.location_update.edit_title")} to="/settings/deviceLocations">
             <div className="space-y-4 p-4 md:p-6">
-                <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">Orts-ID fehlt.</div>
+                <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">{t("ui_new.location_update.location_id_missing")}</div>
             </div>
         </PageComponent>;
     }
 
-    return <PageComponent title={location?.config.name || "Ort bearbeiten"} to="/settings/deviceLocations">
+    return <PageComponent title={location?.config.name || t("ui_new.location_update.edit_title")} to="/settings/deviceLocations">
         <div className="space-y-4 p-4 md:p-6">
-            <PageBox variant="gray" title="Ort ändern"/>
+            <PageBox variant="gray" title={t("ui_new.location_update.rename_title")}/>
                 <PageBox title="">
                     <Input value={location?.config.name} onChange={(event)=>setLocation({
                         ...location,
@@ -63,7 +63,7 @@ const LocationUpdateScreenContent = () => {
                         }
                     } as LocationResponse)}/>
                 </PageBox>
-            <PageBox title="Geräte im Bereich">
+            <PageBox title={t("ui_new.location_update.devices_in_area")}>
                 <div className="sm:grid-cols-1 grid grid-cols-2 gap-3">{
                     memoizedDevices.map(v=>{
                         return <DeviceDecider device={v!} key={v.id}/>

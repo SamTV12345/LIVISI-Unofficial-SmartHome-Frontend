@@ -5,32 +5,34 @@ import {useContentModel} from "@/src/store.tsx";
 import {useMemo, useState} from "react";
 import {useNavigate} from "react-router-dom";
 import {postJson} from "@/src/api/httpClient.ts";
+import {useTranslation} from "react-i18next";
 
 const LOGGING_TIME = [
     {
-        display: "2 Stunden",
+        key: "ui_new.errors.logging_time_2h",
         value: 120
     },
     {
-        display: "4 Stunden",
+        key: "ui_new.errors.logging_time_4h",
         value: 240
     },
     {
-        display: "8 Stunden",
+        key: "ui_new.errors.logging_time_8h",
         value: 480
     },
     {
-        display: "24 Stunden",
+        key: "ui_new.errors.logging_time_24h",
         value: 1440
     },
     {
-        display: "7 Tage",
+        key: "ui_new.errors.logging_time_7d",
         value: 5040
     }
 ]
 
 
 export const ErrorAdvancedPage = ()=>{
+    const {t} = useTranslation();
     const allThings = useContentModel(state => state.allThings)
     const [loggingTime, setLoggingTime] = useState<number>(0)
     const navigate = useNavigate()
@@ -39,13 +41,13 @@ export const ErrorAdvancedPage = ()=>{
         return allThings?.devices['00000000000000000000000000000000']
     },    [allThings])
 
-    return <PageComponent title="Erweiterte Fehlersuche">
+    return <PageComponent title={t("ui_new.errors.advanced_title")}>
         <div className="space-y-4 p-4 md:p-6">
-            <PageBox description="Wählen Sie die Dauer, in der die Daten aufgezeichnet werden sollen." variant="gray">
+            <PageBox description={t("ui_new.errors.advanced_duration_description")} variant="gray">
             </PageBox>
             {
                 LOGGING_TIME.map((time)=>{
-                    return <PageBox key={time.display} title={time.display} selected={loggingTime === time.value} onClick={()=>{
+                    return <PageBox key={time.key} title={t(time.key)} selected={loggingTime === time.value} onClick={()=>{
                         setLoggingTime(time.value)
                     }}><div></div></PageBox>
                 })
@@ -70,7 +72,7 @@ export const ErrorAdvancedPage = ()=>{
                     }
                 })
                 navigate("/help/errors")
-            }}>OK</PrimaryButton>
+            }}>{t("ui_new.common.ok")}</PrimaryButton>
         </div>
     </PageComponent>
 }

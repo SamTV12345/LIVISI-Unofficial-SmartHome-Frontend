@@ -10,6 +10,7 @@ import {
     switchActionKind,
     switchTriggerKind
 } from "@/src/utils/automationRuleEditor.ts";
+import {useTranslation} from "react-i18next";
 
 type AutomationRuleEditorProps = {
     drafts: AutomationRuleDraft[],
@@ -38,6 +39,7 @@ const updateRule = (drafts: AutomationRuleDraft[], index: number, nextRule: Auto
 };
 
 export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRuleEditorProps) => {
+    const {t} = useTranslation();
     const addRule = () => {
         onChange([...drafts, createDefaultRuleDraft(catalog)]);
     };
@@ -46,10 +48,10 @@ export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRule
         return (
             <div className="space-y-3">
                 <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
-                    Noch keine Regeln vorhanden.
+                    {t("ui_new.rule_editor.no_rules")}
                 </div>
                 <PrimaryButton onClick={addRule}>
-                    <span className="inline-flex items-center gap-2"><Plus size={14}/>Neue Regel hinzufuegen</span>
+                    <span className="inline-flex items-center gap-2"><Plus size={14}/>{t("ui_new.rule_editor.add_rule")}</span>
                 </PrimaryButton>
             </div>
         );
@@ -66,12 +68,12 @@ export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRule
                 return (
                     <div key={`rule-editor-${ruleIndex}`} className="rounded-xl border border-slate-200 bg-gradient-to-b from-slate-50 to-white p-4 dark:border-slate-700 dark:from-slate-900 dark:to-slate-950">
                         <div className="flex items-center gap-2">
-                            <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">Regel {ruleIndex + 1}</div>
+                            <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t("ui_new.rule_editor.rule_number", {index: ruleIndex + 1})}</div>
                             <button
                                 type="button"
                                 className="ml-auto rounded-md border border-red-200 bg-red-50 p-1.5 text-red-600 hover:bg-red-100 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-950/60"
                                 onClick={() => onChange(drafts.filter((_, index) => index !== ruleIndex))}
-                                aria-label="Regel entfernen"
+                                aria-label={t("ui_new.rule_editor.remove_rule")}
                             >
                                 <Trash2 size={14}/>
                             </button>
@@ -79,17 +81,17 @@ export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRule
 
                         {!draft.editable && (
                             <div className="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900/70 dark:bg-amber-950/40 dark:text-amber-300">
-                                <div className="inline-flex items-center gap-2"><TriangleAlert size={14}/>Diese Regel hat ein komplexes Format und kann hier nicht direkt bearbeitet werden. Sie bleibt beim Speichern unveraendert.</div>
+                                <div className="inline-flex items-center gap-2"><TriangleAlert size={14}/>{t("ui_new.rule_editor.complex_rule_readonly")}</div>
                             </div>
                         )}
 
                         {draft.editable && (
                             <div className="mt-3 space-y-4">
                                 <div className="rounded-lg border border-cyan-100 bg-cyan-50/50 p-3 dark:border-cyan-900/70 dark:bg-cyan-950/30">
-                                    <div className="text-xs font-semibold uppercase tracking-wide text-cyan-700 dark:text-cyan-300">Wenn</div>
+                                    <div className="text-xs font-semibold uppercase tracking-wide text-cyan-700 dark:text-cyan-300">{t("ui_new.automation.when")}</div>
                                     <div className="mt-3 grid gap-3 md:grid-cols-2">
                                         <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                                            Ausloeser
+                                            {t("ui_new.rule_editor.trigger_label")}
                                             <select
                                                 className={selectClassName}
                                                 value={draft.trigger.kind}
@@ -98,13 +100,13 @@ export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRule
                                                     onChange(updateRule(drafts, ruleIndex, switchTriggerKind(draft, nextKind, catalog)));
                                                 }}
                                             >
-                                                <option value="button">Tastendruck</option>
-                                                <option value="weekly">Zeitpunkt</option>
+                                                <option value="button">{t("ui_new.rule_editor.trigger_button_press")}</option>
+                                                <option value="weekly">{t("ui_new.rule_editor.trigger_time")}</option>
                                             </select>
                                         </label>
 
                                         <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                                            Quelle
+                                            {t("ui_new.rule_editor.source_label")}
                                             <select
                                                 className={selectClassName}
                                                 value={triggerSourceValue}
@@ -148,7 +150,7 @@ export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRule
                                     {draft.trigger.kind === "button" && (
                                         <div className="mt-3 grid gap-3 md:grid-cols-2">
                                             <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                                                Taste
+                                                {t("ui_new.rule_editor.button_label")}
                                                 <select
                                                     className={selectClassName}
                                                     value={draft.trigger.buttonIndex}
@@ -166,7 +168,7 @@ export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRule
                                                     }}
                                                 >
                                                     {[1, 2, 3, 4].map((buttonIndex) => (
-                                                        <option key={buttonIndex} value={buttonIndex}>Taste {buttonIndex} gedrueckt</option>
+                                                        <option key={buttonIndex} value={buttonIndex}>{t("ui_new.rule_editor.button_pressed", {index: buttonIndex})}</option>
                                                     ))}
                                                 </select>
                                             </label>
@@ -176,7 +178,7 @@ export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRule
                                     {draft.trigger.kind === "weekly" && (
                                         <div className="mt-3 grid gap-3 md:grid-cols-2">
                                             <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                                                Zeit
+                                                {t("ui_new.common.time")}
                                                 <input
                                                     type="time"
                                                     className={inputClassName}
@@ -198,7 +200,7 @@ export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRule
                                                 />
                                             </label>
                                             <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                                                Tage
+                                                {t("ui_new.rule_editor.days_label")}
                                                 <select
                                                     className={selectClassName}
                                                     value={draft.trigger.dayOfWeek}
@@ -227,10 +229,10 @@ export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRule
                                 </div>
 
                                 <div className="rounded-lg border border-emerald-100 bg-emerald-50/50 p-3 dark:border-emerald-900/70 dark:bg-emerald-950/30">
-                                    <div className="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Dann</div>
+                                    <div className="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">{t("ui_new.automation.then")}</div>
                                     <div className="mt-3 grid gap-3 md:grid-cols-2">
                                         <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                                            Aktion
+                                            {t("ui_new.rule_editor.action_label")}
                                             <select
                                                 className={selectClassName}
                                                 value={draft.action.kind}
@@ -239,13 +241,13 @@ export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRule
                                                     onChange(updateRule(drafts, ruleIndex, switchActionKind(draft, nextKind, catalog)));
                                                 }}
                                             >
-                                                <option value="onState">AN/AUS</option>
-                                                <option value="switchTimer">Einschalten mit Timer</option>
+                                                <option value="onState">{t("ui_new.rule_editor.action_on_off")}</option>
+                                                <option value="switchTimer">{t("ui_new.rule_editor.action_switch_timer")}</option>
                                             </select>
                                         </label>
 
                                         <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                                            Ziel
+                                            {t("ui_new.rule_editor.target_label")}
                                             <select
                                                 className={selectClassName}
                                                 value={actionTargetValue}
@@ -311,7 +313,7 @@ export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRule
                                     {draft.action.kind === "onState" && (
                                         <div className="mt-3 grid gap-3 md:grid-cols-2">
                                             <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                                                Zustand
+                                                {t("ui_new.common.status")}
                                                 <select
                                                     className={selectClassName}
                                                     value={draft.action.value ? "on" : "off"}
@@ -328,8 +330,8 @@ export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRule
                                                         }));
                                                     }}
                                                 >
-                                                    <option value="on">Einschalten</option>
-                                                    <option value="off">Ausschalten</option>
+                                                    <option value="on">{t("ui_new.device_detail.turn_on")}</option>
+                                                    <option value="off">{t("ui_new.device_detail.turn_off")}</option>
                                                 </select>
                                             </label>
                                         </div>
@@ -338,7 +340,7 @@ export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRule
                                     {draft.action.kind === "switchTimer" && (
                                         <div className="mt-3 grid gap-3 md:grid-cols-2">
                                             <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                                                Timer (Sekunden)
+                                                {t("ui_new.rule_editor.timer_seconds")}
                                                 <input
                                                     type="number"
                                                     min={0}
@@ -364,7 +366,7 @@ export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRule
                                     {draft.action.kind === "setpoint" && (
                                         <div className="mt-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
                                             <div className="flex items-center justify-between gap-3">
-                                                <div className="text-xs font-medium text-slate-700 dark:text-slate-300">Solltemperatur</div>
+                                                <div className="text-xs font-medium text-slate-700 dark:text-slate-300">{t("ui_new.device_detail.setpoint_temperature")}</div>
                                                 <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">{draft.action.temperature.toFixed(1)} °C</div>
                                             </div>
                                             <div className="mt-3">
@@ -394,7 +396,7 @@ export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRule
                                     {draft.action.kind === "notify" && (
                                         <div className="mt-3 grid gap-3">
                                             <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                                                Nachricht (optional)
+                                                {t("ui_new.rule_editor.message_optional")}
                                                 <input
                                                     className={inputClassName}
                                                     value={typeof draft.action.params.message === "string" ? draft.action.params.message : ""}
@@ -424,8 +426,8 @@ export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRule
                         {draft.editable && (
                             <div className="mt-3 text-xs text-slate-500 dark:text-slate-400">
                                 {draft.trigger.kind === "weekly"
-                                    ? `Ausloeser: ${getDayMaskLabel(draft.trigger.dayOfWeek)} um ${draft.trigger.startTime}`
-                                    : "Ausloeser: Tastendruck"}
+                                    ? t("ui_new.rule_editor.trigger_weekly_summary", {days: getDayMaskLabel(draft.trigger.dayOfWeek), time: draft.trigger.startTime})
+                                    : t("ui_new.rule_editor.trigger_button_summary")}
                             </div>
                         )}
                     </div>
@@ -433,7 +435,7 @@ export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRule
             })}
 
             <PrimaryButton onClick={addRule}>
-                <span className="inline-flex items-center gap-2"><Plus size={14}/>Neue Regel hinzufuegen</span>
+                <span className="inline-flex items-center gap-2"><Plus size={14}/>{t("ui_new.rule_editor.add_rule")}</span>
             </PrimaryButton>
         </div>
     );

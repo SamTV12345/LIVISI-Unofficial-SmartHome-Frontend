@@ -32,14 +32,14 @@ const ServicesScreenContent = () => {
 
     const sunDescription = useMemo<ReactNode>(() => {
         if (!sunTimes) {
-            return "Keine Sonnenzeiten verfügbar.";
+            return t("ui_new.services.no_sun_times");
         }
 
         return <span className="space-y-1 block">
-            <span className="block">Nächster Sonnenaufgang: {formatDateTime(sunTimes.nextSunrise ?? undefined)}</span>
-            <span className="block">Nächster Sonnenuntergang: {formatDateTime(sunTimes.nextSunset ?? undefined)}</span>
+            <span className="block">{t("ui_new.services.next_sunrise", {value: formatDateTime(sunTimes.nextSunrise ?? undefined)})}</span>
+            <span className="block">{t("ui_new.services.next_sunset", {value: formatDateTime(sunTimes.nextSunset ?? undefined)})}</span>
         </span>;
-    }, [sunTimes]);
+    }, [sunTimes, t]);
 
     const cards: {
         id: string,
@@ -50,14 +50,14 @@ const ServicesScreenContent = () => {
     }[] = [
         {
             id: "mobile",
-            title: "Mobiler Zugang",
-            description: "Gültig (kostenfrei)",
+            title: t("ui_new.mobile_access.title"),
+            description: t("ui_new.services.mobile_valid_free"),
             icon: <Smartphone size={18}/>,
             to: "/services/mobile-access"
         },
         {
             id: "sun",
-            title: "Sonnenauf-/-untergang",
+            title: t("ui_new.services.sun_times_title"),
             description: sunDescription,
             icon: <CloudSun size={18}/>
         },
@@ -69,24 +69,24 @@ const ServicesScreenContent = () => {
         }
     ];
 
-    return <PageComponent title="Dienste">
+    return <PageComponent title={t("ui_new.services.page_title")}>
         <div className="space-y-5 p-4 md:p-6">
             <ModernHero
-                title="Dienste"
-                subtitle="Externe und zentrale SmartHome-Funktionen."
+                title={t("ui_new.services.hero_title")}
+                subtitle={t("ui_new.services.hero_subtitle")}
                 badges={[
-                    {label: "Remote Zugriff", icon: <Smartphone size={14}/>},
-                    {label: "Automationen", icon: <CloudSun size={14}/>}
+                    {label: t("ui_new.services.remote_access"), icon: <Smartphone size={14}/>},
+                    {label: t("ui_new.services.automations"), icon: <CloudSun size={14}/>}
                 ]}
                 stats={[
-                    {label: "Dienste", value: cards.length},
-                    {label: "Aktiv", value: 1},
-                    {label: "Inaktiv", value: cards.length - 1},
-                    {label: "Nächstes Sonnen-Event", value: sunTimes?.nextEventAt ? formatDateTime(sunTimes.nextEventAt) : "-"}
+                    {label: t("ui_new.services.stats_services"), value: cards.length},
+                    {label: t("ui_new.common.active"), value: 1},
+                    {label: t("ui_new.common.inactive"), value: cards.length - 1},
+                    {label: t("ui_new.services.stats_next_sun_event"), value: sunTimes?.nextEventAt ? formatDateTime(sunTimes.nextEventAt) : "-"}
                 ]}
             />
 
-            <ModernSection title="Verfügbare Dienste" description="Dienste öffnen oder Status prüfen." icon={<ShieldCheck size={18}/>}>
+            <ModernSection title={t("ui_new.services.available_services_title")} description={t("ui_new.services.available_services_description")} icon={<ShieldCheck size={18}/>}>
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                     {cards.map((card) => (
                         <button

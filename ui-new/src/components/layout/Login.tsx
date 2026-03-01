@@ -70,8 +70,8 @@ export const LoginComponent:FC<LoginComponentProps> = () => {
             })
             .catch(() => {
                 toast({
-                    title: "Anmeldung fehlgeschlagen",
-                    description: "Bitte überprüfe deine Anmeldedaten",
+                    title: t("ui_new.login.toast_failed_title"),
+                    description: t("ui_new.login.toast_failed_description"),
                 })
             })
     }
@@ -86,31 +86,31 @@ export const LoginComponent:FC<LoginComponentProps> = () => {
         return <LoadingScreen/>
     }
 
-    return <section className="h-full">
-        <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
-            <a href="https://github.com/SamTV12345/LIVISI-Unofficial-SmartHome-Frontend" target="_blank" className="flex items-center mb-6 text-2xl font-semibold text-white">
+    return <section className="min-h-full">
+        <div className="login-screen-shell mx-auto flex flex-col items-center justify-center px-6 py-8 lg:py-0">
+            <a href="https://github.com/SamTV12345/LIVISI-Unofficial-SmartHome-Frontend" target="_blank" className="mb-6 flex items-center text-2xl font-semibold text-slate-900 dark:text-slate-100">
                 <i className="fa-solid fa-music mr-5"></i>
                 Unofficial LIVISI Gateway
             </a>
             <div
-                className="w-full rounded-lg shadow border md:mt-0 sm:max-w-md xl:p-0 bg-gray-800 border-gray-700">
+                className="w-full rounded-xl border border-slate-300/90 bg-white/95 shadow-xl backdrop-blur-sm md:mt-0 sm:max-w-md xl:p-0 dark:border-slate-500/70 dark:bg-slate-900/90 dark:shadow-black/40">
                 <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
-                    <h1 className="text-xl font-bold leading-tight tracking-tight md:text-2xl text-white">
+                    <h1 className="text-xl font-bold leading-tight tracking-tight text-slate-900 md:text-2xl dark:text-slate-100">
                         {t('sign-in')}
                     </h1>
                     {configModel.authMode === "basic" && <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 text-white">
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 text-slate-900 dark:text-slate-100">
                             <FormField
                                 control={form.control}
                                 name="username"
                                 render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Benutzername</FormLabel>
+                                    <FormItem className="rounded-lg border border-slate-300/80 bg-white/70 p-3 dark:border-slate-500/70 dark:bg-slate-950/45">
+                                        <FormLabel>{t("ui_new.login.username_label")}</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="shadcn" {...field} />
+                                            <Input placeholder={t("ui_new.login.username_placeholder")} className="border-slate-300 bg-white dark:border-slate-500 dark:bg-slate-950/70" {...field} />
                                         </FormControl>
                                         <FormDescription>
-                                            Anmelde-Name für das LIVISI Gateway
+                                            {t("ui_new.login.username_description")}
                                         </FormDescription>
                                         <FormMessage />
                                     </FormItem>
@@ -121,13 +121,13 @@ export const LoginComponent:FC<LoginComponentProps> = () => {
                                 control={form.control}
                                 name="password"
                                 render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Passwort</FormLabel>
+                                    <FormItem className="rounded-lg border border-slate-300/80 bg-white/70 p-3 dark:border-slate-500/70 dark:bg-slate-950/45">
+                                        <FormLabel>{t("ui_new.login.password_label")}</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="*****" type="password" {...field} />
+                                            <Input placeholder={t("ui_new.login.password_placeholder")} type="password" className="border-slate-300 bg-white dark:border-slate-500 dark:bg-slate-950/70" {...field} />
                                         </FormControl>
                                         <FormDescription>
-                                            Passwort für das LIVISI Gateway
+                                            {t("ui_new.login.password_description")}
                                         </FormDescription>
                                         <FormMessage />
                                     </FormItem>
@@ -148,13 +148,13 @@ export const LoginComponent:FC<LoginComponentProps> = () => {
                                         </FormControl>
                                         <div className="space-y-1 leading-none">
                                             <FormLabel>
-                                                Remember me
+                                                {t("ui_new.login.remember_me")}
                                             </FormLabel>
                                         </div>
                                     </FormItem>
                                 )}
                             />
-                            <Button type="submit" className="">Absenden</Button>
+                            <Button type="submit" className="w-full">{t("ui_new.login.submit")}</Button>
                         </form>
                     </Form>}
                     {configModel.authMode === "oidc" && configModel.oidcConfig &&

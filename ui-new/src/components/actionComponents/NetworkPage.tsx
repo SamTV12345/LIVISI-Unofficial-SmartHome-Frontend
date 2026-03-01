@@ -6,9 +6,11 @@ import {PrimaryButton} from "@/src/components/actionComponents/PrimaryButton.tsx
 import {HttpRequestError, postJson} from "@/src/api/httpClient.ts";
 import {useContentModel} from "@/src/store.tsx";
 import {isWifiProfilePresent, useNetworkStatus} from "@/src/hooks/useNetworkStatus.ts";
+import {useTranslation} from "react-i18next";
 
 export const NetworkPage = ()=>{
     const navigate = useNavigate();
+    const {t} = useTranslation();
     const allThings = useContentModel(state => state.allThings);
     const {network, controllerConnected, activeConnection, error, loading, refresh} = useNetworkStatus();
     const [pendingAction, setPendingAction] = useState<"switch" | "wps" | undefined>(undefined);
@@ -26,20 +28,20 @@ export const NetworkPage = ()=>{
         if (!switchRequested) return;
         if (activeConnection === "wlan") {
             setSwitchRequested(false);
-            setInfoMessage("Wechsel auf WLAN erfolgreich erkannt.");
+            setInfoMessage(t("ui_new.network.switch_success_detected"));
             setActionError(undefined);
         }
-    }, [activeConnection, switchRequested]);
+    }, [activeConnection, switchRequested, t]);
 
     const connectionLabel = activeConnection === "lan"
-        ? "LAN verbunden"
+        ? t("ui_new.network.lan_connected")
         : activeConnection === "wlan"
-            ? "WLAN verbunden"
-            : "Keine aktive Verbindung";
+            ? t("ui_new.network.wlan_connected")
+            : t("ui_new.network.no_active_connection");
 
     const runShcAction = async (actionTypes: string[]): Promise<boolean> => {
         if (!shc?.id) {
-            throw new Error("SHC nicht gefunden.");
+            throw new Error(t("ui_new.network.shc_not_found"));
         }
 
         for (const type of actionTypes) {
@@ -70,25 +72,25 @@ export const NetworkPage = ()=>{
 
         try {
             if (activeConnection === "wlan") {
-                setInfoMessage("WLAN ist bereits aktiv.");
+                setInfoMessage(t("ui_new.network.wlan_already_active"));
                 return;
             }
 
             if (!wifiConfigured) {
-                setInfoMessage("Es ist aktuell kein aktives WLAN-Profil erkennbar. Bitte zuerst WLAN einrichten.");
+                setInfoMessage(t("ui_new.network.no_wlan_profile"));
                 return;
             }
 
             const switchedByAction = await runShcAction(["SwitchToWlan", "SwitchToWLAN", "SwitchToWifi", "SwitchToWiFi"]);
             if (switchedByAction) {
-                setInfoMessage("Wechsel auf WLAN wurde ausgelöst. Status wird jetzt überwacht.");
+                setInfoMessage(t("ui_new.network.switch_triggered"));
             } else {
-                setInfoMessage("Automatischer API-Wechsel nicht verfügbar. Ziehe das LAN-Kabel ab, die Zentrale wechselt dann auf WLAN.");
+                setInfoMessage(t("ui_new.network.switch_manual_hint"));
             }
             setSwitchRequested(true);
             void refresh();
         } catch {
-            setActionError("WLAN-Wechsel konnte nicht gestartet werden.");
+            setActionError(t("ui_new.network.switch_failed"));
         } finally {
             setPendingAction(undefined);
         }
@@ -101,13 +103,13 @@ export const NetworkPage = ()=>{
         try {
             const startedByAction = await runShcAction(["StartWPS", "StartWps", "ActivateWPS", "ActivateWps", "EnableWPS", "EnableWps"]);
             if (startedByAction) {
-                setInfoMessage("WPS wurde gestartet. Folge jetzt der Router-Anleitung.");
+                setInfoMessage(t("ui_new.network.wps_started"));
             } else {
-                setInfoMessage("WPS-API nicht verfügbar. Bitte PAIR-Taste an der Zentrale (5 Sek.) und WPS-Taste am Router verwenden.");
+                setInfoMessage(t("ui_new.network.wps_manual_hint"));
             }
             void refresh();
         } catch {
-            setActionError("WPS konnte nicht gestartet werden.");
+            setActionError(t("ui_new.network.wps_failed"));
         } finally {
             setPendingAction(undefined);
         }
@@ -115,7 +117,7 @@ export const NetworkPage = ()=>{
 
     return <PageComponent
         to={"/settings"}
-        title="Netzwerk"
+        title={t("ui_new.network.page_title")}
         actionButton={<button
             type="button"
             onClick={() => {
@@ -123,45 +125,45 @@ export const NetworkPage = ()=>{
             }}
             className="rounded-md border border-gray-200 bg-white px-3 py-1 text-xs text-slate-700 hover:bg-slate-50"
         >
-            Aktualisieren
+            {t("ui_new.common.refresh")}
         </button>}
     >
         <div className="space-y-4 p-4 md:p-6">
             <PageBox variant="default">
                 <div className="flex items-center justify-between gap-3">
                     <div className="space-y-1">
-                        <div className="text-sm text-slate-500">Aktueller Verbindungsstatus</div>
+                        <div className="text-sm text-slate-500">{t("ui_new.network.current_status")}</div>
                         <div className="text-xl font-semibold text-slate-900">{connectionLabel}</div>
-                        <div className="text-xs text-slate-500">Adapter: {network?.inUseAdapter || "-"}</div>
+                        <div className="text-xs text-slate-500">{t("ui_new.network.adapter")}: {network?.inUseAdapter || "-"}</div>
                     </div>
                     <div className="flex justify-center">
                         <img
                             className="network-img"
                             src={activeConnection === "lan" ? "/images/svg_single/connected_wired.svg" : "/images/svg_single/connected_wireless.svg"}
-                            alt="Network connection overview"
+                            alt={t("ui_new.network.connection_overview_alt")}
                         />
                     </div>
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
                     <div className="rounded-md border border-gray-200 p-2">
-                        <div className="text-slate-500">Hostname</div>
+                        <div className="text-slate-500">{t("ui_new.network.hostname")}</div>
                         <div className="font-semibold text-slate-900">{network?.hostname || "-"}</div>
                     </div>
                     <div className="rounded-md border border-gray-200 p-2">
-                        <div className="text-slate-500">Livisi-Backend</div>
-                        <div className="font-semibold text-slate-900">{network?.backendAvailable ? "Ja" : "Nein"}</div>
+                        <div className="text-slate-500">{t("ui_new.network.backend")}</div>
+                        <div className="font-semibold text-slate-900">{network?.backendAvailable ? t("ui_new.common.yes") : t("ui_new.common.no")}</div>
                     </div>
                     <div className="rounded-md border border-gray-200 p-2">
-                        <div className="text-slate-500">WPS aktiv</div>
-                        <div className="font-semibold text-slate-900">{network?.wpsActive ? "Ja" : "Nein"}</div>
+                        <div className="text-slate-500">{t("ui_new.network.wps_active")}</div>
+                        <div className="font-semibold text-slate-900">{network?.wpsActive ? t("ui_new.common.yes") : t("ui_new.common.no")}</div>
                     </div>
                     <div className="rounded-md border border-gray-200 p-2">
-                        <div className="text-slate-500">WLAN Signal</div>
+                        <div className="text-slate-500">{t("ui_new.network.wlan_signal")}</div>
                         <div className="font-semibold text-slate-900">{network?.wifiSignalStrength ?? 0}</div>
                     </div>
                     <div className="rounded-md border border-gray-200 p-2">
-                        <div className="text-slate-500">Zentrale verbunden</div>
-                        <div className="font-semibold text-slate-900">{controllerConnected ? "Ja" : "Nein"}</div>
+                        <div className="text-slate-500">{t("ui_new.network.controller_connected")}</div>
+                        <div className="font-semibold text-slate-900">{controllerConnected ? t("ui_new.common.yes") : t("ui_new.common.no")}</div>
                     </div>
                 </div>
             </PageBox>
@@ -169,10 +171,10 @@ export const NetworkPage = ()=>{
             <PageBox
                 description={
                     activeConnection === "lan"
-                        ? "Ihre Zentrale nutzt aktuell die LAN-Verbindung."
+                        ? t("ui_new.network.currently_using_lan")
                         : activeConnection === "wlan"
-                            ? "Ihre Zentrale nutzt aktuell die WLAN-Verbindung."
-                            : "Aktuell konnte keine aktive Netzwerkverbindung erkannt werden."
+                            ? t("ui_new.network.currently_using_wlan")
+                            : t("ui_new.network.no_connection_detected")
                 }
                 variant="gray"
             />
@@ -180,27 +182,27 @@ export const NetworkPage = ()=>{
             {controllerConnected && network?.backendAvailable === false && (
                 <PageBox
                     variant="gray"
-                    description="Lokale Verbindung ist aktiv, aber die Zentrale meldet keinen Cloud-Backend-Zugriff."
+                    description={t("ui_new.network.local_but_no_cloud")}
                 />
             )}
 
             <PageBox
-                title="LAN"
-                description={activeConnection === "lan" ? "Verbunden" : network?.ethCableAttached ? "Kabel erkannt, aber nicht aktiv" : "Nicht verbunden"}
+                title={t("ui_new.lan.title")}
+                description={activeConnection === "lan" ? t("ui_new.common.connected") : network?.ethCableAttached ? t("ui_new.network.cable_detected_not_active") : t("ui_new.common.not_connected")}
                 variant="default"
                 to="/settings/lan"
             />
 
             <PageBox
-                title="WLAN"
-                description={activeConnection === "wlan" ? "Verbunden" : wifiConfigured ? "Konfiguriert" : "Nicht konfiguriert"}
+                title={t("ui_new.wlan.title")}
+                description={activeConnection === "wlan" ? t("ui_new.common.connected") : wifiConfigured ? t("ui_new.network.configured") : t("ui_new.network.not_configured")}
                 variant="default"
                 to="/settings/wlan"
             />
 
             {(loading || error || actionError || infoMessage) && (
                 <PageBox variant="gray">
-                    {loading && <div className="text-sm text-slate-500">Lade Netzwerkstatus...</div>}
+                    {loading && <div className="text-sm text-slate-500">{t("ui_new.network.loading_status")}</div>}
                     {error && <div className="text-sm text-red-700">{error}</div>}
                     {actionError && <div className="text-sm text-red-700">{actionError}</div>}
                     {infoMessage && <div className="text-sm text-slate-700">{infoMessage}</div>}
@@ -215,7 +217,7 @@ export const NetworkPage = ()=>{
                     }}
                     disabled={pendingAction !== undefined}
                 >
-                    WI-FI Verbindung über WPS
+                    {t("ui_new.network.wifi_via_wps")}
                 </PrimaryButton>
                 <PrimaryButton
                     onClick={() => {
@@ -223,7 +225,7 @@ export const NetworkPage = ()=>{
                     }}
                     disabled={pendingAction !== undefined || activeConnection === "wlan"}
                 >
-                    {pendingAction === "switch" ? "WLAN-Wechsel wird gestartet..." : "Zu WLAN wechseln"}
+                    {pendingAction === "switch" ? t("ui_new.network.switch_starting") : t("ui_new.network.switch_to_wlan")}
                 </PrimaryButton>
             </div>
         </div>

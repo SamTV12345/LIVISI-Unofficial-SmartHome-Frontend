@@ -32,6 +32,7 @@ import {
     parseHeatingDaySchedules,
     validateHeatingSchedules
 } from "@/src/utils/heatingAutomation.ts";
+import {useTranslation} from "react-i18next";
 
 const toDateTimeInput = (isoDateTime?: string): string => {
     if (!isoDateTime) return "";
@@ -50,6 +51,7 @@ const toISOStringOrUndefined = (localDateTime: string): string | undefined => {
 };
 
 const ScenarioDetailContent = ({interactionId}: {interactionId: string}) => {
+    const {t} = useTranslation();
     const allThings = useContentModel((state) => state.allThings);
     const setAllThings = useContentModel((state) => state.setAllThings);
     const {data: interactionResponse} = apiQueryClient.useSuspenseQuery("get", "/interaction/{id}", {
@@ -129,18 +131,18 @@ const ScenarioDetailContent = ({interactionId}: {interactionId: string}) => {
 
         if (heatingAutomation) {
             if (heatingSchedules.length === 0) {
-                setError("Heizplan enthaelt keine Zeitregeln.");
+                setError(t("ui_new.automation.heating_no_rules"));
                 setSuccess(undefined);
                 return;
             }
             if (heatingSchedules.some((schedule) => !schedule.targetCapability)) {
-                setError("Heizplan konnte nicht zu einem Zielgeraet zugeordnet werden.");
+                setError(t("ui_new.automation.heating_no_target"));
                 setSuccess(undefined);
                 return;
             }
             const validationMessage = validateHeatingSchedules(heatingSchedules);
             if (validationMessage) {
-                setError(`Heizplan ungueltig: ${validationMessage}`);
+                setError(t("ui_new.automation.heating_invalid", {message: validationMessage}));
                 setSuccess(undefined);
                 return;
             }
@@ -148,7 +150,7 @@ const ScenarioDetailContent = ({interactionId}: {interactionId: string}) => {
         if (!heatingAutomation) {
             const validationMessage = validateAutomationRuleDrafts(ruleDrafts);
             if (validationMessage) {
-                setError(`Regeln ungueltig: ${validationMessage}`);
+                setError(t("ui_new.automation.rules_invalid", {message: validationMessage}));
                 setSuccess(undefined);
                 return;
             }
@@ -208,14 +210,14 @@ const ScenarioDetailContent = ({interactionId}: {interactionId: string}) => {
                 apiQueryClient.queryOptions("get", "/interaction/{id}", {params: {path: {id: interactionId}}}).queryKey,
                 persistedInteraction
             );
-            setSuccess("Automation gespeichert.");
+            setSuccess(t("ui_new.automation.save_success"));
         } catch (saveError) {
             console.error("Could not save interaction", saveError);
-            setError("Automation konnte nicht gespeichert werden.");
+            setError(t("ui_new.automation.save_failed"));
         } finally {
             setSavePending(false);
         }
-    }, [automationEnabled, capabilityCatalog, description, heatingAutomation, heatingSchedules, homeVisible, interaction, interactionId, name, persistInteractionIntoStore, ruleDrafts, savePending, validFrom, validTo, writableStateBinding]);
+    }, [automationEnabled, capabilityCatalog, description, heatingAutomation, heatingSchedules, homeVisible, interaction, interactionId, name, persistInteractionIntoStore, ruleDrafts, savePending, t, validFrom, validTo, writableStateBinding]);
 
     const onTrigger = useCallback(async () => {
         if (triggerPending) return;
@@ -231,35 +233,35 @@ const ScenarioDetailContent = ({interactionId}: {interactionId: string}) => {
             if (!response.response.ok) {
                 throw new Error("Interaction trigger failed");
             }
-            setSuccess("Automation wurde ausgelöst.");
+            setSuccess(t("ui_new.automation.trigger_success"));
         } catch (triggerError) {
             console.error("Could not trigger interaction", triggerError);
-            setError("Automation konnte nicht ausgelöst werden.");
+            setError(t("ui_new.automation.trigger_failed"));
         } finally {
             setTriggerPending(false);
         }
-    }, [interactionId, triggerPending]);
+    }, [interactionId, t, triggerPending]);
 
     return (
-        <PageComponent title="Automation bearbeiten" to="/automation">
+        <PageComponent title={t("ui_new.automation.edit_title")} to="/automation">
             <div className="space-y-5 p-4 md:p-6">
                 <ModernHero
-                    title={interaction?.name ?? "Automation"}
+                    title={interaction?.name ?? t("ui_new.automation.page_title")}
                     subtitle={heatingAutomation
-                        ? "Moderner Heizplan-Editor direkt auf Basis der Livisi-Interaction."
-                        : "Bearbeitung basiert direkt auf Livisi /interaction-Daten."
+                        ? t("ui_new.automation.heating_editor_subtitle")
+                        : t("ui_new.automation.edit_subtitle")
                     }
                     badges={[
-                        {label: `${summary.totalRuleCount} Regeln`, icon: <Workflow size={14}/>},
-                        {label: `${summary.totalTriggerCount} Trigger`, icon: <Calendar size={14}/>},
-                        {label: `${summary.totalActionCount} Aktionen`, icon: <Bolt size={14}/>}
+                        {label: t("ui_new.automation.count_rules", {count: summary.totalRuleCount}), icon: <Workflow size={14}/>},
+                        {label: t("ui_new.automation.count_triggers", {count: summary.totalTriggerCount}), icon: <Calendar size={14}/>},
+                        {label: t("ui_new.automation.count_actions", {count: summary.totalActionCount}), icon: <Bolt size={14}/>}
                     ]}
                     stats={[
-                        {label: "Kategorie", value: category},
-                        {label: "Status", value: automationState},
-                        {label: "Typ", value: heatingAutomation ? "Heizprogramm" : "Standard"},
-                        {label: "Speichern", value: savePending ? "Aktiv" : "Bereit"},
-                        {label: "Ausfuehren", value: triggerPending ? "Aktiv" : "Bereit"}
+                        {label: t("ui_new.automation.category_label"), value: category},
+                        {label: t("ui_new.common.status"), value: automationState},
+                        {label: t("ui_new.automation.type"), value: heatingAutomation ? t("ui_new.automation.heating_program") : t("ui_new.automation.standard")},
+                        {label: t("ui_new.automation.save"), value: savePending ? t("ui_new.common.active") : t("ui_new.automation.ready")},
+                        {label: t("ui_new.automation.execute"), value: triggerPending ? t("ui_new.common.active") : t("ui_new.automation.ready")}
                     ]}
                 />
 
@@ -267,19 +269,19 @@ const ScenarioDetailContent = ({interactionId}: {interactionId: string}) => {
                 {success && <div className="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{success}</div>}
                 {heatingAutomation && heatingValidation && (
                     <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                        Heizplan-Pruefung: {heatingValidation}
+                        {t("ui_new.automation.heating_validation_label")}: {heatingValidation}
                     </div>
                 )}
                 {!heatingAutomation && ruleValidation && (
                     <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                        Regel-Pruefung: {ruleValidation}
+                        {t("ui_new.automation.rule_validation_label")}: {ruleValidation}
                     </div>
                 )}
 
                 {heatingAutomation && (
                     <ModernSection
-                        title="Heizplan"
-                        description="Zeitraeume und Solltemperaturen im neuen UI bearbeiten."
+                        title={t("ui_new.automation.heating_plan_title")}
+                        description={t("ui_new.automation.heating_plan_description")}
                         icon={<Workflow size={18}/>}
                     >
                         <HeatingAutomationEditor
@@ -292,8 +294,8 @@ const ScenarioDetailContent = ({interactionId}: {interactionId: string}) => {
 
                 {!heatingAutomation && (
                     <ModernSection
-                        title="Regeln bearbeiten"
-                        description="WENN/DANN Regeln im neuen Design bearbeiten und neue Regeln hinzufuegen."
+                        title={t("ui_new.automation.edit_rules_title")}
+                        description={t("ui_new.automation.edit_rules_description")}
                         icon={<Workflow size={18}/>}
                     >
                         <AutomationRuleEditor drafts={ruleDrafts} catalog={capabilityCatalog} onChange={setRuleDrafts}/>
@@ -301,16 +303,16 @@ const ScenarioDetailContent = ({interactionId}: {interactionId: string}) => {
                 )}
 
                 <ModernSection
-                    title="Konfiguration"
+                    title={t("ui_new.automation.configuration_title")}
                     description={heatingAutomation
-                        ? "Name, Beschreibung und Sichtbarkeit bearbeiten."
-                        : "Name, Beschreibung und Zeitfenster bearbeiten."
+                        ? t("ui_new.automation.configuration_description_heating")
+                        : t("ui_new.automation.configuration_description_default")
                     }
                     icon={<Calendar size={18}/>}
                 >
                     <div className="grid gap-3">
                         <label className="text-sm text-slate-700">
-                            <span className="mb-1 block font-medium">Name</span>
+                            <span className="mb-1 block font-medium">{t("ui_new.common.name")}</span>
                             <input
                                 value={name}
                                 onChange={(event) => setName(event.target.value)}
@@ -318,7 +320,7 @@ const ScenarioDetailContent = ({interactionId}: {interactionId: string}) => {
                             />
                         </label>
                         <label className="text-sm text-slate-700">
-                            <span className="mb-1 block font-medium">Beschreibung</span>
+                            <span className="mb-1 block font-medium">{t("ui_new.common.description")}</span>
                             <input
                                 value={description}
                                 onChange={(event) => setDescription(event.target.value)}
@@ -332,7 +334,7 @@ const ScenarioDetailContent = ({interactionId}: {interactionId: string}) => {
                                 onChange={(event) => setHomeVisible(event.target.checked)}
                                 className="h-4 w-4 rounded border-gray-300"
                             />
-                            Auf Home anzeigen
+                            {t("ui_new.automation.show_on_home")}
                         </label>
                         <label className="inline-flex items-center gap-2 text-sm text-slate-700">
                             <input
@@ -342,17 +344,17 @@ const ScenarioDetailContent = ({interactionId}: {interactionId: string}) => {
                                 disabled={!canPersistAutomationEnabled}
                                 className="h-4 w-4 rounded border-gray-300"
                             />
-                            Automation aktiviert
+                            {t("ui_new.automation.enabled")}
                         </label>
                         {!canPersistAutomationEnabled && (
                             <div className="text-xs text-slate-500">
-                                Aktiv-Status wird aus der Smart Home Zentrale gelesen und ist hier nicht direkt schaltbar.
+                                {t("ui_new.automation.enabled_readonly_hint")}
                             </div>
                         )}
                         {!heatingAutomation && (
                             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                                 <label className="text-sm text-slate-700">
-                                    <span className="mb-1 block font-medium">Gültig ab</span>
+                                    <span className="mb-1 block font-medium">{t("ui_new.automation.valid_from")}</span>
                                     <input
                                         type="datetime-local"
                                         value={validFrom}
@@ -361,7 +363,7 @@ const ScenarioDetailContent = ({interactionId}: {interactionId: string}) => {
                                     />
                                 </label>
                                 <label className="text-sm text-slate-700">
-                                    <span className="mb-1 block font-medium">Gültig bis</span>
+                                    <span className="mb-1 block font-medium">{t("ui_new.automation.valid_to")}</span>
                                     <input
                                         type="datetime-local"
                                         value={validTo}
@@ -380,7 +382,7 @@ const ScenarioDetailContent = ({interactionId}: {interactionId: string}) => {
                                 void onSave();
                             }}
                         >
-                            <span className="inline-flex items-center gap-2"><Save size={14}/>{savePending ? "Speichert..." : "Speichern"}</span>
+                            <span className="inline-flex items-center gap-2"><Save size={14}/>{savePending ? t("ui_new.automation.saving") : t("ui_new.automation.save")}</span>
                         </PrimaryButton>
                         <PrimaryButton
                             filled
@@ -390,7 +392,7 @@ const ScenarioDetailContent = ({interactionId}: {interactionId: string}) => {
                                 void onTrigger();
                             }}
                         >
-                            <span className="inline-flex items-center gap-2"><Bolt size={14}/>{triggerPending ? "Läuft..." : "Ausführen"}</span>
+                            <span className="inline-flex items-center gap-2"><Bolt size={14}/>{triggerPending ? t("ui_new.automation.running") : t("ui_new.automation.execute")}</span>
                         </PrimaryButton>
                     </div>
                 </ModernSection>
@@ -400,14 +402,15 @@ const ScenarioDetailContent = ({interactionId}: {interactionId: string}) => {
 };
 
 export const ScenarioDetailScreen = () => {
+    const {t} = useTranslation();
     const params = useParams<{ id: string }>();
     const interactionId = params.id;
 
     if (!interactionId) {
         return (
-            <PageComponent title="Automation bearbeiten" to="/automation">
+            <PageComponent title={t("ui_new.automation.edit_title")} to="/automation">
                 <div className="p-4 md:p-6">
-                    <div className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">Automation-ID fehlt.</div>
+                    <div className="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">{t("ui_new.automation.id_missing")}</div>
                 </div>
             </PageComponent>
         );

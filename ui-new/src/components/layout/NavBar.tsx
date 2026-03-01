@@ -7,6 +7,7 @@ import {useState} from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {cn} from "@/src/utils/cn-helper.ts";
 import {useContentModel} from "@/src/store.tsx";
+import {useTranslation} from "react-i18next";
 
 export const NavBar = () => {
     const location = useLocation();
@@ -14,17 +15,18 @@ export const NavBar = () => {
     const socketConnected = useContentModel((state) => state.socketConnected);
     const unreadMessages = useContentModel((state) => state.allThings?.messages?.filter((message) => !message.read).length ?? 0);
     const navigate = useNavigate();
+    const {t} = useTranslation();
 
     const NavLinks = () => {
         return <>
-            <LinkNav to={'/home'}>Home</LinkNav>
-            <LinkNav to={'/devices'}>Geräte</LinkNav>
-            <LinkNav to={'/automation'}>Automation</LinkNav>
-            <LinkNav to={'/services'}>Dienste</LinkNav>
-            <LinkNav to={'/states'}>Zustände</LinkNav>
+            <LinkNav to={'/home'}>{t("ui_new.nav.home")}</LinkNav>
+            <LinkNav to={'/devices'}>{t("ui_new.nav.devices")}</LinkNav>
+            <LinkNav to={'/automation'}>{t("ui_new.nav.automation")}</LinkNav>
+            <LinkNav to={'/services'}>{t("ui_new.nav.services")}</LinkNav>
+            <LinkNav to={'/states'}>{t("ui_new.nav.states")}</LinkNav>
             <LinkNav to={'/news'}>
                 <span className="inline-flex items-center gap-2">
-                    Nachrichten
+                    {t("ui_new.nav.news")}
                     {unreadMessages > 0 && <span
                         className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#86b919] px-1 text-xs text-white">{unreadMessages}</span>}
                 </span>
@@ -41,21 +43,21 @@ export const NavBar = () => {
             <div className="ml-auto flex items-center gap-4">
                 <div className="hidden items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 lg:flex">
                     <span className={socketConnected ? "h-2 w-2 rounded-full bg-emerald-500" : "h-2 w-2 rounded-full bg-red-500"}></span>
-                    <span>{socketConnected ? "Live verbunden" : "Offline"}</span>
+                    <span>{socketConnected ? t("ui_new.nav.live_connected") : t("ui_new.nav.offline")}</span>
                 </div>
                 <button
                     type="button"
                     className={cn("rounded-lg px-3 py-1 text-sm font-medium text-slate-600 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-800", location.pathname.includes('settings') && "bg-cyan-100/80 text-cyan-800 dark:bg-cyan-900/60 dark:text-cyan-100")}
                     onClick={() => navigate('/settings')}
                 >
-                    Einstellungen
+                    {t("ui_new.nav.settings")}
                 </button>
                 <button
                     type="button"
                     className={cn("rounded-lg px-3 py-1 text-sm font-medium text-slate-600 hover:bg-gray-100 dark:text-slate-300 dark:hover:bg-slate-800", location.pathname.includes('help') && "bg-cyan-100/80 text-cyan-800 dark:bg-cyan-900/60 dark:text-cyan-100")}
                     onClick={() => navigate('/help')}
                 >
-                    Hilfe
+                    {t("ui_new.nav.help")}
                 </button>
             </div>
         </div>
@@ -65,7 +67,7 @@ export const NavBar = () => {
             <img src={logo} className="w-9" alt="LIVISI Smarthome logo"/>
             <div className="flex items-center gap-2">
                 <span className={socketConnected ? "h-2 w-2 rounded-full bg-emerald-500" : "h-2 w-2 rounded-full bg-red-500"}></span>
-                <span className="text-xs text-slate-600 dark:text-slate-300">{socketConnected ? "Live" : "Offline"}</span>
+                <span className="text-xs text-slate-600 dark:text-slate-300">{socketConnected ? t("ui_new.nav.live") : t("ui_new.nav.offline")}</span>
             </div>
         </div>
 
@@ -87,14 +89,14 @@ export const NavBar = () => {
                             className="mt-3 rounded-lg border border-gray-200 px-3 py-2 text-left text-sm font-medium text-slate-700 dark:border-slate-700 dark:text-slate-200"
                             onClick={() => navigate('/settings')}
                         >
-                            Einstellungen
+                            {t("ui_new.nav.settings")}
                         </button>
                         <button
                             type="button"
                             className="rounded-lg border border-gray-200 px-3 py-2 text-left text-sm font-medium text-slate-700 dark:border-slate-700 dark:text-slate-200"
                             onClick={() => navigate('/help')}
                         >
-                            Hilfe
+                            {t("ui_new.nav.help")}
                         </button>
                     </div>
                 </Dialog.Content>

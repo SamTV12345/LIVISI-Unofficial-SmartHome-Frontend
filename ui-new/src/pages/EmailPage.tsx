@@ -10,6 +10,7 @@ import {AlertDialog} from "@/src/components/layout/AlertDialog.tsx";
 import {apiQueryClient, openapiFetchClient} from "@/src/api/openapiClient.ts";
 import {queryClient} from "@/src/api/queryClient.ts";
 import {PageSkeleton} from "@/src/components/layout/PageSkeleton.tsx";
+import {useTranslation} from "react-i18next";
 
 const defaultEmailConfig: EmailConfig = {
     server_address: "",
@@ -22,6 +23,7 @@ const defaultEmailConfig: EmailConfig = {
 };
 
 const EmailPageContent = () => {
+    const {t} = useTranslation();
     const setAllThings = useContentModel((state) => state.setAllThings);
     const {data: emailSettingsResponse} = apiQueryClient.useSuspenseQuery("get", "/email/settings");
     const [emailAlertDialog, setEmailAlertDialog] = useState<boolean>(false);
@@ -35,20 +37,17 @@ const EmailPageContent = () => {
         }
     }, [emailSettingsResponse]);
 
-    return <PageComponent title="E-Mail" to="/settings">
+    return <PageComponent title={t("ui_new.email.page_title")} to="/settings">
         <AlertDialog open={emailAlertDialog} setOpen={setEmailAlertDialog} msg={alertMessage} status={status}/>
         <div className="space-y-4 p-4 md:p-6">
-            <PageBox description={<><p>Dieses Binding ermöglicht eine direkte Verbindung der Zentrale zum SMTP Server des
-                bevorzugten E-Mail Providers. Die Daten zur SMTP-Serveradresse, dem Port usw. müssen beim jeweiligen
-                Provider erfragt werden.
+            <PageBox description={<><p>{t("ui_new.email.intro_p1")}
             </p><p>
-                Hilfe zu diesem Binding findest Du am schnellsten in unserer Community (<Link
+                {t("ui_new.email.intro_p2")} (<Link
                 href="https://lsh.community/">https://lsh.community/</Link>).
             </p></>}>
 
             </PageBox>
-            <PageBox variant="gray" title="Adresse" description="Geben Sie die SMTP-Serveradresse Deines Providers ein.
-                In den meisten Fällen ist dies eine Adresse der Form „smtp.deintolleranbieter.de“."/>
+            <PageBox variant="gray" title={t("ui_new.email.address_title")} description={t("ui_new.email.address_description")}/>
             <PageBox>
                 <div className="ml-2 mr-2">
                     <Input value={emailConfig.server_address} onChange={(event) => {
@@ -59,7 +58,7 @@ const EmailPageContent = () => {
                     }}/>
                 </div>
             </PageBox>
-            <PageBox title="Port" description="Geben Sie den Port des SMTP-Servers ein. Normalerweise ist dies 465 oder 587." variant="gray"/>
+            <PageBox title={t("ui_new.email.port_title")} description={t("ui_new.email.port_description")} variant="gray"/>
             <PageBox>
                 <Input value={emailConfig.server_port_number} onChange={(event) => {
                     setEmailConfig({
@@ -68,7 +67,7 @@ const EmailPageContent = () => {
                     });
                 }}/>
             </PageBox>
-            <PageBox title="Benutzername" description="Benutzername für die Authentifizierung gegenüber dem SMTP-Server. Dies ist in der Regel Deine E-Mail-Adresse." variant="gray"/>
+            <PageBox title={t("ui_new.login.username_label")} description={t("ui_new.email.username_description")} variant="gray"/>
             <PageBox>
                 <Input value={emailConfig.email_username} onChange={(event) => {
                     setEmailConfig({
@@ -77,7 +76,7 @@ const EmailPageContent = () => {
                     });
                 }}/>
             </PageBox>
-            <PageBox title="Passwort" description="Gib das Passwort für die Authentifizierung gegenüber dem SMTP-Server ein." variant="gray"/>
+            <PageBox title={t("ui_new.login.password_label")} description={t("ui_new.email.password_description")} variant="gray"/>
             <PageBox>
                 <Input value={emailConfig.email_password} type="password" onChange={(event) => {
                     setEmailConfig({
@@ -86,7 +85,7 @@ const EmailPageContent = () => {
                     });
                 }}/>
             </PageBox>
-            <PageBox title="E-Mail Adresse" description="Gib die Standardempfänger für E-Mails durch Komma getrennt ein"/>
+            <PageBox title={t("ui_new.email.default_recipient_title")} description={t("ui_new.email.default_recipient_description")}/>
             <PageBox>
                 <Input value={emailConfig.recipient_list.join(",")} onChange={(event) => {
                     setEmailConfig({
@@ -95,7 +94,7 @@ const EmailPageContent = () => {
                     });
                 }}/>
             </PageBox>
-            <PageBox title="Gerät unerreichbar" variant="gray"/>
+            <PageBox title={t("ui_new.email.device_unreachable_title")} variant="gray"/>
             <PageBox>
                 <div className="flex">
                     <Checkbox className="" checked={emailConfig.notifications_device_unreachable} onCheckedChange={() => {
@@ -104,10 +103,10 @@ const EmailPageContent = () => {
                             notifications_device_unreachable: !emailConfig.notifications_device_unreachable
                         });
                     }}/>
-                    <span className="ml-2 text-sm self-center">Nachricht schicken, wenn ein Akku fast leer ist</span>
+                    <span className="ml-2 text-sm self-center">{t("ui_new.email.device_unreachable_text")}</span>
                 </div>
             </PageBox>
-            <PageBox title="Batterie schwach" variant="gray"/>
+            <PageBox title={t("ui_new.email.low_battery_title")} variant="gray"/>
             <PageBox>
                 <div className="flex">
                     <Checkbox className="" checked={emailConfig.notification_device_low_battery} onCheckedChange={() => {
@@ -116,7 +115,7 @@ const EmailPageContent = () => {
                             notification_device_low_battery: !emailConfig.notification_device_low_battery
                         });
                     }}/>
-                    <span className="ml-2 text-sm self-center">Nachricht schicken, wenn die Batterie schwach ist</span>
+                    <span className="ml-2 text-sm self-center">{t("ui_new.email.low_battery_text")}</span>
                 </div>
             </PageBox>
 
@@ -130,19 +129,19 @@ const EmailPageContent = () => {
 
                         if (result.data.result === "AVAILABLE") {
                             setStatus("success");
-                            setAlertMessage("Verbindung klappt. Bitte prüfe, ob auch die E-Mail an den Standardempfänger ankam");
+                            setAlertMessage(t("ui_new.email.test_success"));
                         } else {
                             setStatus("error");
-                            setAlertMessage("Verbindung fehlgeschlagen. Bitte prüfe Serveradresse, Port und Zugangsdaten.");
+                            setAlertMessage(t("ui_new.email.test_failed"));
                         }
                     } catch {
                         setStatus("error");
-                        setAlertMessage("Verbindungstest konnte nicht durchgeführt werden. Bitte prüfe die Verbindung zur Zentrale.");
+                        setAlertMessage(t("ui_new.email.test_unavailable"));
                     } finally {
                         setEmailAlertDialog(true);
                     }
                 }}>
-                    Verbindung testen
+                    {t("ui_new.email.test_connection")}
                 </PrimaryButton>
                 <PrimaryButton filled onClick={async () => {
                     const response = await openapiFetchClient.PUT("/email/settings", {
@@ -151,7 +150,7 @@ const EmailPageContent = () => {
 
                     if (!response.response.ok) {
                         setStatus("error");
-                        setAlertMessage("E-Mail-Einstellungen konnten nicht gespeichert werden.");
+                        setAlertMessage(t("ui_new.email.save_failed"));
                         setEmailAlertDialog(true);
                         return;
                     }
@@ -166,9 +165,9 @@ const EmailPageContent = () => {
                     }
 
                     setStatus("success");
-                    setAlertMessage("E-Mail-Einstellungen wurden gespeichert.");
+                    setAlertMessage(t("ui_new.email.save_success"));
                     setEmailAlertDialog(true);
-                }}>Speichern</PrimaryButton>
+                }}>{t("ui_new.common.save")}</PrimaryButton>
             </div>
         </div>
     </PageComponent>;

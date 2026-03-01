@@ -4,6 +4,8 @@ import {useContentModel} from "@/src/store.tsx";
 import {ModernHero, ModernSection} from "@/src/components/layout/ModernSurface.tsx";
 import {Activity, Filter, Search} from "lucide-react";
 import {formatTime} from "@/src/utils/timeUtils.ts";
+import {useTranslation} from "react-i18next";
+import {i18next} from "@/src/language/i18n.ts";
 
 type StateRow = {
     id: string,
@@ -15,7 +17,7 @@ type StateRow = {
 }
 
 const stringifyValue = (value: unknown): string => {
-    if (typeof value === "boolean") return value ? "An" : "Aus";
+    if (typeof value === "boolean") return value ? i18next.t("ui_new.common.on") : i18next.t("ui_new.common.off");
     if (typeof value === "number") return Number.isInteger(value) ? String(value) : value.toFixed(1);
     if (value === null || value === undefined) return "-";
     return String(value);
@@ -30,6 +32,7 @@ const valueClassName = (value: string): string => {
 
 export const StatesScreen = () => {
     const allThings = useContentModel((state) => state.allThings);
+    const {t} = useTranslation();
     const [search, setSearch] = useState("");
 
     const rows = useMemo(() => {
@@ -38,7 +41,7 @@ export const StatesScreen = () => {
 
         for (const device of devices) {
             const deviceName = device.config?.name ?? device.id;
-            const locationName = device.locationData?.config?.name ?? "Unbekannter Ort";
+            const locationName = device.locationData?.config?.name ?? t("ui_new.states.unknown_location");
             for (const capabilityState of device.capabilityState ?? []) {
                 const state = capabilityState.state ?? {};
                 for (const [key, rawState] of Object.entries(state)) {
@@ -57,7 +60,7 @@ export const StatesScreen = () => {
         }
 
         return output.sort((a, b) => b.lastChanged.localeCompare(a.lastChanged));
-    }, [allThings?.devices]);
+    }, [allThings?.devices, t]);
 
     const filteredRows = useMemo(() => {
         const query = search.trim().toLowerCase();
@@ -70,34 +73,34 @@ export const StatesScreen = () => {
     }, [rows, search]);
 
     return (
-        <PageComponent title="Zustände">
+        <PageComponent title={t("ui_new.states.page_title")}>
             <div className="space-y-5 p-4 md:p-6">
                 <ModernHero
-                    title="Live-Zustände"
-                    subtitle="Alle aktuellen Zustandswerte zentral und filterbar."
+                    title={t("ui_new.states.hero_title")}
+                    subtitle={t("ui_new.states.hero_subtitle")}
                     badges={[
-                        {label: `${rows.length} Werte`, icon: <Activity size={14}/>},
-                        {label: `${Object.keys(allThings?.devices ?? {}).length} Geräte`, icon: <Filter size={14}/>}
+                        {label: t("ui_new.states.values_count", {count: rows.length}), icon: <Activity size={14}/>},
+                        {label: t("ui_new.states.devices_count", {count: Object.keys(allThings?.devices ?? {}).length}), icon: <Filter size={14}/>}
                     ]}
                     stats={[
-                        {label: "Gesamt", value: rows.length},
-                        {label: "Gefiltert", value: filteredRows.length},
-                        {label: "Suche", value: search.trim() ? "Aktiv" : "Inaktiv"},
-                        {label: "Neuester Wert", value: rows[0]?.lastChanged ? formatTime(rows[0].lastChanged) : "-"}
+                        {label: t("ui_new.states.stats_total"), value: rows.length},
+                        {label: t("ui_new.states.stats_filtered"), value: filteredRows.length},
+                        {label: t("ui_new.states.stats_search"), value: search.trim() ? t("ui_new.common.active") : t("ui_new.common.inactive")},
+                        {label: t("ui_new.states.stats_latest"), value: rows[0]?.lastChanged ? formatTime(rows[0].lastChanged) : "-"}
                     ]}
                 />
 
-                <ModernSection title="Filter" description="Suche nach Gerät, Raum oder Zustandsnamen." icon={<Search size={18}/>}>
+                <ModernSection title={t("ui_new.states.filter_title")} description={t("ui_new.states.filter_description")} icon={<Search size={18}/>}>
                     <input
                         value={search}
                         onChange={(event) => setSearch(event.target.value)}
-                        placeholder="Suche nach Gerät, Ort oder Zustand"
+                        placeholder={t("ui_new.states.search_placeholder")}
                         className="w-full rounded-lg border border-gray-300 bg-white p-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-100"
                     />
                 </ModernSection>
 
-                <ModernSection title="Ergebnisse" description={`${filteredRows.length} Einträge`}>
-                    {filteredRows.length === 0 && <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-500">Keine Zustände gefunden.</div>}
+                <ModernSection title={t("ui_new.states.results_title")} description={t("ui_new.states.entries_count", {count: filteredRows.length})}>
+                    {filteredRows.length === 0 && <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-500">{t("ui_new.states.none_found")}</div>}
                     {filteredRows.length > 0 && (
                         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
                             {filteredRows.map((row) => (

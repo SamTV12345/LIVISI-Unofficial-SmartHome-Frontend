@@ -5,6 +5,8 @@ import {ModernHero, ModernSection} from "@/src/components/layout/ModernSurface.t
 import {PageSkeleton} from "@/src/components/layout/PageSkeleton.tsx";
 import {apiQueryClient} from "@/src/api/openapiClient.ts";
 import type {components} from "@/src/api/schema";
+import {useTranslation} from "react-i18next";
+import {i18next} from "@/src/language/i18n.ts";
 
 type DriverEntry = {
     id: string,
@@ -37,8 +39,8 @@ const withDeviceSuffix = (name: string): string => {
 
 const getDriverDisplayName = (type: string, config: Record<string, unknown> | undefined): string => {
     const explicitMappings: Record<string, string> = {
-        "CosipDevices.RWE": "innogy Geräte",
-        "BLEDevices.Medion": "MEDION Geräte"
+        "CosipDevices.RWE": i18next.t("ui_new.device_drivers.vendor_innogy"),
+        "BLEDevices.Medion": i18next.t("ui_new.device_drivers.vendor_medion")
     };
     const mapped = explicitMappings[type];
     if (mapped) {
@@ -109,35 +111,36 @@ const normalizeDrivers = (products: components["schemas"]["ProductDoc"][]): Driv
 }
 
 const DeviceDriversContent = () => {
+    const {t} = useTranslation();
     const {data} = apiQueryClient.useSuspenseQuery("get", "/product");
     const drivers = useMemo(() => normalizeDrivers(data ?? []), [data]);
     const versionedCount = useMemo(() => drivers.filter((entry) => entry.version !== "-").length, [drivers]);
 
     return (
-        <PageComponent title="Gerätetreiber" to="/settings">
+        <PageComponent title={t("ui_new.device_drivers.page_title")} to="/settings">
             <div className="space-y-5 p-4 md:p-6">
                 <ModernHero
-                    title="Gerätetreiber"
-                    subtitle="Installierte Treiber und Versionsstände der Zentrale."
+                    title={t("ui_new.device_drivers.hero_title")}
+                    subtitle={t("ui_new.device_drivers.hero_subtitle")}
                     badges={[
-                        {label: `${drivers.length} installiert`, icon: <HardDrive size={14}/>}
+                        {label: t("ui_new.device_drivers.installed_badge", {count: drivers.length}), icon: <HardDrive size={14}/>}
                     ]}
                     stats={[
-                        {label: "Installiert", value: drivers.length},
-                        {label: "Mit Version", value: versionedCount},
-                        {label: "Quelle", value: "/product"},
-                        {label: "Status", value: "Aktiv"}
+                        {label: t("ui_new.device_drivers.stats_installed"), value: drivers.length},
+                        {label: t("ui_new.device_drivers.stats_with_version"), value: versionedCount},
+                        {label: t("ui_new.device_drivers.stats_source"), value: "/product"},
+                        {label: t("ui_new.common.status"), value: t("ui_new.common.active")}
                     ]}
                 />
 
                 <ModernSection
-                    title="Installierte Gerätetreiber"
-                    description="Name und installierte Version."
+                    title={t("ui_new.device_drivers.section_title")}
+                    description={t("ui_new.device_drivers.section_description")}
                     icon={<Wrench size={18}/>}
                 >
                     {drivers.length === 0 && (
                         <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-slate-600">
-                            Keine installierten Gerätetreiber gefunden.
+                            {t("ui_new.device_drivers.empty")}
                         </div>
                     )}
 
@@ -146,7 +149,7 @@ const DeviceDriversContent = () => {
                             {drivers.map((driver) => (
                                 <div key={driver.id} className="py-3 first:pt-0 last:pb-0">
                                     <div className="font-semibold text-slate-900">{driver.name}</div>
-                                    <div className="text-sm text-slate-500">Version {driver.version}</div>
+                                    <div className="text-sm text-slate-500">{t("ui_new.common.version")} {driver.version}</div>
                                 </div>
                             ))}
                         </div>

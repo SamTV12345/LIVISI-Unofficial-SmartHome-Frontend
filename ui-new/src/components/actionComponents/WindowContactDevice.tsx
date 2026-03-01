@@ -3,6 +3,7 @@ import {FC, useState} from "react";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/src/components/layout/Card.tsx";
 import {DoorOpen, DoorClosed} from "lucide-react";
 import {useNavigate} from "react-router-dom";
+import {useTranslation} from "react-i18next";
 
 
 type WindowDeviceProps = {
@@ -21,6 +22,7 @@ export const WindowContactDevice:FC<WindowDeviceProps> = ({device, showRoom}) =>
         return false
     })
     const navigate = useNavigate()
+    const {t} = useTranslation();
 
     return <Card className="relative" key={device.id} onClick={()=>{
         navigate('/devices/'+device.id)
@@ -39,8 +41,8 @@ export const WindowContactDevice:FC<WindowDeviceProps> = ({device, showRoom}) =>
         <CardContent>
             {
                 isOpen
-                    ? <CardDescription className="text-red-500 text-xl">Geöffnet</CardDescription>
-                    : <CardDescription className="text-green-500 text-xl">Geschlossen</CardDescription>
+                    ? <CardDescription className="text-red-500 text-xl">{t("ui_new.window_contact.open")}</CardDescription>
+                    : <CardDescription className="text-green-500 text-xl">{t("ui_new.window_contact.closed")}</CardDescription>
             }
         </CardContent>
     </Card>

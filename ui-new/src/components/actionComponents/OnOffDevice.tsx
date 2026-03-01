@@ -6,6 +6,7 @@ import {Power} from "lucide-react";
 import {useNavigate} from "react-router-dom";
 import {cn} from "@/src/utils/cn-helper.ts";
 import {postJson} from "@/src/api/httpClient.ts";
+import {useTranslation} from "react-i18next";
 
 type OnOffDeviceProps = {
     device: Device,
@@ -14,6 +15,7 @@ type OnOffDeviceProps = {
 
 export const OnOffDevice: FC<OnOffDeviceProps> = ({device, showRoom = false}) => {
     const navigate = useNavigate();
+    const {t} = useTranslation();
     const onStateCapability = useMemo(() => {
         return (device.capabilityState ?? []).find((capability) => typeof capability.state?.onState?.value === "boolean");
     }, [device.capabilityState]);
@@ -56,11 +58,11 @@ export const OnOffDevice: FC<OnOffDeviceProps> = ({device, showRoom = false}) =>
             });
         } catch {
             setTurnedOn(previousValue);
-            setError("Schaltvorgang fehlgeschlagen.");
+            setError(t("ui_new.on_off.switch_failed"));
         } finally {
             setPending(false);
         }
-    }, [device.product, onStateCapability, pending, turnedOn]);
+    }, [device.product, onStateCapability, pending, t, turnedOn]);
 
     return <Card key={device.id} onClick={() => navigate('/devices/' + device.id)}>
         <CardHeader className="flex flex-row items-start gap-3">
@@ -73,7 +75,7 @@ export const OnOffDevice: FC<OnOffDeviceProps> = ({device, showRoom = false}) =>
                         ? "border-emerald-200 bg-emerald-100 text-emerald-700"
                         : "border-slate-200 bg-slate-100 text-slate-700"
                 )}>
-                    {turnedOn ? "An" : "Aus"}
+                    {turnedOn ? t("ui_new.common.on") : t("ui_new.common.off")}
                 </span>
             </div>
             <span className="flex-1"></span>
@@ -91,7 +93,7 @@ export const OnOffDevice: FC<OnOffDeviceProps> = ({device, showRoom = false}) =>
                     pending && "cursor-not-allowed opacity-70",
                     !onStateCapability && "cursor-not-allowed opacity-40"
                 )}
-                aria-label={turnedOn ? "Ausschalten" : "Einschalten"}
+                aria-label={turnedOn ? t("ui_new.on_off.switch_off") : t("ui_new.on_off.switch_on")}
             >
                 <span
                     className={cn(
@@ -99,7 +101,7 @@ export const OnOffDevice: FC<OnOffDeviceProps> = ({device, showRoom = false}) =>
                         turnedOn ? "left-3 text-emerald-700/40" : "right-3 text-slate-500/70"
                     )}
                 >
-                    {turnedOn ? "AN" : "AUS"}
+                    {turnedOn ? t("ui_new.on_off.on_upper") : t("ui_new.on_off.off_upper")}
                 </span>
                 <span
                     className={cn(

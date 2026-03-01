@@ -8,6 +8,7 @@ import {CapabilityState} from "@/src/models/CapabilityState.ts";
 import {useDebounce} from "@/src/utils/useDebounce.ts";
 import {ACTION_ENDPOINT} from "@/src/constants/FieldConstants.ts";
 import {postJson} from "@/src/api/httpClient.ts";
+import {useTranslation} from "react-i18next";
 
 type WindowDeviceProps = {
     device: Device,
@@ -16,6 +17,7 @@ type WindowDeviceProps = {
 
 
 export const SmokeDetector: FC<WindowDeviceProps> = ({device, showRoom}) => {
+    const {t} = useTranslation();
     const [isAlarming, setAlarming] = useState<boolean>(() => {
         for (const dev of device.capabilityState ||[]) {
             if (dev.state && dev.state.onState && dev.state.onState.value) {
@@ -79,11 +81,11 @@ export const SmokeDetector: FC<WindowDeviceProps> = ({device, showRoom}) => {
             <span className="absolute right-5 top-1/3">
             {
                 isAlarming
-                    ? <button title="Alarm ausschalten" onClick={(e)=>{
+                    ? <button title={t("ui_new.smoke_detector.alarm_off_title")} onClick={(e)=>{
                         e.stopPropagation()
                         setAlarming(!isAlarming)
                     }}><Siren className="rounded-full cursor-pointer border-gray-500 border-2 h-14 w-14 p-2 bg-red-500"/></button>
-                    : <button title="Alarm anschalten"  onClick={(e)=>{
+                    : <button title={t("ui_new.smoke_detector.alarm_on_title")}  onClick={(e)=>{
                         e.stopPropagation()
                         setAlarming(!isAlarming)
                     }}><SirenOff
@@ -94,8 +96,8 @@ export const SmokeDetector: FC<WindowDeviceProps> = ({device, showRoom}) => {
         <CardContent>
             {
                 isSmokeDetected
-                    ? <CardDescription className="text-red-500 text-xl">Rauch erkannt</CardDescription>
-                    : <CardDescription className="text-green-500 text-xl">Kein Rauch erkannt</CardDescription>
+                    ? <CardDescription className="text-red-500 text-xl">{t("ui_new.smoke_detector.smoke_detected")}</CardDescription>
+                    : <CardDescription className="text-green-500 text-xl">{t("ui_new.smoke_detector.no_smoke")}</CardDescription>
             }
         </CardContent>
     </Card>

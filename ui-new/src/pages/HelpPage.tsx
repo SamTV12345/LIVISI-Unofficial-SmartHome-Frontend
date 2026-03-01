@@ -1,14 +1,16 @@
 import {PageComponent} from "@/src/components/actionComponents/PageComponent.tsx";
 import {PageBox} from "@/src/components/actionComponents/PageBox.tsx";
+import {useTranslation} from "react-i18next";
 
 export const HelpPage = () => {
+    const {t} = useTranslation();
 
-    return <PageComponent title="Hilfe">
+    return <PageComponent title={t("ui_new.help.title")}>
         <div className="space-y-4 p-4 md:p-6">
-            <PageBox title="Über das Projekt" to="/settings/imprint" description="Kontaktdaten, Info-/Bestellhotline, Impressum">
+            <PageBox title={t("ui_new.help.about_project_title")} to="/settings/imprint" description={t("ui_new.help.about_project_description")}>
 
             </PageBox>
-            <PageBox title="Fehlerbehebung" to="/help/errors" description="Suchen und Beheben von Fehlern">
+            <PageBox title={t("ui_new.help.troubleshooting_title")} to="/help/errors" description={t("ui_new.help.troubleshooting_description")}>
 
             </PageBox>
         </div>

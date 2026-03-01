@@ -5,6 +5,7 @@ import {PageComponent} from "@/src/components/actionComponents/PageComponent.tsx
 import {PageBox} from "@/src/components/actionComponents/PageBox.tsx";
 import {PrimaryButton} from "@/src/components/actionComponents/PrimaryButton.tsx";
 import {postJson} from "@/src/api/httpClient.ts";
+import {useTranslation} from "react-i18next";
 
 type LoggingReq = {
     id: string,
@@ -38,6 +39,7 @@ const formatTime = (seconds: number): string=> {
 }
 
 export const ErrorPage = () => {
+    const {t} = useTranslation();
     const navigate = useNavigate()
     const allThings = useContentModel(state => state.allThings)
     const shc = useMemo(()=> {
@@ -73,9 +75,9 @@ export const ErrorPage = () => {
     }, [loggingConf]);
 
 
-    return <PageComponent title="Fehlerbehebung" to="/help">
+    return <PageComponent title={t("ui_new.errors.page_title")} to="/help">
         <div className="space-y-4 p-4 md:p-6">
-            <PageBox title="Zentrale neu starten" description="Bei Problemen mit Ihrem SmartHome haben Sie hier die Möglichkeit, Ihre Zentrale neu zu starten.">
+            <PageBox title={t("ui_new.errors.restart_title")} description={t("ui_new.errors.restart_description")}>
                 <PrimaryButton onClick={async () => {
                     await postJson("/action", {
                             id: shc!.id,
@@ -90,13 +92,13 @@ export const ErrorPage = () => {
                             }
                         }
                     )
-                }}>Neustart</PrimaryButton>
+                }}>{t("ui_new.errors.restart_button")}</PrimaryButton>
             </PageBox>
 
-            <PageBox title="Erweiterte Fehlersuche" description="Bei unregelmäßig auftretenden Fehlern zwischen den Geräten und Systemaktivitäten.">
+            <PageBox title={t("ui_new.errors.advanced_title")} description={t("ui_new.errors.advanced_description")}>
                 {
                     loggingConf && loggingConf.properties.expiresAfterMinutes !=0 && <div className="pt-2 pb-2">
-                        Eingeschaltet - Gültigkeitsdauer der Fehlerbehebung: {formatTime(countDown)} Stunden
+                        {t("ui_new.errors.active_duration")}: {formatTime(countDown)} {t("ui_new.common.hours")}
 
                     </div>
                 }
@@ -125,18 +127,13 @@ export const ErrorPage = () => {
                                 setLoggingConf({...loggingConf, properties: {...loggingConf.properties, expiresAfterMinutes: 0,}})
                         })
 
-                    }}}>{loggingConf&& (loggingConf.properties.expiresAfterMinutes === 0? "Fehlersuche aktivieren": "Fehlersuche beenden")}</PrimaryButton>
+                    }}}>{loggingConf&& (loggingConf.properties.expiresAfterMinutes === 0? t("ui_new.errors.enable_advanced"): t("ui_new.errors.disable_advanced"))}</PrimaryButton>
             </PageBox>
-            <PageBox title="Internetverbindung" description={<><p>Um Verbindungsprobleme als Ursache für Störungen (z.B.
-                Abbrüche, fehlgeschlagene Updates) ihres SmartHomes
-                auszuschließen, führen Sie bitte einen Test der Internetverbindung durch und fügen Sie die Ergebnisse
-                (Ping,
-                Upload-/Downloadrate) dem jeweiligen Ticket bei.</p><p>Für den Test wird die Seite speedtest.net in
-                einem externen Fenster geöffnet.</p></>}>
+            <PageBox title={t("ui_new.errors.internet_title")} description={<><p>{t("ui_new.errors.internet_description_p1")}</p><p>{t("ui_new.errors.internet_description_p2")}</p></>}>
                 <PrimaryButton className="w-full h-14 mt-10" onClick={()=>{
                     window.open("https://www.speedtest.net/")
                 }}>
-                    Internetverbindung testen
+                    {t("ui_new.errors.internet_test_button")}
                 </PrimaryButton>
             </PageBox>
         </div>

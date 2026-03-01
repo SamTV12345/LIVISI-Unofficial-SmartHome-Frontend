@@ -8,8 +8,10 @@ import {useNavigate} from "react-router-dom";
 import {apiQueryClient} from "@/src/api/openapiClient.ts";
 import {Message} from "@/src/models/Messages.ts";
 import {PageSkeleton} from "@/src/components/layout/PageSkeleton.tsx";
+import {useTranslation} from "react-i18next";
 
 const NewsScreenContent = () => {
+    const {t} = useTranslation();
     const {data: messagesResponse} = apiQueryClient.useSuspenseQuery("get", "/message");
     const messages = (messagesResponse as Message[] | undefined) ?? [];
     const navigate = useNavigate();
@@ -19,27 +21,27 @@ const NewsScreenContent = () => {
     }, [messages]);
     const unreadCount = sortedMessages.filter((message) => !message.read).length;
 
-    return <PageComponent title="Nachrichten">
+    return <PageComponent title={t("ui_new.news.page_title")}>
         <div className="space-y-5 p-4 md:p-6">
             <ModernHero
-                title="Nachrichtenzentrale"
-                subtitle="Systemmeldungen, Warnungen und Statusupdates an einem Ort."
+                title={t("ui_new.news.hero_title")}
+                subtitle={t("ui_new.news.hero_subtitle")}
                 badges={[
-                    {label: `${sortedMessages.length} Nachrichten`, icon: <Mail size={14}/>},
-                    {label: `${unreadCount} ungelesen`, icon: <Bell size={14}/>}
+                    {label: t("ui_new.news.messages_count", {count: sortedMessages.length}), icon: <Mail size={14}/>},
+                    {label: t("ui_new.news.unread_count", {count: unreadCount}), icon: <Bell size={14}/>}
                 ]}
                 stats={[
-                    {label: "Gesamt", value: sortedMessages.length},
-                    {label: "Ungelesen", value: unreadCount},
-                    {label: "Gelesen", value: sortedMessages.length - unreadCount},
-                    {label: "Neueste", value: sortedMessages[0] ? formatTime(sortedMessages[0].timestamp) : "-"}
+                    {label: t("ui_new.news.stats_total"), value: sortedMessages.length},
+                    {label: t("ui_new.news.stats_unread"), value: unreadCount},
+                    {label: t("ui_new.news.stats_read"), value: sortedMessages.length - unreadCount},
+                    {label: t("ui_new.news.stats_latest"), value: sortedMessages[0] ? formatTime(sortedMessages[0].timestamp) : "-"}
                 ]}
             />
 
-            <ModernSection title="Nachrichten" description="Klicke auf eine Nachricht für die Detailansicht.">
+            <ModernSection title={t("ui_new.news.section_title")} description={t("ui_new.news.section_description")}>
                 {sortedMessages.length === 0 && (
                     <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-500">
-                        Keine Nachrichten vorhanden.
+                        {t("ui_new.news.none")}
                     </div>
                 )}
                 {sortedMessages.length > 0 && (

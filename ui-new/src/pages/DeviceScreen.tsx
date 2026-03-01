@@ -40,18 +40,18 @@ export const DeviceScreen = () => {
     return <PageComponent title={t('HouseholdIdDevicesTag')}>
         <div className="space-y-5 p-4 md:p-6">
             <ModernHero
-                title="Geräteübersicht"
-                subtitle="Alle Geräte nach Ort oder Typ gruppiert. Live-Daten aktualisieren sich automatisch."
+                title={t("ui_new.devices.hero_title")}
+                subtitle={t("ui_new.devices.hero_subtitle")}
                 badges={[
-                    {label: `${deviceCount} Geräte`, icon: <House size={14}/>},
-                    {label: `${locationCount} Räume`, icon: <MapPin size={14}/>},
-                    {label: `${typeCount} aktive Typen`, icon: <Layers size={14}/>}
+                    {label: t("ui_new.devices.devices_count", {count: deviceCount}), icon: <House size={14}/>},
+                    {label: t("ui_new.devices.rooms_count", {count: locationCount}), icon: <MapPin size={14}/>},
+                    {label: t("ui_new.devices.active_types_count", {count: typeCount}), icon: <Layers size={14}/>}
                 ]}
                 stats={[
-                    {label: "Ansicht", value: selectedTab === "location" ? "Nach Ort" : "Nach Typ"},
-                    {label: "Räume", value: locationCount},
-                    {label: "Geräte", value: deviceCount},
-                    {label: "Typen", value: typeCount}
+                    {label: t("ui_new.devices.stats_view"), value: selectedTab === "location" ? t("ui_new.devices.view_by_location") : t("ui_new.devices.view_by_type")},
+                    {label: t("ui_new.devices.stats_rooms"), value: locationCount},
+                    {label: t("ui_new.devices.stats_devices"), value: deviceCount},
+                    {label: t("ui_new.devices.stats_types"), value: typeCount}
                 ]}
             />
 
@@ -66,7 +66,7 @@ export const DeviceScreen = () => {
                     )}
                     onClick={() => setSelectedTab("location")}
                 >
-                    Ort
+                    {t("ui_new.devices.tab_location")}
                 </button>
                 <button
                     type="button"
@@ -78,12 +78,12 @@ export const DeviceScreen = () => {
                     )}
                     onClick={() => setSelectedTab("type")}
                 >
-                    Gerätetyp
+                    {t("ui_new.devices.tab_type")}
                 </button>
             </div>
 
             {selectedTab === "location" && (
-                <ModernSection title="Geräte nach Ort" description="Öffne einen Ort, um die zugehörigen Geräte zu sehen.">
+                <ModernSection title={t("ui_new.devices.by_location_title")} description={t("ui_new.devices.by_location_description")}>
                     <Accordion type="multiple" className="space-y-2">
                         {allDevices?.locations?.map((location) => {
                             const matchingDevices = (location.devices ?? [])
@@ -101,7 +101,7 @@ export const DeviceScreen = () => {
                                     </div>
                                 </AccordionTrigger>
                                 <AccordionContent className="bg-white px-3 pb-3">
-                                    {matchingDevices.length === 0 && <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-3 text-sm text-gray-500">Keine passenden Geräte in diesem Ort.</div>}
+                                    {matchingDevices.length === 0 && <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-3 text-sm text-gray-500">{t("ui_new.devices.none_in_location")}</div>}
                                     {matchingDevices.length > 0 && <div className="grid grid-cols-1 gap-3 md:grid-cols-2">{matchingDevices.map((device) => <DeviceDecider device={device} key={device.id}/>)}</div>}
                                 </AccordionContent>
                             </AccordionItem>
@@ -111,7 +111,7 @@ export const DeviceScreen = () => {
             )}
 
             {selectedTab === "type" && (
-                <ModernSection title="Geräte nach Typ" description="Alle registrierten Gerätetypen mit ihren Einträgen.">
+                <ModernSection title={t("ui_new.devices.by_type_title")} description={t("ui_new.devices.by_type_description")}>
                     <Accordion type="multiple" className="space-y-2">
                         {mappedDevicesToType && [...mappedDevicesToType.entries()].map(([key, devices]) => (
                             <AccordionItem key={key} value={key} className="overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
@@ -124,7 +124,7 @@ export const DeviceScreen = () => {
                                     </div>
                                 </AccordionTrigger>
                                 <AccordionContent className="bg-white px-3 pb-3">
-                                    {devices.length === 0 && <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-3 text-sm text-gray-500">Keine Geräte dieses Typs vorhanden.</div>}
+                                    {devices.length === 0 && <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-3 text-sm text-gray-500">{t("ui_new.devices.none_of_type")}</div>}
                                     {devices.length > 0 && <div className="grid grid-cols-1 gap-3 md:grid-cols-2">{devices.map((device) => <DeviceDecider device={device} key={device.id}/>)}</div>}
                                 </AccordionContent>
                             </AccordionItem>
