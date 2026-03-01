@@ -8,8 +8,7 @@ import {DeviceDecider} from "@/components/DeviceDecider";
 import {useAllThingsRefresh} from "@/hooks/useAllThingsRefresh";
 import {ErrorBanner} from "@/components/ErrorBanner";
 import {AppScreen} from "@/components/ui/AppScreen";
-import {SurfaceCard} from "@/components/ui/SurfaceCard";
-import {SectionHeader} from "@/components/ui/SectionHeader";
+import {ModernHero, ModernSection} from "@/components/ui/ModernSurface";
 import {StatusPill} from "@/components/ui/StatusPill";
 import {Colors} from "@/constants/Colors";
 import {TYPES, ZWISCHENSTECKER, ZWISCHENSTECKER_OUTDOOR} from "@/constants/FieldConstants";
@@ -106,24 +105,52 @@ export default function HomeScreen() {
         }));
     };
 
+    const totalDevices = Object.keys(allThings?.devices ?? {}).length;
+    const roomCount = groupedRooms.length;
+
     return (
-        <AppScreen
-            title="Zuhause"
-            subtitle={`${Object.keys(allThings?.devices ?? {}).length} Geräte`}
-            scroll={false}
-        >
+        <AppScreen scroll={false}>
             <ScrollView
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => {
                     void refreshAllThings();
                 }}/>}
                 showsVerticalScrollIndicator={false}
             >
+                <ModernHero
+                    title="SmartHome Uebersicht"
+                    subtitle="Filtere Geraetetypen und steuere Geraete direkt pro Raum."
+                    badges={[
+                        {
+                            label: `${totalDevices} Geraete`,
+                            icon: <MaterialCommunityIcons size={12} color="white" name="home-outline"/>
+                        },
+                        {
+                            label: `${roomCount} Raeume`,
+                            icon: <MaterialCommunityIcons size={12} color="white" name="map-marker-outline"/>
+                        },
+                        {
+                            label: `${typeCounts.length} Typen`,
+                            icon: <MaterialCommunityIcons size={12} color="white" name="view-grid-outline"/>
+                        }
+                    ]}
+                    stats={[
+                        {label: "Geraete", value: totalDevices},
+                        {label: "Raeume", value: roomCount},
+                        {label: "Typen", value: typeCounts.length},
+                        {label: "Filter", value: selectedType ? i18n.t(selectedType) : "Alle"}
+                    ]}
+                />
+
                 {refreshError && <ErrorBanner message={refreshError} onRetry={() => {
                     void refreshAllThings();
                 }}/>}
 
-                <SectionHeader title="Filter"/>
-                <SurfaceCard style={{marginBottom: 14}}>
+                <ModernSection
+                    title="Filter"
+                    description="Nach Geraetetyp filtern"
+                    icon={<MaterialCommunityIcons size={18} color={Colors.app.primary} name="filter-variant"/>}
+                    style={{marginBottom: 14}}
+                >
                     <View style={styles.chipWrap}>
                         {typeCounts.map(([type, count]) => {
                             const selected = selectedType === type;
@@ -140,41 +167,53 @@ export default function HomeScreen() {
                             );
                         })}
                     </View>
-                </SurfaceCard>
+                </ModernSection>
 
-                <SectionHeader title="Räume" subtitle="Aufklappen für Gerätesteuerung"/>
                 {groupedRooms.length === 0 && (
-                    <SurfaceCard>
+                    <ModernSection
+                        title="Raeume"
+                        description="Keine Geraete fuer den aktuellen Filter"
+                        icon={<MaterialCommunityIcons size={18} color={Colors.app.primary} name="home-city-outline"/>}
+                    >
                         <Text style={{color: Colors.app.textMuted}}>Keine Geräte für den aktuellen Filter gefunden.</Text>
-                    </SurfaceCard>
+                    </ModernSection>
                 )}
 
-                {groupedRooms.map((room) => {
-                    const isExpanded = expandedRooms[room.id] ?? true;
-                    return (
-                        <SurfaceCard key={room.id} style={{marginBottom: 12}}>
-                            <Pressable onPress={() => toggleRoom(room.id)} style={styles.roomHeader}>
-                                <View>
-                                    <Text style={styles.roomName}>{room.name}</Text>
-                                    <Text style={styles.roomMeta}>{room.devices.length} Geräte</Text>
+                {groupedRooms.length > 0 && (
+                    <ModernSection
+                        title="Raeume"
+                        description="Aufklappen fuer direkte Steuerung"
+                        icon={<MaterialCommunityIcons size={18} color={Colors.app.primary} name="home-city-outline"/>}
+                        style={{marginBottom: 14}}
+                    >
+                        {groupedRooms.map((room, index) => {
+                            const isExpanded = expandedRooms[room.id] ?? true;
+                            return (
+                                <View key={room.id} style={[styles.roomCard, index < groupedRooms.length - 1 ? styles.roomCardGap : null]}>
+                                    <Pressable onPress={() => toggleRoom(room.id)} style={styles.roomHeader}>
+                                        <View>
+                                            <Text style={styles.roomName}>{room.name}</Text>
+                                            <Text style={styles.roomMeta}>{room.devices.length} Geraete</Text>
+                                        </View>
+                                        <MaterialCommunityIcons
+                                            name={isExpanded ? "chevron-up" : "chevron-down"}
+                                            size={22}
+                                            color={Colors.app.textMuted}
+                                        />
+                                    </Pressable>
+                                    {isExpanded && (
+                                        <View style={{marginTop: 10}}>
+                                            {room.devices.map((device) => (
+                                                <DeviceDecider key={device.id} device={device}/>
+                                            ))}
+                                        </View>
+                                    )}
+                                    {!isExpanded && <StatusPill label="Eingeklappt" tone="neutral"/>}
                                 </View>
-                                <MaterialCommunityIcons
-                                    name={isExpanded ? "chevron-up" : "chevron-down"}
-                                    size={22}
-                                    color={Colors.app.textMuted}
-                                />
-                            </Pressable>
-                            {isExpanded && (
-                                <View style={{marginTop: 10}}>
-                                    {room.devices.map((device) => (
-                                        <DeviceDecider key={device.id} device={device}/>
-                                    ))}
-                                </View>
-                            )}
-                            {!isExpanded && <StatusPill label="Eingeklappt" tone="neutral"/>}
-                        </SurfaceCard>
-                    );
-                })}
+                            );
+                        })}
+                    </ModernSection>
+                )}
             </ScrollView>
         </AppScreen>
     );
@@ -209,6 +248,16 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between"
+    },
+    roomCard: {
+        borderWidth: 1,
+        borderColor: Colors.app.border,
+        borderRadius: 14,
+        backgroundColor: Colors.app.surfaceSoft,
+        padding: 11
+    },
+    roomCardGap: {
+        marginBottom: 10
     },
     roomName: {
         color: Colors.app.text,

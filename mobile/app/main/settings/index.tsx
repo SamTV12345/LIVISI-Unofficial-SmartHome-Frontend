@@ -5,9 +5,10 @@ import {setAllInactive} from "@/utils/sqlite";
 import {useAllThingsRefresh} from "@/hooks/useAllThingsRefresh";
 import {ErrorBanner} from "@/components/ErrorBanner";
 import {AppScreen} from "@/components/ui/AppScreen";
-import {SectionHeader} from "@/components/ui/SectionHeader";
-import {SurfaceCard} from "@/components/ui/SurfaceCard";
 import {NavRow} from "@/components/ui/NavRow";
+import {ModernHero, ModernSection} from "@/components/ui/ModernSurface";
+import {MaterialCommunityIcons} from "@expo/vector-icons";
+import {Colors} from "@/constants/Colors";
 
 export default function SettingsPage() {
     const {refreshing, refreshError, refreshAllThings} = useAllThingsRefresh();
@@ -21,11 +22,7 @@ export default function SettingsPage() {
     };
 
     return (
-        <AppScreen
-            title="Einstellungen"
-            subtitle={gateway?.label || gateway?.baseURL || "Kein aktives Gateway"}
-            scroll={false}
-        >
+        <AppScreen scroll={false}>
             <ScrollView
                 overScrollMode="always"
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => {
@@ -33,12 +30,33 @@ export default function SettingsPage() {
                 }}/>}
                 showsVerticalScrollIndicator={false}
             >
+                <ModernHero
+                    title="Einstellungen"
+                    subtitle={gateway?.label || gateway?.baseURL || "Kein aktives Gateway"}
+                    badges={[
+                        {
+                            label: gateway?.baseURL ? "Gateway verbunden" : "Kein Gateway",
+                            icon: <MaterialCommunityIcons size={12} color="white" name="lan-connect"/>
+                        }
+                    ]}
+                    stats={[
+                        {label: "Verbindung", value: gateway?.baseURL ? "Aktiv" : "Inaktiv"},
+                        {label: "Refresh", value: refreshing ? "Laeuft" : "Bereit"},
+                        {label: "Profil", value: gateway?.label || "Standard"},
+                        {label: "Bereiche", value: 3}
+                    ]}
+                />
+
                 {refreshError && <ErrorBanner message={refreshError} onRetry={() => {
                     void refreshAllThings();
                 }}/>}
 
-                <SectionHeader title="Verbindung"/>
-                <SurfaceCard style={{marginBottom: 14}}>
+                <ModernSection
+                    title="Verbindung"
+                    description="Gateway und Netzwerk"
+                    icon={<MaterialCommunityIcons size={18} color={Colors.app.primary} name="lan"/>}
+                    style={{marginBottom: 14}}
+                >
                     <NavRow
                         title="Gateway konfigurieren"
                         subtitle="URL, Nutzername und Passwort verwalten"
@@ -50,26 +68,34 @@ export default function SettingsPage() {
                         subtitle="Lokale Netzwerkdaten der Zentrale"
                         onPress={() => router.push("/main/settings/network")}
                     />
-                </SurfaceCard>
+                </ModernSection>
 
-                <SectionHeader title="Benachrichtigungen"/>
-                <SurfaceCard style={{marginBottom: 14}}>
+                <ModernSection
+                    title="Benachrichtigungen"
+                    description="SMTP und Empfaenger"
+                    icon={<MaterialCommunityIcons size={18} color={Colors.app.primary} name="email-outline"/>}
+                    style={{marginBottom: 14}}
+                >
                     <NavRow
                         title="E-Mail"
                         subtitle="SMTP und Empfänger konfigurieren"
                         onPress={() => router.push("/main/settings/email")}
                     />
-                </SurfaceCard>
+                </ModernSection>
 
-                <SectionHeader title="Session"/>
-                <SurfaceCard>
+                <ModernSection
+                    title="Session"
+                    description="Aktive Anmeldung"
+                    icon={<MaterialCommunityIcons size={18} color={Colors.app.primary} name="account-circle-outline"/>}
+                    style={{marginBottom: 14}}
+                >
                     <NavRow
                         title="Abmelden"
                         subtitle="Aktive Gateway-Sitzung beenden"
                         onPress={logout}
                         danger
                     />
-                </SurfaceCard>
+                </ModernSection>
             </ScrollView>
         </AppScreen>
     );

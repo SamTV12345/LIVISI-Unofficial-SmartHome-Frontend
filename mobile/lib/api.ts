@@ -1,5 +1,7 @@
 import {ConfigData} from "@/models/ConfigData";
 import {AxiosDeviceResponse, EmailConfig, GatewayConfig} from "@/store/store";
+import {Interaction} from "@/models/Interaction";
+import {Message} from "@/models/Messages";
 import ky from "ky";
 
 const DEFAULT_TIMEOUT_MS = 12_000;
@@ -65,7 +67,7 @@ export const fetchAPIConfig = async (gatewayInput: GatewayInput) => {
         return await apiClient.get(endpoint, {
             headers: basicAuthHeader(gateway)
         }).json<ConfigData>();
-    } catch (error) {
+    } catch {
         throw new Error("API config could not be loaded");
     }
 }
@@ -78,7 +80,7 @@ export const fetchAPIAll = async (gatewayInput: GatewayInput): Promise<AxiosDevi
         return await apiClient.get(endpoint, {
             headers: basicAuthHeader(gateway)
         }).json<AxiosDeviceResponse>();
-    } catch (error) {
+    } catch {
         throw new Error("Device data could not be loaded");
     }
 }
@@ -99,5 +101,48 @@ export const sendDeviceAction = async (gatewayInput: GatewayInput, payload: unkn
     await apiClient.post(endpoint, {
         json: payload,
         headers: basicAuthHeader(gateway)
+    });
+};
+
+export const fetchInteractions = async (gatewayInput: GatewayInput): Promise<Interaction[]> => {
+    const gateway = resolveGateway(gatewayInput);
+    const endpoint = buildURL(gateway.baseURL, "/interaction");
+    return apiClient.get(endpoint, {
+        headers: basicAuthHeader(gateway)
+    }).json<Interaction[]>();
+};
+
+export const fetchInteractionById = async (gatewayInput: GatewayInput, interactionId: string): Promise<Interaction> => {
+    const gateway = resolveGateway(gatewayInput);
+    const endpoint = buildURL(gateway.baseURL, `/interaction/${encodeURIComponent(interactionId)}`);
+    return apiClient.get(endpoint, {
+        headers: basicAuthHeader(gateway)
+    }).json<Interaction>();
+};
+
+export const triggerInteraction = async (gatewayInput: GatewayInput, interactionId: string) => {
+    const gateway = resolveGateway(gatewayInput);
+    const endpoint = buildURL(gateway.baseURL, `/interaction/${encodeURIComponent(interactionId)}/trigger`);
+    await apiClient.post(endpoint, {
+        headers: basicAuthHeader(gateway)
+    });
+};
+
+export const fetchMessageById = async (gatewayInput: GatewayInput, messageId: string): Promise<Message> => {
+    const gateway = resolveGateway(gatewayInput);
+    const endpoint = buildURL(gateway.baseURL, `/message/${encodeURIComponent(messageId)}`);
+    return apiClient.get(endpoint, {
+        headers: basicAuthHeader(gateway)
+    }).json<Message>();
+};
+
+export const markMessageAsRead = async (gatewayInput: GatewayInput, messageId: string) => {
+    const gateway = resolveGateway(gatewayInput);
+    const endpoint = buildURL(gateway.baseURL, `/message/${encodeURIComponent(messageId)}`);
+    await apiClient.put(endpoint, {
+        headers: basicAuthHeader(gateway),
+        json: {
+            read: true
+        }
     });
 };

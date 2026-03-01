@@ -3,6 +3,7 @@ import {LocationResponse} from "@/models/Location";
 import {Message} from "@/models/Messages";
 import { create } from "zustand";
 import {ConfigData} from "@/models/ConfigData";
+import {Interaction} from "@/models/Interaction";
 
 export type GatewayConfig = {
     baseURL: string,
@@ -54,7 +55,14 @@ export type AxiosDeviceResponse = {
     user_storage: any[],
     locations: LocationResponse[],
     messages: Message[],
-    email: EmailConfig
+    email: EmailConfig,
+    interactions?: Interaction[],
+    capabilities?: Array<{
+        id?: string;
+        type?: string;
+        device?: string;
+        config?: {name?: string};
+    }>
 }
 
 

@@ -10,6 +10,5 @@ export const LoadingScreen = ()=>{
             <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-gray-900"></div>
             <ProgressBar className="w-1/5" value={(totalProgress/TOTAL_THINGS_TO_LOAD)*100}/>
         </div>
-        {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
     </div>,document.getElementById('loading')!)
 }

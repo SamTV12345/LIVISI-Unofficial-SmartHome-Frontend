@@ -1,4 +1,4 @@
-import {RefreshControl, ScrollView, Text, View} from "react-native";
+import {RefreshControl, ScrollView, StyleSheet, Text, View} from "react-native";
 import {useMemo} from "react";
 import {router} from "expo-router";
 import {useContentModel} from "@/store/store";
@@ -7,9 +7,10 @@ import i18n from "@/i18n/i18n";
 import {useAllThingsRefresh} from "@/hooks/useAllThingsRefresh";
 import {ErrorBanner} from "@/components/ErrorBanner";
 import {AppScreen} from "@/components/ui/AppScreen";
-import {SectionHeader} from "@/components/ui/SectionHeader";
-import {SurfaceCard} from "@/components/ui/SurfaceCard";
 import {NavRow} from "@/components/ui/NavRow";
+import {ModernHero, ModernSection} from "@/components/ui/ModernSurface";
+import {MaterialCommunityIcons} from "@expo/vector-icons";
+import {Colors} from "@/constants/Colors";
 
 const normalizeType = (type: string) => type === ZWISCHENSTECKER_OUTDOOR ? ZWISCHENSTECKER : type;
 
@@ -34,21 +35,42 @@ export default function RoomsTabScreen() {
     }, [allThings?.devices]);
 
     return (
-        <AppScreen title="Gerätetypen" subtitle="Alphabetisch sortiert" scroll={false}>
+        <AppScreen scroll={false}>
             <ScrollView
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => {
                     void refreshAllThings();
                 }}/>}
                 showsVerticalScrollIndicator={false}
             >
+                <ModernHero
+                    title="Geraetetypen"
+                    subtitle="Alle vorhandenen Typen alphabetisch sortiert."
+                    badges={[
+                        {
+                            label: `${deviceTypeCounts.length} Typen`,
+                            icon: <MaterialCommunityIcons size={12} color="white" name="view-grid-outline"/>
+                        }
+                    ]}
+                    stats={[
+                        {label: "Typen", value: deviceTypeCounts.length},
+                        {label: "Sortierung", value: "A-Z"},
+                        {label: "Ansicht", value: "Typliste"},
+                        {label: "Live", value: refreshing ? "Aktualisiert..." : "Aktiv"}
+                    ]}
+                />
+
                 {refreshError && <ErrorBanner message={refreshError} onRetry={() => {
                     void refreshAllThings();
                 }}/>}
 
-                <SectionHeader title="Typenübersicht"/>
-                <SurfaceCard>
+                <ModernSection
+                    title="Typenuebersicht"
+                    description="Tippen fuer die Detailansicht pro Typ"
+                    icon={<MaterialCommunityIcons size={18} color={Colors.app.primary} name="format-list-bulleted"/>}
+                    style={{marginBottom: 14}}
+                >
                     {deviceTypeCounts.length === 0 && (
-                        <Text style={{color: "#5f7388"}}>Keine Geräte gefunden.</Text>
+                        <Text style={styles.emptyText}>Keine Geraete gefunden.</Text>
                     )}
                     {deviceTypeCounts.map(([type, count], index) => (
                         <View
@@ -70,8 +92,14 @@ export default function RoomsTabScreen() {
                             />
                         </View>
                     ))}
-                </SurfaceCard>
+                </ModernSection>
             </ScrollView>
         </AppScreen>
     );
 }
+
+const styles = StyleSheet.create({
+    emptyText: {
+        color: Colors.app.textMuted
+    }
+});

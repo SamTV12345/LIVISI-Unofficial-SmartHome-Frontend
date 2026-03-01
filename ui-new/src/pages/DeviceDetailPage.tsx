@@ -381,7 +381,7 @@ export const DeviceDetailPage = () => {
                                 <div className="mt-1 text-sm font-semibold">24h Verlauf</div>
                             </div>
                             <div className="rounded-lg bg-black/15 p-3">
-                                <div className="text-xs uppercase tracking-wide text-white/70">Szenarien</div>
+                                <div className="text-xs uppercase tracking-wide text-white/70">Automation</div>
                                 <div className="mt-1 text-sm font-semibold">{relatedScenarios.length}</div>
                             </div>
                             <div className="rounded-lg bg-black/15 p-3">
@@ -451,7 +451,7 @@ export const DeviceDetailPage = () => {
                             <AccordionTrigger className="px-4 py-4 hover:no-underline">
                                 <div className="flex w-full items-center gap-2 pr-2">
                                     <Layers size={18}/>
-                                    <span className="font-semibold text-gray-900">Empfohlene Szenarien</span>
+                                    <span className="font-semibold text-gray-900">Empfohlene Automationen</span>
                                     <span className="ml-auto rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
                                         {recommendedScenarios.length > 0 ? recommendedScenarios.length : DEFAULT_CLIMATE_RECOMMENDATIONS.length}
                                     </span>
@@ -463,7 +463,7 @@ export const DeviceDetailPage = () => {
                                         type="button"
                                         key={scenario.id}
                                         onClick={() => {
-                                            navigate(`/scenarios/${scenario.id}`);
+                                            navigate(`/automation/${scenario.id}`);
                                         }}
                                         className="w-full rounded-lg border border-gray-200 px-3 py-2 text-left hover:bg-slate-50"
                                     >
@@ -570,7 +570,7 @@ export const DeviceDetailPage = () => {
                     </div>
                     <div className="relative z-10 mt-5 grid grid-cols-2 gap-2 md:grid-cols-4">
                         <div className="rounded-lg bg-black/15 p-3"><div className="text-xs uppercase text-white/70">Status</div><div className="mt-1 text-sm font-semibold">{onStateValue === undefined ? "Keine Schaltfunktion" : onStateValue ? "Aktiv" : "Inaktiv"}</div></div>
-                        <div className="rounded-lg bg-black/15 p-3"><div className="text-xs uppercase text-white/70">Szenarien</div><div className="mt-1 text-sm font-semibold">{relatedScenarios.length}</div></div>
+                        <div className="rounded-lg bg-black/15 p-3"><div className="text-xs uppercase text-white/70">Automation</div><div className="mt-1 text-sm font-semibold">{relatedScenarios.length}</div></div>
                         <div className="rounded-lg bg-black/15 p-3"><div className="text-xs uppercase text-white/70">Live-Werte</div><div className="mt-1 text-sm font-semibold">{stateRows.length}</div></div>
                         <div className="rounded-lg bg-black/15 p-3"><div className="text-xs uppercase text-white/70">Letzte Änderung</div><div className="mt-1 text-sm font-semibold">{latestStateChange ? formatTime(latestStateChange) : "-"}</div></div>
                     </div>
@@ -597,11 +597,11 @@ export const DeviceDetailPage = () => {
                     </AccordionItem>
 
                     <AccordionItem value="scenarios" className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-                        <AccordionTrigger className="px-4 py-4 hover:no-underline"><div className="flex w-full items-center gap-2 pr-2"><Layers size={18}/><span className="font-semibold text-gray-900">Szenarien</span><span className="ml-auto rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">{relatedScenarios.length}</span></div></AccordionTrigger>
+                        <AccordionTrigger className="px-4 py-4 hover:no-underline"><div className="flex w-full items-center gap-2 pr-2"><Layers size={18}/><span className="font-semibold text-gray-900">Automation</span><span className="ml-auto rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">{relatedScenarios.length}</span></div></AccordionTrigger>
                         <AccordionContent className="px-4 pb-4">
-                            {relatedScenarios.length === 0 && <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-500">Keine passenden Szenarien gefunden.</div>}
-                            {relatedScenarios.length > 0 && <div className="space-y-2">{relatedScenarios.map((scenario) => <button type="button" key={scenario.id} onClick={() => { navigate(`/scenarios/${scenario.id}`); }} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-left hover:bg-slate-50"><div className="flex items-center gap-2"><div className="font-semibold text-slate-900">{scenario.name ?? scenario.id}</div><ChevronRight size={16} className="ml-auto text-slate-400"/></div><div className="mt-1 text-xs text-slate-500">Zuletzt geändert: {formatTime(scenario.modified)}</div></button>)}</div>}
-                            <button type="button" onClick={() => { navigate("/scenarios"); }} className="mt-3 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Alle Szenarien öffnen</button>
+                            {relatedScenarios.length === 0 && <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-500">Keine passenden Automationen gefunden.</div>}
+                            {relatedScenarios.length > 0 && <div className="space-y-2">{relatedScenarios.map((scenario) => <button type="button" key={scenario.id} onClick={() => { navigate(`/automation/${scenario.id}`); }} className="w-full rounded-lg border border-gray-200 px-3 py-2 text-left hover:bg-slate-50"><div className="flex items-center gap-2"><div className="font-semibold text-slate-900">{scenario.name ?? scenario.id}</div><ChevronRight size={16} className="ml-auto text-slate-400"/></div><div className="mt-1 text-xs text-slate-500">Zuletzt geändert: {formatTime(scenario.modified)}</div></button>)}</div>}
+                            <button type="button" onClick={() => { navigate("/automation"); }} className="mt-3 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Alle Automationen öffnen</button>
                         </AccordionContent>
                     </AccordionItem>
 

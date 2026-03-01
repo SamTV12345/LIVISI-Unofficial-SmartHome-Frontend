@@ -52,6 +52,10 @@ const router = createBrowserRouter(createRoutesFromElements(
                 <Route index element={<ServicesScreen/>}/>
                 <Route path="mobile-access" element={<MobileAccessScreen/>}/>
             </Route>
+            <Route path="automation">
+                <Route index element={<ScenarioScreen/>}/>
+                <Route path=":id" element={<ScenarioDetailScreen/>}/>
+            </Route>
             <Route path="scenarios">
                 <Route index element={<ScenarioScreen/>}/>
                 <Route path=":id" element={<ScenarioDetailScreen/>}/>

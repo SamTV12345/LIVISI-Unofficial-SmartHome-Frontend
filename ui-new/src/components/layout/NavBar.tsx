@@ -19,7 +19,7 @@ export const NavBar = () => {
         return <>
             <LinkNav to={'/home'}>Home</LinkNav>
             <LinkNav to={'/devices'}>Geräte</LinkNav>
-            <LinkNav to={'/scenarios'}>Szenarien</LinkNav>
+            <LinkNav to={'/automation'}>Automation</LinkNav>
             <LinkNav to={'/services'}>Dienste</LinkNav>
             <LinkNav to={'/states'}>Zustände</LinkNav>
             <LinkNav to={'/news'}>

@@ -25,7 +25,7 @@ export const useAllThingsRefresh = (): UseAllThingsRefreshResult => {
             const data = await fetchAPIAll(gateway);
             setAllThings(data);
             setRefreshError(undefined);
-        } catch (error) {
+        } catch {
             setRefreshError("Aktualisierung fehlgeschlagen.");
         } finally {
             setRefreshing(false);

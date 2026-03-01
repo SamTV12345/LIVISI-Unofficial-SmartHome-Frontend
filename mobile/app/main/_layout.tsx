@@ -18,6 +18,10 @@ export default function RootLayout() {
     const [isLoading, setIsLoading] = useState(true);
     const [loadError, setLoadError] = useState<string | undefined>(undefined);
     const [isSavingEmail, setIsSavingEmail] = useState(false);
+    const unreadMessageCount = useMemo(
+        () => (allThings?.messages ?? []).filter((message) => !message.read).length,
+        [allThings?.messages]
+    );
 
     const loadAllThings = useCallback(async () => {
         if (!gateway?.baseURL) {
@@ -71,17 +75,25 @@ export default function RootLayout() {
         headerShown: false,
         tabBarActiveTintColor: Colors.app.primary,
         tabBarInactiveTintColor: Colors.app.textMuted,
+        tabBarHideOnKeyboard: true,
         tabBarStyle: {
             borderTopColor: Colors.app.border,
             borderTopWidth: 1,
             backgroundColor: Colors.app.surface,
-            height: 64,
+            height: 70,
             paddingBottom: 8,
-            paddingTop: 8
+            paddingTop: 8,
+            paddingHorizontal: 4
         },
         tabBarLabelStyle: {
-            fontSize: 12,
+            fontSize: 11,
             fontWeight: "600" as const
+        },
+        tabBarBadgeStyle: {
+            backgroundColor: "#86b919",
+            color: "white",
+            fontSize: 10,
+            fontWeight: "700" as const
         }
     }), []);
 
@@ -170,6 +182,21 @@ export default function RootLayout() {
                         }}
                     />
                     <Tabs.Screen
+                        name="automation/index"
+                        options={{
+                            title: "Automation",
+                            tabBarIcon: ({color}) => <MaterialCommunityIcons size={22} name="source-branch" color={color}/>
+                        }}
+                    />
+                    <Tabs.Screen
+                        name="news/index"
+                        options={{
+                            title: "Nachrichten",
+                            tabBarBadge: unreadMessageCount > 0 ? unreadMessageCount : undefined,
+                            tabBarIcon: ({color}) => <MaterialCommunityIcons size={22} name="bell-outline" color={color}/>
+                        }}
+                    />
+                    <Tabs.Screen
                         name="settings/index"
                         options={{
                             title: "Einstellungen",
@@ -219,6 +246,24 @@ export default function RootLayout() {
                             href: null,
                             headerShown: true,
                             title: "Gerätedetails",
+                            headerTintColor: Colors.app.text
+                        }}
+                    />
+                    <Tabs.Screen
+                        name="automation/[interactionId]"
+                        options={{
+                            href: null,
+                            headerShown: true,
+                            title: "Automation",
+                            headerTintColor: Colors.app.text
+                        }}
+                    />
+                    <Tabs.Screen
+                        name="news/[messageId]"
+                        options={{
+                            href: null,
+                            headerShown: true,
+                            title: "Nachricht",
                             headerTintColor: Colors.app.text
                         }}
                     />

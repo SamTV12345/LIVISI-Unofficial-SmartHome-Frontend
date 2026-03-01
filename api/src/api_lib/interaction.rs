@@ -43,7 +43,9 @@ pub struct InteractionResponse{
     pub is_internal: Option<bool>,
     pub rules: Vec<InteractionRule>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub tags: Option<HashMap<String,String>>
+    pub tags: Option<HashMap<String,String>>,
+    #[serde(flatten, default)]
+    pub extra: HashMap<String, Value>
 }
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Details {}
