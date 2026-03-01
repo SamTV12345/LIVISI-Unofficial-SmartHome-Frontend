@@ -31,11 +31,11 @@ jobs:
       - name: Install dependencies
         working-directory: mobile
         run: pnpm install --frozen-lockfile
-      - name: Setup Expo CLI
-        run: pnpm install -g @expo/cli@latest
       - name: Generate native code with expo prebuild
         run: npx expo prebuild --platform android
+        working-directory: mobile
       - name: Generate unsigned APK
+        working-directory: mobile
         run: |
           cd android
           chmod +x gradlew
