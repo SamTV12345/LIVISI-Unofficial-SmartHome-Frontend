@@ -3,7 +3,6 @@ import {Pressable, RefreshControl, ScrollView, StyleSheet, Text, View} from "rea
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import {useContentModel} from "@/store/store";
 import {Device} from "@/models/Device";
-import {LocationResponse} from "@/models/Location";
 import {DeviceDecider} from "@/components/DeviceDecider";
 import {useAllThingsRefresh} from "@/hooks/useAllThingsRefresh";
 import {ErrorBanner} from "@/components/ErrorBanner";
@@ -13,6 +12,7 @@ import {StatusPill} from "@/components/ui/StatusPill";
 import {Colors} from "@/constants/Colors";
 import {TYPES, ZWISCHENSTECKER, ZWISCHENSTECKER_OUTDOOR} from "@/constants/FieldConstants";
 import i18n from "@/i18n/i18n";
+import {buildLocationLookups, normalizeLocationReference, resolveDeviceLocation} from "@/utils/location";
 
 type RoomGroup = {
     id: string;
@@ -34,13 +34,10 @@ export default function HomeScreen() {
     const [selectedType, setSelectedType] = useState<string | undefined>(undefined);
     const [expandedRooms, setExpandedRooms] = useState<Record<string, boolean>>({});
 
-    const locationMap = useMemo(() => {
-        const map = new Map<string, LocationResponse>();
-        for (const location of allThings?.locations ?? []) {
-            map.set(location.id, location);
-        }
-        return map;
-    }, [allThings?.locations]);
+    const locationLookups = useMemo(
+        () => buildLocationLookups(allThings?.locations ?? []),
+        [allThings?.locations]
+    );
 
     const groupedRooms = useMemo<RoomGroup[]>(() => {
         if (!allThings?.devices) {
@@ -58,8 +55,9 @@ export default function HomeScreen() {
                 continue;
             }
 
-            const location = locationMap.get(device.location);
-            const roomId = location?.id ?? "unassigned";
+            const location = resolveDeviceLocation(device, locationLookups);
+            const fallbackRoomId = normalizeLocationReference(device.location) ?? "unassigned";
+            const roomId = location?.id ?? fallbackRoomId;
             const roomName = location?.config.name ?? "Ohne Raum";
             const existing = rooms.get(roomId);
             const nextDevice: Device = {
@@ -84,7 +82,7 @@ export default function HomeScreen() {
                 devices: room.devices.sort((a, b) => compareByName(getDeviceName(a), getDeviceName(b)))
             }))
             .sort((a, b) => compareByName(a.name, b.name));
-    }, [allThings?.devices, locationMap, selectedType]);
+    }, [allThings?.devices, locationLookups, selectedType]);
 
     const typeCounts = useMemo(() => {
         const map = new Map<string, number>();
@@ -117,15 +115,15 @@ export default function HomeScreen() {
                 showsVerticalScrollIndicator={false}
             >
                 <ModernHero
-                    title="SmartHome Uebersicht"
-                    subtitle="Filtere Geraetetypen und steuere Geraete direkt pro Raum."
+                    title="SmartHome Übersicht"
+                    subtitle="Filtere Gerätetypen und steuere Geräte direkt pro Raum."
                     badges={[
                         {
-                            label: `${totalDevices} Geraete`,
+                            label: `${totalDevices} Geräte`,
                             icon: <MaterialCommunityIcons size={12} color="white" name="home-outline"/>
                         },
                         {
-                            label: `${roomCount} Raeume`,
+                            label: `${roomCount} Räume`,
                             icon: <MaterialCommunityIcons size={12} color="white" name="map-marker-outline"/>
                         },
                         {
@@ -134,8 +132,8 @@ export default function HomeScreen() {
                         }
                     ]}
                     stats={[
-                        {label: "Geraete", value: totalDevices},
-                        {label: "Raeume", value: roomCount},
+                        {label: "Geräte", value: totalDevices},
+                        {label: "Räume", value: roomCount},
                         {label: "Typen", value: typeCounts.length},
                         {label: "Filter", value: selectedType ? i18n.t(selectedType) : "Alle"}
                     ]}
@@ -147,7 +145,7 @@ export default function HomeScreen() {
 
                 <ModernSection
                     title="Filter"
-                    description="Nach Geraetetyp filtern"
+                    description="Nach Gerätetyp filtern"
                     icon={<MaterialCommunityIcons size={18} color={Colors.app.primary} name="filter-variant"/>}
                     style={{marginBottom: 14}}
                 >
@@ -171,8 +169,8 @@ export default function HomeScreen() {
 
                 {groupedRooms.length === 0 && (
                     <ModernSection
-                        title="Raeume"
-                        description="Keine Geraete fuer den aktuellen Filter"
+                        title="Räume"
+                        description="Keine Geräte für den aktuellen Filter"
                         icon={<MaterialCommunityIcons size={18} color={Colors.app.primary} name="home-city-outline"/>}
                     >
                         <Text style={{color: Colors.app.textMuted}}>Keine Geräte für den aktuellen Filter gefunden.</Text>
@@ -181,8 +179,8 @@ export default function HomeScreen() {
 
                 {groupedRooms.length > 0 && (
                     <ModernSection
-                        title="Raeume"
-                        description="Aufklappen fuer direkte Steuerung"
+                        title="Räume"
+                        description="Aufklappen für direkte Steuerung"
                         icon={<MaterialCommunityIcons size={18} color={Colors.app.primary} name="home-city-outline"/>}
                         style={{marginBottom: 14}}
                     >
@@ -193,7 +191,7 @@ export default function HomeScreen() {
                                     <Pressable onPress={() => toggleRoom(room.id)} style={styles.roomHeader}>
                                         <View>
                                             <Text style={styles.roomName}>{room.name}</Text>
-                                            <Text style={styles.roomMeta}>{room.devices.length} Geraete</Text>
+                                            <Text style={styles.roomMeta}>{room.devices.length} Geräte</Text>
                                         </View>
                                         <MaterialCommunityIcons
                                             name={isExpanded ? "chevron-up" : "chevron-down"}

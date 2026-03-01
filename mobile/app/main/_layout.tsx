@@ -1,29 +1,48 @@
-import {DefaultTheme, ThemeProvider} from "@react-navigation/native";
+import {ThemeProvider} from "@react-navigation/native";
 import {useCallback, useEffect, useMemo, useState} from "react";
 import "react-native-reanimated";
 import {Pressable, Text, View} from "react-native";
 import {GestureHandlerRootView} from "react-native-gesture-handler";
 import {AxiosDeviceResponse, useContentModel} from "@/store/store";
-import {Colors} from "@/constants/Colors";
 import {FontAwesome, MaterialCommunityIcons} from "@expo/vector-icons";
-import {Tabs} from "expo-router";
+import {Href, router, Tabs, useNavigation} from "expo-router";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {createGatewayQueryClient} from "@/lib/openapi/client";
 import {MainLoadingSkeleton} from "@/components/ui/Skeleton";
+import {useAppColors, useNavigationTheme} from "@/hooks/useAppColors";
 
 const REFRESH_INTERVAL_MS = 30_000;
 
 export default function RootLayout() {
+    const appColors = useAppColors();
+    const navigationTheme = useNavigationTheme();
     const setAllThings = useContentModel((state) => state.setAllThings);
     const gateway = useContentModel((state) => state.gateway);
     const allThings = useContentModel((state) => state.allThings);
     const [loadError, setLoadError] = useState<string | undefined>(undefined);
     const [isSavingEmail, setIsSavingEmail] = useState(false);
     const insets = useSafeAreaInsets();
+    const navigation = useNavigation();
     const unreadMessageCount = useMemo(
         () => (allThings?.messages ?? []).filter((message) => !message.read).length,
         [allThings?.messages]
     );
+
+    const renderDetailBackButton = useCallback((fallbackRoute: Href) => (
+        <Pressable
+            onPress={() => {
+                if (navigation.canGoBack()) {
+                    navigation.goBack();
+                    return;
+                }
+                router.replace(fallbackRoute);
+            }}
+            style={{marginLeft: 8, padding: 4}}
+            hitSlop={10}
+        >
+            <MaterialCommunityIcons size={22} color={appColors.text} name="chevron-left"/>
+        </Pressable>
+    ), [appColors.text, navigation]);
 
     const gatewayIdentity = useMemo(() => ({
         baseURL: gateway?.baseURL ?? "http://127.0.0.1",
@@ -79,48 +98,57 @@ export default function RootLayout() {
         }
     }, [allThings?.email, gateway?.baseURL, isSavingEmail, saveEmailMutation]);
 
-    const tabBottomPadding = Math.max(insets.bottom, 8);
-    const tabBarHeight = 56 + tabBottomPadding + 6;
+    const tabBarSafeBottom = Math.max(insets.bottom, 10);
+    const tabBarHeight = 58 + tabBarSafeBottom;
+    const tabBarVerticalPadding = 6;
     const tabScreenOptions = useMemo(() => ({
         headerShown: false,
-        tabBarActiveTintColor: Colors.app.primary,
-        tabBarInactiveTintColor: Colors.app.textMuted,
+        tabBarActiveTintColor: appColors.primary,
+        tabBarInactiveTintColor: appColors.textMuted,
         tabBarHideOnKeyboard: true,
         sceneStyle: {
-            backgroundColor: Colors.app.background,
-            paddingBottom: tabBarHeight
+            backgroundColor: appColors.background,
+            paddingBottom: tabBarHeight + 8
         },
         tabBarStyle: {
             position: "absolute" as const,
             left: 0,
             right: 0,
             bottom: 0,
-            borderTopColor: Colors.app.border,
             borderTopWidth: 1,
-            backgroundColor: Colors.app.surface,
+            borderTopColor: appColors.borderStrong,
+            backgroundColor: appColors.surfaceRaised,
             height: tabBarHeight,
-            paddingBottom: tabBottomPadding,
-            paddingTop: 6,
-            paddingHorizontal: 4
+            paddingBottom: tabBarSafeBottom,
+            paddingTop: tabBarVerticalPadding,
+            paddingHorizontal: 8
         },
         tabBarItemStyle: {
-            paddingHorizontal: 2
+            borderRadius: 10,
+            marginHorizontal: 1,
+            marginVertical: 1,
+            backgroundColor: "transparent",
+            paddingHorizontal: 1
+        },
+        tabBarIconStyle: {
+            marginTop: 1
         },
         tabBarLabelStyle: {
             fontSize: 10,
-            fontWeight: "600" as const
+            fontWeight: "600" as const,
+            marginBottom: 1
         },
         tabBarBadgeStyle: {
-            backgroundColor: "#86b919",
-            color: "white",
+            backgroundColor: appColors.accent,
+            color: appColors.surface,
             fontSize: 10,
             fontWeight: "700" as const
         }
-    }), [tabBarHeight, tabBottomPadding]);
+    }), [appColors.accent, appColors.background, appColors.borderStrong, appColors.primary, appColors.surface, appColors.surfaceRaised, appColors.textMuted, tabBarHeight, tabBarSafeBottom, tabBarVerticalPadding]);
 
     if ((allThingsQuery.isLoading || allThingsQuery.isFetching) && !allThings) {
         return (
-            <ThemeProvider value={DefaultTheme}>
+            <ThemeProvider value={navigationTheme}>
                 <MainLoadingSkeleton/>
             </ThemeProvider>
         );
@@ -128,19 +156,19 @@ export default function RootLayout() {
 
     if (loadError && !allThings) {
         return (
-            <ThemeProvider value={DefaultTheme}>
+            <ThemeProvider value={navigationTheme}>
                 <View style={{
                     flex: 1,
-                    backgroundColor: Colors.app.background,
+                    backgroundColor: appColors.background,
                     justifyContent: "center",
                     alignItems: "center",
                     padding: 20
                     }}>
-                    <Text style={{color: Colors.app.text, textAlign: "center", marginBottom: 20}}>{loadError}</Text>
+                    <Text style={{color: appColors.text, textAlign: "center", marginBottom: 20}}>{loadError}</Text>
                     <Pressable onPress={() => {
                         refetchAllThings();
                     }} style={{
-                        backgroundColor: Colors.app.primary,
+                        backgroundColor: appColors.primary,
                         borderRadius: 999,
                         paddingHorizontal: 20,
                         paddingVertical: 10
@@ -153,11 +181,11 @@ export default function RootLayout() {
     }
 
     return (
-        <ThemeProvider value={DefaultTheme}>
+        <ThemeProvider value={navigationTheme}>
             <GestureHandlerRootView style={{flex: 1}}>
                 {loadError && allThings && <View style={{
-                    backgroundColor: Colors.app.warningSoft,
-                    borderColor: Colors.app.warningBorder,
+                    backgroundColor: appColors.warningSoft,
+                    borderColor: appColors.warningBorder,
                     borderWidth: 1,
                     borderRadius: 12,
                     marginHorizontal: 16,
@@ -165,12 +193,12 @@ export default function RootLayout() {
                     paddingHorizontal: 12,
                     paddingVertical: 10
                 }}>
-                        <Text style={{color: Colors.app.warningText}}>{loadError}</Text>
+                        <Text style={{color: appColors.warningText}}>{loadError}</Text>
                         <Pressable onPress={() => {
                             refetchAllThings();
                         }}>
                             <Text style={{
-                                color: Colors.app.warningText,
+                                color: appColors.warningText,
                             textDecorationLine: "underline",
                             marginTop: 6
                         }}>
@@ -217,7 +245,9 @@ export default function RootLayout() {
                             href: null,
                             headerShown: true,
                             title: "Netzwerk",
-                            headerTintColor: Colors.app.text
+                            headerTintColor: appColors.text,
+                            headerStyle: {backgroundColor: appColors.surfaceRaised},
+                            headerLeft: () => renderDetailBackButton("/main/settings")
                         }}
                     />
                     <Tabs.Screen
@@ -226,7 +256,9 @@ export default function RootLayout() {
                             href: null,
                             headerShown: true,
                             title: "Gateway",
-                            headerTintColor: Colors.app.text
+                            headerTintColor: appColors.text,
+                            headerStyle: {backgroundColor: appColors.surfaceRaised},
+                            headerLeft: () => renderDetailBackButton("/main/settings")
                         }}
                     />
                     <Tabs.Screen
@@ -235,10 +267,12 @@ export default function RootLayout() {
                             href: null,
                             headerShown: true,
                             title: "E-Mail",
-                            headerTintColor: Colors.app.text,
+                            headerTintColor: appColors.text,
+                            headerStyle: {backgroundColor: appColors.surfaceRaised},
+                            headerLeft: () => renderDetailBackButton("/main/settings"),
                             headerRight: () => (
                                 <Text
-                                    style={{color: Colors.app.primary, marginRight: 16, fontSize: 17, lineHeight: 22}}
+                                    style={{color: appColors.primary, marginRight: 16, fontSize: 17, lineHeight: 22}}
                                     onPress={onSaveEmail}
                                 >
                                     {isSavingEmail ? "Speichert..." : "Speichern"}
@@ -252,7 +286,9 @@ export default function RootLayout() {
                             href: null,
                             headerShown: true,
                             title: "Gerätedetails",
-                            headerTintColor: Colors.app.text
+                            headerTintColor: appColors.text,
+                            headerStyle: {backgroundColor: appColors.surfaceRaised},
+                            headerLeft: () => renderDetailBackButton("/main/devices/(tabs)")
                         }}
                     />
                     <Tabs.Screen
@@ -261,7 +297,9 @@ export default function RootLayout() {
                             href: null,
                             headerShown: true,
                             title: "Automation",
-                            headerTintColor: Colors.app.text
+                            headerTintColor: appColors.text,
+                            headerStyle: {backgroundColor: appColors.surfaceRaised},
+                            headerLeft: () => renderDetailBackButton("/main/automation")
                         }}
                     />
                     <Tabs.Screen
@@ -270,7 +308,9 @@ export default function RootLayout() {
                             href: null,
                             headerShown: true,
                             title: "Nachricht",
-                            headerTintColor: Colors.app.text
+                            headerTintColor: appColors.text,
+                            headerStyle: {backgroundColor: appColors.surfaceRaised},
+                            headerLeft: () => renderDetailBackButton("/main/news")
                         }}
                     />
                 </Tabs>

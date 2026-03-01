@@ -13,6 +13,7 @@ import {ErrorBanner} from "@/components/ErrorBanner";
 import i18n from "@/i18n/i18n";
 import {FENSTERKONTAKT, HEATING, RAUCHMELDER, ZWISCHENSTECKER, ZWISCHENSTECKER_OUTDOOR} from "@/constants/FieldConstants";
 import {useGatewayApi} from "@/hooks/useGatewayApi";
+import {buildLocationLookups, resolveDeviceLocation} from "@/utils/location";
 
 type CapabilityEntry = {
     id: string;
@@ -60,12 +61,16 @@ export default function DeviceDetailScreen() {
     const [localSetpoint, setLocalSetpoint] = useState<number | undefined>(undefined);
 
     const device = deviceId ? allThings?.devices?.[deviceId] : undefined;
+    const locationLookups = useMemo(
+        () => buildLocationLookups(allThings?.locations ?? []),
+        [allThings?.locations]
+    );
     const locationName = useMemo(() => {
         if (!device) {
             return undefined;
         }
-        return allThings?.locations.find((entry) => entry.id === device.location)?.config.name;
-    }, [allThings?.locations, device]);
+        return resolveDeviceLocation(device, locationLookups)?.config.name;
+    }, [device, locationLookups]);
 
     if (!device) {
         return (

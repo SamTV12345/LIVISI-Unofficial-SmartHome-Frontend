@@ -59,7 +59,7 @@ export default function NewsScreen() {
 
                 <ModernSection
                     title="Nachrichtenliste"
-                    description="Tippe auf eine Nachricht fuer die Detailansicht"
+                    description="Tippe auf eine Nachricht für die Detailansicht"
                     icon={<MaterialCommunityIcons size={18} color={Colors.app.primary} name="text-box-outline"/>}
                     style={{marginBottom: 14}}
                 >

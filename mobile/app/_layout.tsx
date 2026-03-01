@@ -1,4 +1,4 @@
-import {DefaultTheme, ThemeProvider} from '@react-navigation/native';
+import {ThemeProvider} from "@react-navigation/native";
 import * as SplashScreen from 'expo-splash-screen';
 import {useEffect} from 'react';
 import 'react-native-reanimated';
@@ -9,12 +9,14 @@ import {QueryClientProvider} from "@tanstack/react-query";
 import {queryClient} from "@/lib/queryClient";
 import {createGatewayQueryClient} from "@/lib/openapi/client";
 import {ConfigData} from "@/models/ConfigData";
+import {useNavigationTheme} from "@/hooks/useAppColors";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const router = useRouter();
+  const navigationTheme = useNavigationTheme();
 
   useEffect(() => {
     const bootstrap = async () => {
@@ -65,7 +67,7 @@ export default function RootLayout() {
 
     return (
         <QueryClientProvider client={queryClient}>
-            <ThemeProvider value={DefaultTheme}>
+            <ThemeProvider value={navigationTheme}>
                 <Slot>
                 </Slot>
             </ThemeProvider>

@@ -1,6 +1,7 @@
-import {PropsWithChildren, ReactNode} from "react";
+import {PropsWithChildren, ReactNode, useMemo} from "react";
 import {StyleProp, StyleSheet, Text, View, ViewStyle} from "react-native";
-import {Colors} from "@/constants/Colors";
+import {AppPalette} from "@/constants/Colors";
+import {useAppColors} from "@/hooks/useAppColors";
 
 export type HeroBadge = {
     label: string;
@@ -38,8 +39,13 @@ export const ModernHero = ({
     actionSlot,
     style
 }: ModernHeroProps) => {
+    const appColors = useAppColors();
+    const styles = useMemo(() => createStyles(appColors), [appColors]);
+
     return (
         <View style={[styles.hero, style]}>
+            <View style={styles.heroTintLeft}/>
+            <View style={styles.heroTintRight}/>
             <View style={styles.heroGlowTop}/>
             <View style={styles.heroGlowBottom}/>
             <View style={styles.heroOverlay}/>
@@ -85,6 +91,9 @@ export const ModernSection = ({
     contentStyle,
     children
 }: ModernSectionProps) => {
+    const appColors = useAppColors();
+    const styles = useMemo(() => createStyles(appColors), [appColors]);
+
     return (
         <View style={[styles.section, style]}>
             <View style={styles.sectionHeader}>
@@ -102,37 +111,62 @@ export const ModernSection = ({
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppPalette) => StyleSheet.create({
     hero: {
         overflow: "hidden",
         borderRadius: 24,
         borderWidth: 1,
-        borderColor: "rgba(14, 46, 79, 0.22)",
+        borderColor: colors.borderStrong,
         padding: 16,
-        backgroundColor: "#1f5f97",
-        marginBottom: 14
+        backgroundColor: colors.heroFrom,
+        marginBottom: 14,
+        shadowColor: colors.shadow,
+        shadowOpacity: 0.34,
+        shadowRadius: 16,
+        shadowOffset: {width: 0, height: 8},
+        elevation: 8
     },
     heroOverlay: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: "rgba(16, 103, 94, 0.28)"
+        backgroundColor: colors.heroOverlay
+    },
+    heroTintLeft: {
+        position: "absolute",
+        width: 280,
+        height: 280,
+        borderRadius: 280,
+        left: -120,
+        top: -130,
+        backgroundColor: colors.heroVia,
+        opacity: 0.46
+    },
+    heroTintRight: {
+        position: "absolute",
+        width: 300,
+        height: 300,
+        borderRadius: 300,
+        right: -130,
+        bottom: -170,
+        backgroundColor: colors.heroTo,
+        opacity: 0.44
     },
     heroGlowTop: {
         position: "absolute",
-        width: 220,
-        height: 220,
+        width: 250,
+        height: 250,
         borderRadius: 220,
-        right: -90,
+        right: -100,
         top: -90,
-        backgroundColor: "rgba(255,255,255,0.2)"
+        backgroundColor: colors.heroGlowTop
     },
     heroGlowBottom: {
         position: "absolute",
-        width: 220,
-        height: 220,
+        width: 250,
+        height: 250,
         borderRadius: 220,
-        left: -110,
-        bottom: -120,
-        backgroundColor: "rgba(164, 219, 142, 0.2)"
+        left: -120,
+        bottom: -130,
+        backgroundColor: colors.heroGlowBottom
     },
     heroContent: {
         zIndex: 1,
@@ -141,8 +175,8 @@ const styles = StyleSheet.create({
     },
     heroTitle: {
         color: "white",
-        fontSize: 26,
-        fontWeight: "700"
+        fontSize: 27,
+        fontWeight: "800"
     },
     heroSubtitle: {
         color: "rgba(255,255,255,0.92)",
@@ -158,8 +192,8 @@ const styles = StyleSheet.create({
     badge: {
         borderRadius: 999,
         borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.25)",
-        backgroundColor: "rgba(0,0,0,0.12)",
+        borderColor: "rgba(255,255,255,0.24)",
+        backgroundColor: "rgba(0,0,0,0.14)",
         paddingHorizontal: 10,
         paddingVertical: 5,
         flexDirection: "row",
@@ -182,7 +216,9 @@ const styles = StyleSheet.create({
         minWidth: "47%",
         flexGrow: 1,
         borderRadius: 14,
-        backgroundColor: "rgba(0,0,0,0.14)",
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.16)",
+        backgroundColor: "rgba(4, 19, 30, 0.2)",
         paddingHorizontal: 10,
         paddingVertical: 9
     },
@@ -201,13 +237,18 @@ const styles = StyleSheet.create({
     section: {
         borderRadius: 16,
         borderWidth: 1,
-        borderColor: Colors.app.border,
-        backgroundColor: Colors.app.surface,
-        overflow: "hidden"
+        borderColor: colors.border,
+        backgroundColor: colors.surfaceRaised,
+        overflow: "hidden",
+        shadowColor: colors.shadow,
+        shadowOpacity: 0.14,
+        shadowRadius: 10,
+        shadowOffset: {width: 0, height: 4},
+        elevation: 3
     },
     sectionHeader: {
         borderBottomWidth: 1,
-        borderBottomColor: "#e8eff6",
+        borderBottomColor: colors.border,
         paddingHorizontal: 14,
         paddingVertical: 11,
         flexDirection: "row",
@@ -218,12 +259,12 @@ const styles = StyleSheet.create({
         flex: 1
     },
     sectionTitle: {
-        color: Colors.app.text,
+        color: colors.text,
         fontWeight: "700",
         fontSize: 16
     },
     sectionDescription: {
-        color: Colors.app.textMuted,
+        color: colors.textMuted,
         marginTop: 2,
         fontSize: 13
     },

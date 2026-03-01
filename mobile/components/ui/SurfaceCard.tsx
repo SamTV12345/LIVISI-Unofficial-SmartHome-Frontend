@@ -1,6 +1,7 @@
-import {PropsWithChildren} from "react";
+import {PropsWithChildren, useMemo} from "react";
 import {StyleProp, StyleSheet, View, ViewStyle} from "react-native";
-import {Colors} from "@/constants/Colors";
+import {AppPalette} from "@/constants/Colors";
+import {useAppColors} from "@/hooks/useAppColors";
 
 type SurfaceCardProps = PropsWithChildren<{
     style?: StyleProp<ViewStyle>;
@@ -8,6 +9,9 @@ type SurfaceCardProps = PropsWithChildren<{
 }>;
 
 export const SurfaceCard = ({children, style, muted}: SurfaceCardProps) => {
+    const appColors = useAppColors();
+    const styles = useMemo(() => createStyles(appColors), [appColors]);
+
     return (
         <View style={[
             styles.card,
@@ -19,20 +23,20 @@ export const SurfaceCard = ({children, style, muted}: SurfaceCardProps) => {
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppPalette) => StyleSheet.create({
     card: {
-        backgroundColor: Colors.app.surface,
-        borderColor: Colors.app.border,
+        backgroundColor: colors.surfaceRaised,
+        borderColor: colors.border,
         borderWidth: 1,
-        borderRadius: 16,
+        borderRadius: 18,
         padding: 14,
-        shadowColor: "#132a40",
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        shadowOffset: {width: 0, height: 4},
-        elevation: 2
+        shadowColor: colors.shadow,
+        shadowOpacity: 0.16,
+        shadowRadius: 10,
+        shadowOffset: {width: 0, height: 5},
+        elevation: 3
     },
     cardMuted: {
-        backgroundColor: Colors.app.surfaceSoft
+        backgroundColor: colors.surfaceSoft
     }
 });

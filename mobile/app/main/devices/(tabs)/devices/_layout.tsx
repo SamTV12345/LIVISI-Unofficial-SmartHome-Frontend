@@ -1,15 +1,17 @@
 import {Stack} from "expo-router";
-import {Colors} from "@/constants/Colors";
+import {useAppColors} from "@/hooks/useAppColors";
 
 export default function RootLayout() {
+    const appColors = useAppColors();
+
     return (
         <Stack
             screenOptions={{
                 headerShadowVisible: false,
                 headerStyle: {
-                    backgroundColor: Colors.app.background
+                    backgroundColor: appColors.surface
                 },
-                headerTintColor: Colors.app.text,
+                headerTintColor: appColors.text,
                 headerTitleStyle: {
                     fontWeight: "700"
                 }

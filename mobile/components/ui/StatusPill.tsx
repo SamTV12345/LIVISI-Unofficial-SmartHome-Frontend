@@ -1,5 +1,7 @@
+import {useMemo} from "react";
 import {StyleSheet, Text, View} from "react-native";
-import {Colors} from "@/constants/Colors";
+import {AppPalette} from "@/constants/Colors";
+import {useAppColors} from "@/hooks/useAppColors";
 
 type StatusPillProps = {
     label: string;
@@ -7,6 +9,10 @@ type StatusPillProps = {
 };
 
 export const StatusPill = ({label, tone = "neutral"}: StatusPillProps) => {
+    const appColors = useAppColors();
+    const styles = useMemo(() => createStyles(appColors), [appColors]);
+    const toneStyles = useMemo(() => createToneStyles(appColors), [appColors]);
+
     return (
         <View style={[styles.pill, toneStyles[tone].background]}>
             <Text style={[styles.label, toneStyles[tone].text]}>{label}</Text>
@@ -14,26 +20,42 @@ export const StatusPill = ({label, tone = "neutral"}: StatusPillProps) => {
     );
 };
 
-const toneStyles = {
+const createToneStyles = (colors: AppPalette) => ({
     neutral: StyleSheet.create({
-        background: {backgroundColor: Colors.app.surfaceSoft},
-        text: {color: Colors.app.textMuted}
+        background: {
+            backgroundColor: colors.surfaceSoft,
+            borderColor: colors.border,
+            borderWidth: 1
+        },
+        text: {color: colors.textMuted}
     }),
     primary: StyleSheet.create({
-        background: {backgroundColor: Colors.app.primarySoft},
-        text: {color: Colors.app.primary}
+        background: {
+            backgroundColor: colors.primarySoft,
+            borderColor: colors.borderStrong,
+            borderWidth: 1
+        },
+        text: {color: colors.primary}
     }),
     success: StyleSheet.create({
-        background: {backgroundColor: Colors.app.successSoft},
-        text: {color: Colors.app.success}
+        background: {
+            backgroundColor: colors.successSoft,
+            borderColor: colors.accent,
+            borderWidth: 1
+        },
+        text: {color: colors.success}
     }),
     warning: StyleSheet.create({
-        background: {backgroundColor: Colors.app.warningSoft},
-        text: {color: Colors.app.warningText}
+        background: {
+            backgroundColor: colors.warningSoft,
+            borderColor: colors.warningBorder,
+            borderWidth: 1
+        },
+        text: {color: colors.warningText}
     })
-};
+});
 
-const styles = StyleSheet.create({
+const createStyles = (_colors: AppPalette) => StyleSheet.create({
     pill: {
         borderRadius: 999,
         paddingHorizontal: 10,

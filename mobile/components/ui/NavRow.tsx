@@ -1,6 +1,8 @@
+import {useMemo} from "react";
 import {Pressable, StyleSheet, Text, View} from "react-native";
-import {Colors} from "@/constants/Colors";
+import {AppPalette} from "@/constants/Colors";
 import AntDesign from "@expo/vector-icons/AntDesign";
+import {useAppColors} from "@/hooks/useAppColors";
 
 type NavRowProps = {
     title: string;
@@ -10,6 +12,9 @@ type NavRowProps = {
 };
 
 export const NavRow = ({title, subtitle, onPress, danger}: NavRowProps) => {
+    const appColors = useAppColors();
+    const styles = useMemo(() => createStyles(appColors), [appColors]);
+
     return (
         <Pressable
             onPress={onPress}
@@ -23,34 +28,36 @@ export const NavRow = ({title, subtitle, onPress, danger}: NavRowProps) => {
                 <Text style={[styles.title, danger ? styles.titleDanger : null]}>{title}</Text>
                 {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
             </View>
-            {onPress ? <AntDesign name="right" size={14} color={Colors.app.textMuted}/> : null}
+            {onPress ? <AntDesign name="right" size={14} color={appColors.textMuted}/> : null}
         </Pressable>
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppPalette) => StyleSheet.create({
     row: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        paddingVertical: 14
+        paddingVertical: 14,
+        paddingHorizontal: 4,
+        borderRadius: 12
     },
     pressed: {
-        opacity: 0.7
+        backgroundColor: colors.surfaceSoft
     },
     textWrap: {
         flexShrink: 1
     },
     title: {
-        color: Colors.app.text,
+        color: colors.text,
         fontSize: 16,
         fontWeight: "600"
     },
     titleDanger: {
-        color: "#b3384a"
+        color: colors.danger
     },
     subtitle: {
-        color: Colors.app.textMuted,
+        color: colors.textMuted,
         marginTop: 2
     }
 });

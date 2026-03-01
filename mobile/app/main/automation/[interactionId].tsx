@@ -75,7 +75,7 @@ export default function AutomationDetailScreen() {
     }, [interaction, presentationLookup]);
 
     const category = interaction ? readAutomationCategory(interaction) : "-";
-    const state = interaction ? readAutomationState(interaction) : "Unbekannt";
+    const state = interaction ? readAutomationState(interaction, allThings) : "Unbekannt";
 
     const saveInteractionIntoStore = useCallback((nextInteraction: Interaction) => {
         const currentState = useContentModel.getState().allThings;
@@ -122,10 +122,10 @@ export default function AutomationDetailScreen() {
                 }
             });
             void interactionQuery.refetch();
-            setSuccessMessage("Automation wurde ausgefuehrt.");
+            setSuccessMessage("Automation wurde ausgeführt.");
             setError(undefined);
         } catch {
-            setError("Automation konnte nicht ausgeloest werden.");
+            setError("Automation konnte nicht ausgelöst werden.");
             setSuccessMessage(undefined);
         } finally {
             setTriggerPending(false);
@@ -134,7 +134,7 @@ export default function AutomationDetailScreen() {
 
     if (!activeInteractionId) {
         return (
-            <AppScreen title="Automation" subtitle="Keine Automation-ID uebergeben.">
+            <AppScreen title="Automation" subtitle="Keine Automation-ID übergeben.">
                 <ErrorBanner message="Automation-ID fehlt."/>
             </AppScreen>
         );
@@ -161,7 +161,7 @@ export default function AutomationDetailScreen() {
 
                 <ModernHero
                     title={interaction?.name ?? activeInteractionId}
-                    subtitle={interaction ? "Details zur ausgewaehlten Livisi-Automation." : "Lade Automationsdetails..."}
+                    subtitle={interaction ? "Details zur ausgewählten Livisi-Automation." : "Lade Automationsdetails..."}
                     badges={[
                         {
                             label: category,
@@ -176,7 +176,7 @@ export default function AutomationDetailScreen() {
                         {label: "Regeln", value: summary.totalRuleCount},
                         {label: "Trigger", value: summary.totalTriggerCount},
                         {label: "Aktionen", value: summary.totalActionCount},
-                        {label: "Geaendert", value: interaction ? formatTime(interaction.modified) : "-"}
+                        {label: "Geändert", value: interaction ? formatTime(interaction.modified) : "-"}
                     ]}
                 />
 
@@ -199,11 +199,11 @@ export default function AutomationDetailScreen() {
                             tone={state === "Aktiv" ? "success" : state === "Inaktiv" ? "warning" : "neutral"}
                         />
                         <Text style={styles.metaLine}>ID: {interaction?.id ?? activeInteractionId}</Text>
-                        <Text style={styles.metaLine}>Zuletzt geaendert: {interaction ? formatTime(interaction.modified) : "-"}</Text>
+                        <Text style={styles.metaLine}>Zuletzt geändert: {interaction ? formatTime(interaction.modified) : "-"}</Text>
                     </View>
                     <View style={{marginTop: 10}}>
                         <ActionButton
-                            title={triggerPending ? "Wird ausgefuehrt..." : "Jetzt ausfuehren"}
+                            title={triggerPending ? "Wird ausgeführt..." : "Jetzt ausführen"}
                             onPress={() => {
                                 void onTrigger();
                             }}
@@ -214,7 +214,7 @@ export default function AutomationDetailScreen() {
 
                 <ModernSection
                     title="Regelvorschau"
-                    description="Wenn-Dann Uebersicht"
+                    description="Wenn-Dann Übersicht"
                     icon={<MaterialCommunityIcons size={18} color={Colors.app.primary} name="format-list-checks"/>}
                     style={{marginBottom: 14}}
                 >
@@ -245,7 +245,7 @@ export default function AutomationDetailScreen() {
 
                 <ModernSection
                     title="Raw JSON"
-                    description="Technische Ansicht fuer Debugging"
+                    description="Technische Ansicht für Debugging"
                     icon={<MaterialCommunityIcons size={18} color={Colors.app.primary} name="code-json"/>}
                     style={{marginBottom: 14}}
                 >

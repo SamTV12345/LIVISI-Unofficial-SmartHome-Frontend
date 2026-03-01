@@ -1,7 +1,8 @@
-import {PropsWithChildren, ReactNode} from "react";
+import {PropsWithChildren, ReactNode, useMemo} from "react";
 import {SafeAreaView} from "react-native-safe-area-context";
 import {ScrollView, StyleSheet, Text, View} from "react-native";
-import {Colors} from "@/constants/Colors";
+import {AppPalette} from "@/constants/Colors";
+import {useAppColors} from "@/hooks/useAppColors";
 
 type AppScreenProps = PropsWithChildren<{
     title?: string;
@@ -19,6 +20,9 @@ export const AppScreen = ({
     scroll = true,
     contentStyle
 }: AppScreenProps) => {
+    const appColors = useAppColors();
+    const styles = useMemo(() => createStyles(appColors), [appColors]);
+
     const content = (
         <View style={[styles.contentWrap, contentStyle]}>
             {(title || subtitle || rightAction) && (
@@ -55,28 +59,30 @@ export const AppScreen = ({
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppPalette) => StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: Colors.app.background
+        backgroundColor: colors.background
     },
     backgroundBlobTop: {
         position: "absolute",
-        width: 280,
-        height: 280,
+        width: 320,
+        height: 320,
         borderRadius: 999,
-        right: -120,
-        top: -120,
-        backgroundColor: Colors.app.backgroundStrong
+        right: -130,
+        top: -130,
+        backgroundColor: colors.backgroundStrong,
+        opacity: 0.8
     },
     backgroundBlobBottom: {
         position: "absolute",
-        width: 220,
-        height: 220,
+        width: 260,
+        height: 260,
         borderRadius: 999,
-        left: -100,
-        bottom: -90,
-        backgroundColor: Colors.app.backgroundStrong
+        left: -120,
+        bottom: -110,
+        backgroundColor: colors.accentSoft,
+        opacity: 0.55
     },
     scrollContent: {
         flexGrow: 1
@@ -99,13 +105,14 @@ const styles = StyleSheet.create({
         flexShrink: 1
     },
     title: {
-        color: Colors.app.text,
-        fontSize: 26,
-        fontWeight: "700"
+        color: colors.text,
+        fontSize: 28,
+        fontWeight: "800"
     },
     subtitle: {
-        color: Colors.app.textMuted,
+        color: colors.textMuted,
         fontSize: 14,
-        marginTop: 4
+        marginTop: 4,
+        lineHeight: 20
     }
 });

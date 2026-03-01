@@ -165,7 +165,7 @@ export default function AutomationScreen() {
             });
             setError(undefined);
         } catch {
-            setError("Automation konnte nicht ausgeloest werden.");
+            setError("Automation konnte nicht ausgelöst werden.");
         } finally {
             setActiveInteractionId(undefined);
         }
@@ -181,7 +181,7 @@ export default function AutomationScreen() {
             >
                 <ModernHero
                     title="Automation"
-                    subtitle="Livisi-Interaktionen filtern, pruefen und direkt ausfuehren."
+                    subtitle="Livisi-Interaktionen filtern, prüfen und direkt ausführen."
                     badges={[
                         {
                             label: `${filteredInteractions.length} Automationen`,
@@ -253,7 +253,7 @@ export default function AutomationScreen() {
 
                 <ModernSection
                     title="Automationen"
-                    description="Jetzt ausfuehren oder Details oeffnen"
+                    description="Jetzt ausführen oder Details öffnen"
                     icon={<MaterialCommunityIcons size={18} color={Colors.app.primary} name="playlist-play"/>}
                     style={{marginBottom: 14}}
                 >
@@ -263,7 +263,7 @@ export default function AutomationScreen() {
                     {filteredInteractions.map((interaction, index) => {
                         const summary = summarizeInteraction(interaction, presentationLookup);
                         const category = readAutomationCategory(interaction);
-                        const state = readAutomationState(interaction);
+                        const state = readAutomationState(interaction, allThings);
                         const isRunning = activeInteractionId === interaction.id;
 
                         return (
@@ -316,7 +316,7 @@ export default function AutomationScreen() {
 
                                 <View style={styles.cardActions}>
                                     <ActionButton
-                                        title={isRunning ? "Wird ausgefuehrt..." : "Jetzt ausfuehren"}
+                                        title={isRunning ? "Wird ausgeführt..." : "Jetzt ausführen"}
                                         onPress={() => {
                                             void runInteraction(interaction);
                                         }}

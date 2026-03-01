@@ -43,7 +43,7 @@ export default function RoomsTabScreen() {
                 showsVerticalScrollIndicator={false}
             >
                 <ModernHero
-                    title="Geraetetypen"
+                    title="Gerätetypen"
                     subtitle="Alle vorhandenen Typen alphabetisch sortiert."
                     badges={[
                         {
@@ -64,13 +64,13 @@ export default function RoomsTabScreen() {
                 }}/>}
 
                 <ModernSection
-                    title="Typenuebersicht"
-                    description="Tippen fuer die Detailansicht pro Typ"
+                    title="Typenübersicht"
+                    description="Tippen für die Detailansicht pro Typ"
                     icon={<MaterialCommunityIcons size={18} color={Colors.app.primary} name="format-list-bulleted"/>}
                     style={{marginBottom: 14}}
                 >
                     {deviceTypeCounts.length === 0 && (
-                        <Text style={styles.emptyText}>Keine Geraete gefunden.</Text>
+                        <Text style={styles.emptyText}>Keine Geräte gefunden.</Text>
                     )}
                     {deviceTypeCounts.map(([type, count], index) => (
                         <View

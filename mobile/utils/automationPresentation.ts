@@ -25,9 +25,9 @@ const CATEGORY_LABELS: Record<string, string> = {
     ClimateId: "Klima",
     EntertainmentId: "Unterhaltung",
     SecurityId: "Sicherheit",
-    StatesId: "Zustaende",
-    DoorsId: "Tueren und Fenster",
-    OutsideId: "Aussen",
+    StatesId: "Zustände",
+    DoorsId: "Türen und Fenster",
+    OutsideId: "Außen",
     EnergyId: "Energie",
     HouseholdId: "Haushalt",
     HealthId: "Gesundheit"
@@ -35,14 +35,14 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 const EVENT_LABELS: Record<string, string> = {
     ButtonPressed: "Tastendruck",
-    StateChanged: "Statusaenderung"
+    StateChanged: "Statusänderung"
 };
 
 const ACTION_LABELS: Record<string, string> = {
     SwitchOnWithOffTimer: "Einschalten mit Timer",
     SetState: "Status setzen",
     SendNotification: "Benachrichtigung",
-    Execute: "Ausfuehren"
+    Execute: "Ausführen"
 };
 
 const toRecord = (value: unknown): Record<string, unknown> | undefined => {
@@ -189,7 +189,7 @@ const formatSourceLabel = (source: string, lookup?: AutomationPresentationLookup
 const summarizeTriggerChips = (trigger: unknown, lookup?: AutomationPresentationLookup): string[] => {
     const triggerRecord = toRecord(trigger);
     if (!triggerRecord) {
-        return ["Ausloeser"];
+        return ["Auslöser"];
     }
 
     const eventTypeRaw = toStringValue(triggerRecord.eventType);
@@ -220,7 +220,7 @@ const summarizeTriggerChips = (trigger: unknown, lookup?: AutomationPresentation
         return [humanizeIdentifier(rawType)];
     }
 
-    return ["Ausloeser"];
+    return ["Auslöser"];
 };
 
 const summarizeSetStateAction = (action: InteractionAction, targetLabel?: string): string[] | undefined => {
@@ -327,26 +327,214 @@ export const readAutomationCategory = (interaction: Interaction): string => {
 
 const BOOLEAN_KEYS = ["enabled", "isEnabled", "isActive", "scenarioActive", "active"];
 
-const readStateFromRecord = (record: Record<string, unknown> | undefined): boolean | undefined => {
-    if (!record) return undefined;
-    for (const key of BOOLEAN_KEYS) {
-        const direct = toBoolean(record[key]);
-        if (direct !== undefined) {
-            return direct;
+const readBooleanFromRecord = (
+    source: Record<string, unknown> | undefined,
+    candidates: string[]
+): {key: string; value: boolean} | undefined => {
+    if (!source) return undefined;
+    for (const key of candidates) {
+        const value = toBoolean(source[key]);
+        if (value !== undefined) {
+            return {key, value};
         }
     }
     return undefined;
 };
 
-export const readAutomationState = (interaction: Interaction): "Aktiv" | "Inaktiv" | "Unbekannt" => {
-    const topLevel = readStateFromRecord(interaction as unknown as Record<string, unknown>);
-    if (topLevel !== undefined) {
-        return topLevel ? "Aktiv" : "Inaktiv";
+const readAutomationBooleanBinding = (interaction: Interaction): boolean | undefined => {
+    const interactionRecord = toRecord(interaction as unknown);
+    const topLevel = readBooleanFromRecord(interactionRecord, BOOLEAN_KEYS);
+    if (topLevel) {
+        return topLevel.value;
     }
 
-    const tags = readStateFromRecord(interaction.tags as unknown as Record<string, unknown> | undefined);
-    if (tags !== undefined) {
-        return tags ? "Aktiv" : "Inaktiv";
+    const tagsRecord = toRecord(interaction.tags as unknown);
+    const tags = readBooleanFromRecord(tagsRecord, BOOLEAN_KEYS);
+    if (tags) {
+        return tags.value;
+    }
+
+    return undefined;
+};
+
+const readActionSetBoolean = (action: InteractionAction): boolean | undefined => {
+    if (toStringValue(action.type) === "SwitchOnWithOffTimer") {
+        return true;
+    }
+
+    const params = toRecord(action.params);
+    if (!params) return undefined;
+
+    const directValue = toBoolean(params.value);
+    if (directValue !== undefined) return directValue;
+
+    const valueItem = toRecord(params.value);
+    const nestedValue = toBoolean(valueItem?.value);
+    if (nestedValue !== undefined) return nestedValue;
+
+    const onStateItem = toRecord(params.onState);
+    const onStateValue = toBoolean(onStateItem?.value);
+    if (onStateValue !== undefined) return onStateValue;
+
+    return toBoolean(params.onState);
+};
+
+const readBooleanFromStateEntry = (state: unknown): boolean | undefined => {
+    const stateRecord = toRecord(state);
+    if (!stateRecord) {
+        return undefined;
+    }
+
+    const preferredKeys = ["value", "onState", "isOn", "isActive", "active", "state"];
+    for (const key of preferredKeys) {
+        const direct = toBoolean(stateRecord[key]);
+        if (direct !== undefined) return direct;
+        const nested = toRecord(stateRecord[key]);
+        const nestedValue = toBoolean(nested?.value);
+        if (nestedValue !== undefined) return nestedValue;
+    }
+
+    for (const value of Object.values(stateRecord)) {
+        const direct = toBoolean(value);
+        if (direct !== undefined) return direct;
+        const nested = toRecord(value);
+        const nestedValue = toBoolean(nested?.value);
+        if (nestedValue !== undefined) return nestedValue;
+    }
+
+    return undefined;
+};
+
+const readCapabilityStateBoolean = (allThings: AxiosDeviceResponse | undefined, capabilityId: string): boolean | undefined => {
+    if (!allThings) return undefined;
+
+    const normalizedCapabilityId = normalizeCapabilityId(capabilityId);
+    const devices = Object.values(allThings.devices ?? {}) as Device[];
+
+    for (const device of devices) {
+        const entries = Array.isArray(device.capabilityState) ? device.capabilityState : [];
+        const matchingEntry = entries.find((entry) => normalizeCapabilityId(entry.id) === normalizedCapabilityId);
+        if (!matchingEntry) continue;
+        const value = readBooleanFromStateEntry(matchingEntry.state);
+        if (value !== undefined) {
+            return value;
+        }
+    }
+
+    return undefined;
+};
+
+const BOOLEAN_ACTUATOR_CAPABILITY_TYPES = new Set(["BooleanStateActuator", "SwitchActuator"]);
+
+const isBooleanStateActuatorCapability = (allThings: AxiosDeviceResponse | undefined, capabilityId: string): boolean => {
+    if (!allThings) return false;
+
+    const normalizedCapabilityId = normalizeCapabilityId(capabilityId);
+    const topLevelMatch = (allThings.capabilities ?? []).find(
+        (capability) => normalizeCapabilityId(capability.id ?? "") === normalizedCapabilityId
+    );
+    if (topLevelMatch?.type && BOOLEAN_ACTUATOR_CAPABILITY_TYPES.has(topLevelMatch.type)) {
+        return true;
+    }
+
+    const devices = Object.values(allThings.devices ?? {}) as Device[];
+    for (const device of devices) {
+        const deviceTags = toRecord(device.tags as unknown);
+        const internalStateId = toStringValue(deviceTags?.internalStateId);
+        if (!internalStateId) {
+            continue;
+        }
+
+        const capabilityRefs = Array.isArray(device.capabilities) ? device.capabilities : [];
+        if (capabilityRefs.some((capabilityRef) => normalizeCapabilityId(capabilityRef) === normalizedCapabilityId)) {
+            return true;
+        }
+
+        const capabilityData = Array.isArray(device.capabilityData) ? device.capabilityData : [];
+        if (capabilityData.some((capability) => {
+            if (normalizeCapabilityId(capability.id) !== normalizedCapabilityId) {
+                return false;
+            }
+            if (capability.type && BOOLEAN_ACTUATOR_CAPABILITY_TYPES.has(capability.type)) {
+                return true;
+            }
+            return Boolean(internalStateId);
+        })) {
+            return true;
+        }
+    }
+
+    return false;
+};
+
+const readStateCapabilityBinding = (interaction: Interaction, allThings?: AxiosDeviceResponse): boolean | undefined => {
+    if (!allThings) return undefined;
+
+    type Candidate = {
+        capabilityId: string;
+        setsTo?: boolean;
+    };
+
+    const candidates: Candidate[] = [];
+    for (const rule of (interaction.rules ?? [])) {
+        for (const action of (rule.actions ?? [])) {
+            const target = toStringValue(action.target);
+            if (!target) continue;
+            const capabilityId = normalizeCapabilityId(target);
+            if (!capabilityId) continue;
+            const setsTo = readActionSetBoolean(action);
+            const capabilityLooksBoolean = isBooleanStateActuatorCapability(allThings, capabilityId);
+            if (!capabilityLooksBoolean && setsTo === undefined) continue;
+            candidates.push({
+                capabilityId,
+                setsTo
+            });
+        }
+    }
+
+    if (candidates.length === 0) {
+        return undefined;
+    }
+
+    const evaluations: boolean[] = [];
+
+    for (const candidate of candidates) {
+        const currentValue = readCapabilityStateBoolean(allThings, candidate.capabilityId);
+        if (currentValue === undefined) {
+            continue;
+        }
+
+        if (candidate.setsTo !== undefined) {
+            evaluations.push(currentValue === candidate.setsTo);
+            continue;
+        }
+
+        evaluations.push(currentValue);
+    }
+
+    if (evaluations.length === 0) {
+        return undefined;
+    }
+
+    if (evaluations.includes(false)) {
+        return false;
+    }
+
+    return true;
+};
+
+export const readAutomationState = (
+    interaction: Interaction,
+    allThings?: AxiosDeviceResponse
+): "Aktiv" | "Inaktiv" | "Unbekannt" => {
+    const directBinding = readAutomationBooleanBinding(interaction);
+    if (directBinding !== undefined) {
+        return directBinding ? "Aktiv" : "Inaktiv";
+    }
+
+    const stateCapabilityValue = readStateCapabilityBinding(interaction, allThings);
+    if (stateCapabilityValue !== undefined) {
+        return stateCapabilityValue ? "Aktiv" : "Inaktiv";
     }
 
     return "Unbekannt";

@@ -97,7 +97,7 @@ export default function NewsDetailScreen() {
                     style={{marginBottom: 14}}
                 >
                     <Text style={styles.descriptionText}>
-                        {presentation?.description ?? "Keine Beschreibung verfuegbar."}
+                        {presentation?.description ?? "Keine Beschreibung verfügbar."}
                     </Text>
                 </ModernSection>
 

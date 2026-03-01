@@ -11,6 +11,7 @@ import {FENSTERKONTAKT, HEATING, RAUCHMELDER, WANDSENDER, ZWISCHENSTECKER, ZWISC
 import i18n from "@/i18n/i18n";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import {useGatewayApi} from "@/hooks/useGatewayApi";
+import {buildLocationLookups, resolveDeviceLocation} from "@/utils/location";
 
 type DeviceDeciderProps = {
     device: Device;
@@ -73,13 +74,14 @@ export const DeviceDecider: FC<DeviceDeciderProps> = ({device}) => {
     const humidityCapability = useMemo(() => getCapabilityByField(device, "humidity"), [device]);
     const setpointCapability = useMemo(() => getCapabilityByField(device, "setpointTemperature"), [device]);
 
+    const locationLookups = useMemo(
+        () => buildLocationLookups(allThings?.locations ?? []),
+        [allThings?.locations]
+    );
     const roomName = useMemo(() => {
-        if (device.locationData?.config?.name) {
-            return device.locationData.config.name;
-        }
-        const location = allThings?.locations.find((entry) => entry.id === device.location);
+        const location = resolveDeviceLocation(device, locationLookups);
         return location?.config.name;
-    }, [allThings?.locations, device.location, device.locationData?.config?.name]);
+    }, [device, locationLookups]);
 
     const currentOnState = localOnState ?? readBoolean(onStateCapability, "onState");
     const currentSetpoint = localSetpoint ?? readNumber(setpointCapability, "setpointTemperature") ?? 20;

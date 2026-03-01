@@ -1,6 +1,7 @@
 import {Pressable, StyleSheet, Text, View} from "react-native";
-import {FC} from "react";
-import {Colors} from "@/constants/Colors";
+import {FC, useMemo} from "react";
+import {AppPalette} from "@/constants/Colors";
+import {useAppColors} from "@/hooks/useAppColors";
 
 type ErrorBannerProps = {
     message: string,
@@ -8,6 +9,9 @@ type ErrorBannerProps = {
 }
 
 export const ErrorBanner: FC<ErrorBannerProps> = ({message, onRetry}) => {
+    const appColors = useAppColors();
+    const styles = useMemo(() => createStyles(appColors), [appColors]);
+
     return (
         <View style={styles.container}>
             <Text style={styles.message}>{message}</Text>
@@ -18,23 +22,23 @@ export const ErrorBanner: FC<ErrorBannerProps> = ({message, onRetry}) => {
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppPalette) => StyleSheet.create({
     container: {
         marginTop: 12,
         marginBottom: 8,
         borderRadius: 12,
         paddingHorizontal: 12,
         paddingVertical: 10,
-        backgroundColor: Colors.app.warningSoft,
-        borderColor: Colors.app.warningBorder,
+        backgroundColor: colors.warningSoft,
+        borderColor: colors.warningBorder,
         borderWidth: 1
     },
     message: {
-        color: Colors.app.warningText,
+        color: colors.warningText,
         fontSize: 14
     },
     retry: {
-        color: Colors.app.warningText,
+        color: colors.warningText,
         textDecorationLine: "underline",
         marginTop: 8,
         fontWeight: "600"

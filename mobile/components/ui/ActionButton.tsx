@@ -1,5 +1,7 @@
+import {useMemo} from "react";
 import {Pressable, StyleSheet, Text} from "react-native";
-import {Colors} from "@/constants/Colors";
+import {AppPalette} from "@/constants/Colors";
+import {useAppColors} from "@/hooks/useAppColors";
 
 type ActionButtonProps = {
     title: string;
@@ -9,6 +11,9 @@ type ActionButtonProps = {
 };
 
 export const ActionButton = ({title, onPress, disabled, variant = "primary"}: ActionButtonProps) => {
+    const appColors = useAppColors();
+    const styles = useMemo(() => createStyles(appColors), [appColors]);
+
     return (
         <Pressable
             style={({pressed}) => [
@@ -27,21 +32,25 @@ export const ActionButton = ({title, onPress, disabled, variant = "primary"}: Ac
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppPalette) => StyleSheet.create({
     base: {
-        borderRadius: 12,
+        borderRadius: 14,
         paddingVertical: 12,
+        borderWidth: 1,
         alignItems: "center",
         justifyContent: "center"
     },
     primary: {
-        backgroundColor: Colors.app.primary
+        backgroundColor: colors.primary,
+        borderColor: colors.primaryStrong
     },
     ghost: {
-        backgroundColor: Colors.app.primarySoft
+        backgroundColor: colors.primarySoft,
+        borderColor: colors.border
     },
     pressed: {
-        opacity: 0.85
+        opacity: 0.88,
+        transform: [{translateY: 1}]
     },
     disabled: {
         opacity: 0.55
@@ -54,6 +63,6 @@ const styles = StyleSheet.create({
         color: "white"
     },
     ghostLabel: {
-        color: Colors.app.primary
+        color: colors.primary
     }
 });

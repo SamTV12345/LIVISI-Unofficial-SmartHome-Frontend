@@ -1,5 +1,7 @@
+import {useMemo} from "react";
 import {StyleSheet, Text, TextInput, View} from "react-native";
-import {Colors} from "@/constants/Colors";
+import {AppPalette} from "@/constants/Colors";
+import {useAppColors} from "@/hooks/useAppColors";
 
 type FormFieldProps = {
     label: string;
@@ -22,6 +24,9 @@ export const FormField = ({
     error,
     autoCapitalize = "none"
 }: FormFieldProps) => {
+    const appColors = useAppColors();
+    const styles = useMemo(() => createStyles(appColors), [appColors]);
+
     return (
         <View style={styles.wrap}>
             <Text style={styles.label}>{label}</Text>
@@ -29,7 +34,7 @@ export const FormField = ({
                 value={value}
                 onChangeText={onChangeText}
                 placeholder={placeholder}
-                placeholderTextColor={Colors.app.textMuted}
+                placeholderTextColor={appColors.textSoft}
                 style={[styles.input, error ? styles.inputError : null]}
                 secureTextEntry={secureTextEntry}
                 keyboardType={keyboardType}
@@ -41,30 +46,32 @@ export const FormField = ({
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppPalette) => StyleSheet.create({
     wrap: {
         marginBottom: 12
     },
     label: {
-        color: Colors.app.text,
-        fontWeight: "600",
-        marginBottom: 6
+        color: colors.text,
+        fontWeight: "700",
+        marginBottom: 6,
+        fontSize: 13,
+        letterSpacing: 0.2
     },
     input: {
-        backgroundColor: Colors.app.surfaceSoft,
-        borderRadius: 12,
+        backgroundColor: colors.surfaceSoft,
+        borderRadius: 13,
         borderWidth: 1,
-        borderColor: Colors.app.border,
-        color: Colors.app.text,
+        borderColor: colors.borderStrong,
+        color: colors.text,
         paddingHorizontal: 12,
         paddingVertical: 11,
         fontSize: 16
     },
     inputError: {
-        borderColor: "#d84d64"
+        borderColor: colors.danger
     },
     errorText: {
-        color: "#b3384a",
+        color: colors.danger,
         marginTop: 6
     }
 });

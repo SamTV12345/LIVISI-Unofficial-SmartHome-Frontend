@@ -1,6 +1,7 @@
-import {PropsWithChildren, useEffect, useRef} from "react";
+import {PropsWithChildren, useEffect, useMemo, useRef} from "react";
 import {Animated, Easing, StyleProp, StyleSheet, View, ViewStyle} from "react-native";
-import {Colors} from "@/constants/Colors";
+import {AppPalette} from "@/constants/Colors";
+import {useAppColors} from "@/hooks/useAppColors";
 
 type SkeletonBlockProps = {
     height: number;
@@ -10,6 +11,8 @@ type SkeletonBlockProps = {
 };
 
 export const SkeletonBlock = ({height, width = "100%", radius = 12, style}: SkeletonBlockProps) => {
+    const appColors = useAppColors();
+    const styles = useMemo(() => createStyles(appColors), [appColors]);
     const opacity = useRef(new Animated.Value(0.42)).current;
 
     useEffect(() => {
@@ -52,6 +55,9 @@ export const SkeletonBlock = ({height, width = "100%", radius = 12, style}: Skel
 };
 
 export const SkeletonCard = ({children, style}: PropsWithChildren<{style?: StyleProp<ViewStyle>}>) => {
+    const appColors = useAppColors();
+    const styles = useMemo(() => createStyles(appColors), [appColors]);
+
     return (
         <View style={[styles.card, style]}>
             {children}
@@ -60,6 +66,9 @@ export const SkeletonCard = ({children, style}: PropsWithChildren<{style?: Style
 };
 
 export const MainLoadingSkeleton = () => {
+    const appColors = useAppColors();
+    const styles = useMemo(() => createStyles(appColors), [appColors]);
+
     return (
         <View style={styles.container}>
             <SkeletonCard style={{marginBottom: 14}}>
@@ -90,21 +99,21 @@ export const MainLoadingSkeleton = () => {
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppPalette) => StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Colors.app.background,
+        backgroundColor: colors.background,
         paddingHorizontal: 18,
         paddingTop: 16
     },
     card: {
         borderRadius: 16,
         borderWidth: 1,
-        borderColor: Colors.app.border,
-        backgroundColor: Colors.app.surface,
+        borderColor: colors.border,
+        backgroundColor: colors.surface,
         padding: 14
     },
     skeletonBlock: {
-        backgroundColor: "#d8e7f4"
+        backgroundColor: colors.surfaceSoft
     }
 });

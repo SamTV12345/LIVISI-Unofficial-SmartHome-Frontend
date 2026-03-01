@@ -41,7 +41,7 @@ export default function SettingsPage() {
                     ]}
                     stats={[
                         {label: "Verbindung", value: gateway?.baseURL ? "Aktiv" : "Inaktiv"},
-                        {label: "Refresh", value: refreshing ? "Laeuft" : "Bereit"},
+                        {label: "Refresh", value: refreshing ? "Läuft" : "Bereit"},
                         {label: "Profil", value: gateway?.label || "Standard"},
                         {label: "Bereiche", value: 3}
                     ]}
@@ -72,7 +72,7 @@ export default function SettingsPage() {
 
                 <ModernSection
                     title="Benachrichtigungen"
-                    description="SMTP und Empfaenger"
+                    description="SMTP und Empfänger"
                     icon={<MaterialCommunityIcons size={18} color={Colors.app.primary} name="email-outline"/>}
                     style={{marginBottom: 14}}
                 >

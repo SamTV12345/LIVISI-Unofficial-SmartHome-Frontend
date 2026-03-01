@@ -1,6 +1,7 @@
-import {ReactNode} from "react";
+import {ReactNode, useMemo} from "react";
 import {StyleSheet, Text, View} from "react-native";
-import {Colors} from "@/constants/Colors";
+import {AppPalette} from "@/constants/Colors";
+import {useAppColors} from "@/hooks/useAppColors";
 
 type SectionHeaderProps = {
     title: string;
@@ -9,6 +10,9 @@ type SectionHeaderProps = {
 };
 
 export const SectionHeader = ({title, subtitle, rightAction}: SectionHeaderProps) => {
+    const appColors = useAppColors();
+    const styles = useMemo(() => createStyles(appColors), [appColors]);
+
     return (
         <View style={styles.row}>
             <View>
@@ -20,7 +24,7 @@ export const SectionHeader = ({title, subtitle, rightAction}: SectionHeaderProps
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: AppPalette) => StyleSheet.create({
     row: {
         flexDirection: "row",
         alignItems: "center",
@@ -28,12 +32,12 @@ const styles = StyleSheet.create({
         marginBottom: 10
     },
     title: {
-        color: Colors.app.text,
+        color: colors.text,
         fontSize: 18,
         fontWeight: "700"
     },
     subtitle: {
-        color: Colors.app.textMuted,
+        color: colors.textMuted,
         marginTop: 2
     }
 });
