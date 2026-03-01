@@ -8,12 +8,15 @@ services:
         - "80:8000"
       environment:
         - BASE_URL=<your-base-url>
-        - BASIC_AUTH=true
+        - AUTH_MODE=none
         - PASSWORD=<livisi-password>
         - USERNAME=<livisi-username>
-        - BASIC_USERNAME=<login-username>
-        - BASIC_PASSWORD=<login-password>
-        # BASIC_AUTH=true
+        # AUTH_MODE=basic
         # BASIC_USERNAME=<your-basic-auth-username>
         # BASIC_PASSWORD=<your-basic-auth-password>
+        # AUTH_MODE=oidc
         # OIDC_CLIENT_ID=<your-oidc-client-id>
+        # OIDC_REDIRECT_URI=<http(s)://your-host/ui/>
+        # OIDC_SCOPE=openid profile email
+        # OIDC_AUTHORITY=<https://keycloak-or-authelia-authority>
+        # OIDC_AUDIENCE=<optional-audience-override>

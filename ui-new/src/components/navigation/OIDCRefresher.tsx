@@ -1,7 +1,7 @@
-import {FC, PropsWithChildren} from "react";
+import {FC, PropsWithChildren, useEffect} from "react";
 import {useAuth} from "react-oidc-context";
 import useOnMount from "@/src/hooks/useOnMount.tsx";
-import {getAuthorizationHeader, setAuthorizationHeader} from "@/src/api/authHeaderStore.ts";
+import {clearAuthorizationHeader, setAuthorizationHeader} from "@/src/api/authHeaderStore.ts";
 
 export const OIDCRefresher:FC<PropsWithChildren> = ({children})=>{
     const auth = useAuth()
@@ -19,9 +19,15 @@ export const OIDCRefresher:FC<PropsWithChildren> = ({children})=>{
         return ()=>clearInterval(interval)
     })
 
-    if (getAuthorizationHeader() == undefined && auth.user?.access_token){
-        setAuthorizationHeader('Bearer ' + auth.user.access_token)
-    }
+    useEffect(() => {
+        if (auth.user?.access_token) {
+            setAuthorizationHeader('Bearer ' + auth.user.access_token)
+            return;
+        }
+        if (!auth.isLoading) {
+            clearAuthorizationHeader();
+        }
+    }, [auth.user?.access_token, auth.isLoading])
 
     return <>
             {children}

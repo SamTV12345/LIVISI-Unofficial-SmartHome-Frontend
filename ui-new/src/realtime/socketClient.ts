@@ -1,3 +1,5 @@
+import {getAuthorizationHeader} from "@/src/api/authHeaderStore.ts";
+
 type SocketEnvelope<TPayload = unknown> = {
     message: TPayload
 }
@@ -12,16 +14,26 @@ const MAX_RECONNECT_DELAY_MS = 30_000;
 
 const buildSocketUrl = (): string => {
     const explicitUrl = import.meta.env.VITE_WS_URL as string | undefined;
+    let baseSocketUrl = "";
     if (explicitUrl) {
-        return explicitUrl;
+        baseSocketUrl = explicitUrl;
+    } else {
+        const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws";
+        if (import.meta.env.MODE === "development") {
+            baseSocketUrl = wsProtocol + "://localhost:8000/websocket";
+        } else {
+            baseSocketUrl = wsProtocol + "://" + window.location.host + "/websocket";
+        }
     }
 
-    const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws";
-    if (import.meta.env.MODE === "development") {
-        return wsProtocol + "://localhost:8000/websocket";
+    const authorization = getAuthorizationHeader();
+    if (!authorization) {
+        return baseSocketUrl;
     }
 
-    return wsProtocol + "://" + window.location.host + "/websocket";
+    const url = new URL(baseSocketUrl, window.location.origin);
+    url.searchParams.set("authorization", authorization);
+    return url.toString();
 };
 
 const parseEnvelope = <TPayload,>(data: string): SocketEnvelope<TPayload> | null => {

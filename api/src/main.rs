@@ -1,20 +1,10 @@
-mod models;
 mod api_lib;
-mod utils;
 mod constants;
-mod store;
+mod models;
 mod openapi_doc;
+mod store;
+mod utils;
 
-use std::cmp::Ordering;
-use std::collections::HashMap;
-use std::env::var;
-use std::future::pending;
-use std::sync::atomic::{AtomicBool, Ordering as AtomicOrdering};
-use std::sync::{Mutex, OnceLock};
-use std::thread;
-use std::thread::spawn;
-use std::time::Duration;
-use chrono::{DateTime, Days, NaiveDate, Utc};
 use axum::extract::ws::{Message as WsMessage, WebSocket, WebSocketUpgrade};
 use axum::extract::{Path, Request, State};
 use axum::http::{header, StatusCode, Uri};
@@ -24,14 +14,27 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 use base64::engine::general_purpose;
 use base64::Engine;
+use chrono::{DateTime, Days, NaiveDate, Utc};
 use clap::Parser;
 use clokwerk::{Job, Scheduler, TimeUnits};
 use include_dir::{include_dir, Dir};
+use jsonwebtoken::jwk::JwkSet;
+use jsonwebtoken::{decode, decode_header, Algorithm, DecodingKey, Validation};
 use kv::Config;
 use path_clean::clean;
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::cmp::Ordering;
+use std::collections::HashMap;
+use std::env::var;
+use std::future::pending;
+use std::str::FromStr;
+use std::sync::atomic::{AtomicBool, Ordering as AtomicOrdering};
+use std::sync::{Arc, Mutex, OnceLock};
+use std::thread;
+use std::thread::spawn;
+use std::time::{Duration, Instant};
 use sunrise::{Coordinates, SolarDay, SolarEvent};
 use tokio::sync::broadcast;
 use tungstenite::connect;
@@ -54,8 +57,8 @@ use crate::api_lib::unmount_service::USBService;
 use crate::api_lib::user::User;
 use crate::api_lib::user_storage::UserStorage;
 use crate::constants::constant_types::{
-    BASIC_AUTH, OIDC_AUTH, OIDC_AUTHORITY, OIDC_CLIENT_ID, OIDC_REDIRECT_URI, OIDC_SCOPE,
-    PASSWORD_BASIC, USERNAME_BASIC,
+    AUTH_MODE, BASIC_AUTH, OIDC_AUDIENCE, OIDC_AUTH, OIDC_AUTHORITY, OIDC_CLIENT_ID,
+    OIDC_REDIRECT_URI, OIDC_SCOPE, PASSWORD_BASIC, USERNAME_BASIC,
 };
 use crate::models::client_data::ClientData;
 use crate::models::socket_event::Properties::Value as SocketValue;
@@ -88,11 +91,47 @@ struct AxumState {
     email: Email,
     kv_store: kv::Store,
     resource_base_url: String,
+    auth_runtime: AuthRuntime,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, Copy, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+enum AuthMode {
+    None,
+    Basic,
+    Oidc,
+}
+
+impl AuthMode {
+    fn as_str(&self) -> &'static str {
+        match self {
+            AuthMode::None => "none",
+            AuthMode::Basic => "basic",
+            AuthMode::Oidc => "oidc",
+        }
+    }
+}
+
+impl FromStr for AuthMode {
+    type Err = String;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        match value.trim().to_ascii_lowercase().as_str() {
+            "none" => Ok(AuthMode::None),
+            "basic" => Ok(AuthMode::Basic),
+            "oidc" => Ok(AuthMode::Oidc),
+            other => Err(format!(
+                "Unsupported AUTH_MODE '{}'. Use one of: none, basic, oidc.",
+                other
+            )),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 struct ConfigModel {
+    auth_mode: AuthMode,
     basic_auth: bool,
     oidc_configured: bool,
     oidc_config: Option<OidcConfigModel>,
@@ -107,10 +146,209 @@ struct OidcConfigModel {
     scope: String,
 }
 
+#[derive(Clone)]
+struct BasicAuthRuntime {
+    username: String,
+    password: String,
+}
+
+#[derive(Clone)]
+struct OidcJwksCache {
+    jwks: JwkSet,
+    fetched_at: Instant,
+}
+
+#[derive(Clone)]
+struct OidcAuthRuntime {
+    config: OidcConfigModel,
+    issuer: String,
+    audience: Option<String>,
+    jwks_uri: String,
+    client: reqwest::Client,
+    jwks_cache: Arc<Mutex<Option<OidcJwksCache>>>,
+}
+
+#[derive(Clone)]
+enum AuthRuntime {
+    None,
+    Basic(BasicAuthRuntime),
+    Oidc(OidcAuthRuntime),
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "snake_case")]
+struct OidcDiscoveryDocument {
+    issuer: String,
+    jwks_uri: String,
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct LoginRequest {
     username: String,
     password: String,
+}
+
+impl AuthRuntime {
+    fn mode(&self) -> AuthMode {
+        match self {
+            AuthRuntime::None => AuthMode::None,
+            AuthRuntime::Basic(_) => AuthMode::Basic,
+            AuthRuntime::Oidc(_) => AuthMode::Oidc,
+        }
+    }
+
+    fn oidc_config(&self) -> Option<OidcConfigModel> {
+        match self {
+            AuthRuntime::Oidc(runtime) => Some(runtime.config.clone()),
+            _ => None,
+        }
+    }
+
+    fn to_config_model(&self) -> ConfigModel {
+        let auth_mode = self.mode();
+        ConfigModel {
+            auth_mode,
+            basic_auth: auth_mode == AuthMode::Basic,
+            oidc_configured: auth_mode == AuthMode::Oidc,
+            oidc_config: self.oidc_config(),
+        }
+    }
+}
+
+impl OidcAuthRuntime {
+    const JWKS_CACHE_TTL_SECONDS: u64 = 600;
+
+    async fn validate_token(&self, token: &str) -> Result<(), String> {
+        let token_header = decode_header(token)
+            .map_err(|error| format!("Could not decode JWT header: {}", error))?;
+
+        let validation = self.build_validation(token_header.alg);
+        self.validate_with_cached_keys(token, &token_header.kid, &validation)
+            .await
+    }
+
+    fn build_validation(&self, algorithm: Algorithm) -> Validation {
+        let mut validation = Validation::new(algorithm);
+        validation.set_issuer(&[self.issuer.as_str()]);
+        if let Some(audience) = &self.audience {
+            validation.set_audience(&[audience.as_str()]);
+        }
+        validation.leeway = 15;
+        validation
+    }
+
+    async fn validate_with_cached_keys(
+        &self,
+        token: &str,
+        key_id: &Option<String>,
+        validation: &Validation,
+    ) -> Result<(), String> {
+        let cached_jwks = self.get_jwks().await?;
+        if self
+            .try_validate_token_with_jwks(token, key_id, validation, &cached_jwks)
+            .is_ok()
+        {
+            return Ok(());
+        }
+
+        let fresh_jwks = self.fetch_jwks().await?;
+        self.try_validate_token_with_jwks(token, key_id, validation, &fresh_jwks)
+    }
+
+    fn try_validate_token_with_jwks(
+        &self,
+        token: &str,
+        key_id: &Option<String>,
+        validation: &Validation,
+        jwks: &JwkSet,
+    ) -> Result<(), String> {
+        let matching_keys: Vec<_> = jwks
+            .keys
+            .iter()
+            .filter(|jwk| {
+                if let Some(key_id) = key_id {
+                    return jwk.common.key_id.as_deref() == Some(key_id.as_str());
+                }
+                true
+            })
+            .collect();
+
+        if matching_keys.is_empty() {
+            return Err("No matching OIDC key found for token".to_string());
+        }
+
+        let mut last_error = String::new();
+        for jwk in matching_keys {
+            let decoding_key = match DecodingKey::from_jwk(jwk) {
+                Ok(key) => key,
+                Err(error) => {
+                    last_error = format!("Could not convert JWK: {}", error);
+                    continue;
+                }
+            };
+
+            match decode::<Value>(token, &decoding_key, validation) {
+                Ok(_) => return Ok(()),
+                Err(error) => {
+                    last_error = error.to_string();
+                }
+            }
+        }
+
+        if last_error.is_empty() {
+            last_error = "Unknown token validation error".to_string();
+        }
+        Err(format!("OIDC token validation failed: {}", last_error))
+    }
+
+    async fn get_jwks(&self) -> Result<JwkSet, String> {
+        {
+            let cache = self
+                .jwks_cache
+                .lock()
+                .map_err(|_| "OIDC JWKS cache lock poisoned".to_string())?;
+            if let Some(cache) = cache.as_ref() {
+                let age = cache.fetched_at.elapsed();
+                if age.as_secs() < Self::JWKS_CACHE_TTL_SECONDS {
+                    return Ok(cache.jwks.clone());
+                }
+            }
+        }
+
+        self.fetch_jwks().await
+    }
+
+    async fn fetch_jwks(&self) -> Result<JwkSet, String> {
+        let response = self
+            .client
+            .get(&self.jwks_uri)
+            .send()
+            .await
+            .map_err(|error| format!("Could not fetch OIDC JWKS: {}", error))?;
+
+        if !response.status().is_success() {
+            return Err(format!(
+                "OIDC JWKS request failed with status {}",
+                response.status()
+            ));
+        }
+
+        let jwks = response
+            .json::<JwkSet>()
+            .await
+            .map_err(|error| format!("Could not parse OIDC JWKS response: {}", error))?;
+
+        let mut cache = self
+            .jwks_cache
+            .lock()
+            .map_err(|_| "OIDC JWKS cache lock poisoned".to_string())?;
+        *cache = Some(OidcJwksCache {
+            jwks: jwks.clone(),
+            fetched_at: Instant::now(),
+        });
+
+        Ok(jwks)
+    }
 }
 
 #[derive(Debug, Serialize)]
@@ -125,6 +363,150 @@ struct SunTimesResponse {
     next_sunset: Option<String>,
     next_event_name: Option<String>,
     next_event_at: Option<String>,
+}
+
+fn env_flag_enabled(name: &str) -> bool {
+    let Ok(raw_value) = var(name) else {
+        return false;
+    };
+
+    match raw_value.trim().to_ascii_lowercase().as_str() {
+        "0" | "false" | "no" | "off" => false,
+        _ => true,
+    }
+}
+
+fn resolve_auth_mode() -> AuthMode {
+    if let Ok(auth_mode_raw) = var(AUTH_MODE) {
+        return AuthMode::from_str(&auth_mode_raw).unwrap_or_else(|error| panic!("{}", error));
+    }
+
+    if env_flag_enabled(OIDC_AUTH) {
+        return AuthMode::Oidc;
+    }
+
+    if env_flag_enabled(BASIC_AUTH) {
+        return AuthMode::Basic;
+    }
+
+    AuthMode::None
+}
+
+async fn load_oidc_discovery(authority: &str) -> OidcDiscoveryDocument {
+    let well_known_url = format!(
+        "{}/.well-known/openid-configuration",
+        authority.trim_end_matches('/')
+    );
+
+    let response = reqwest::get(&well_known_url)
+        .await
+        .unwrap_or_else(|error| panic!("Could not fetch OIDC discovery document: {}", error));
+
+    if !response.status().is_success() {
+        panic!(
+            "OIDC discovery endpoint {} returned status {}",
+            well_known_url,
+            response.status()
+        );
+    }
+
+    response
+        .json::<OidcDiscoveryDocument>()
+        .await
+        .unwrap_or_else(|error| panic!("Could not parse OIDC discovery document: {}", error))
+}
+
+async fn build_auth_runtime() -> AuthRuntime {
+    let auth_mode = resolve_auth_mode();
+    log::info!("Authentication mode selected: {}", auth_mode.as_str());
+
+    match auth_mode {
+        AuthMode::None => AuthRuntime::None,
+        AuthMode::Basic => {
+            let username = var(USERNAME_BASIC)
+                .expect("BASIC_USERNAME is required when AUTH_MODE is set to 'basic'");
+            let password = var(PASSWORD_BASIC)
+                .expect("BASIC_PASSWORD is required when AUTH_MODE is set to 'basic'");
+            AuthRuntime::Basic(BasicAuthRuntime { username, password })
+        }
+        AuthMode::Oidc => {
+            let scope = var(OIDC_SCOPE).unwrap_or("openid profile email".to_string());
+            let oidc_config = OidcConfigModel {
+                redirect_uri: var(OIDC_REDIRECT_URI)
+                    .expect("OIDC_REDIRECT_URI is required when AUTH_MODE is set to 'oidc'"),
+                authority: var(OIDC_AUTHORITY)
+                    .expect("OIDC_AUTHORITY is required when AUTH_MODE is set to 'oidc'"),
+                client_id: var(OIDC_CLIENT_ID)
+                    .expect("OIDC_CLIENT_ID is required when AUTH_MODE is set to 'oidc'"),
+                scope,
+            };
+
+            let discovery = load_oidc_discovery(&oidc_config.authority).await;
+            let audience = var(OIDC_AUDIENCE)
+                .ok()
+                .filter(|value| !value.trim().is_empty());
+
+            AuthRuntime::Oidc(OidcAuthRuntime {
+                config: oidc_config,
+                issuer: discovery.issuer,
+                audience,
+                jwks_uri: discovery.jwks_uri,
+                client: reqwest::Client::new(),
+                jwks_cache: Arc::new(Mutex::new(None)),
+            })
+        }
+    }
+}
+
+fn read_authorization_from_query(request: &Request) -> Option<String> {
+    let query = request.uri().query()?;
+    for entry in query.split('&') {
+        let mut parts = entry.splitn(2, '=');
+        let Some(key) = parts.next() else {
+            continue;
+        };
+        if key != "authorization" {
+            continue;
+        }
+
+        let value = parts.next().unwrap_or_default().replace('+', " ");
+        if let Ok(decoded) = urlencoding::decode(&value) {
+            return Some(decoded.into_owned());
+        }
+        return Some(value);
+    }
+
+    None
+}
+
+fn read_authorization(request: &Request) -> Option<String> {
+    if let Some(header_value) = request
+        .headers()
+        .get(header::AUTHORIZATION)
+        .and_then(|value| value.to_str().ok())
+    {
+        return Some(header_value.to_string());
+    }
+
+    read_authorization_from_query(request)
+}
+
+fn basic_unauthorized_response() -> Response {
+    (
+        StatusCode::UNAUTHORIZED,
+        [(header::WWW_AUTHENTICATE, "Basic realm=\"LIVISI\"")],
+        "Unauthorized",
+    )
+        .into_response()
+}
+
+fn bearer_unauthorized_response() -> Response {
+    (
+        StatusCode::UNAUTHORIZED,
+        [(header::WWW_AUTHENTICATE, "Bearer realm=\"LIVISI\"")],
+        "Unauthorized",
+    )
+        .into_response()
 }
 
 #[tokio::main]
@@ -158,6 +540,7 @@ async fn main() -> std::io::Result<()> {
     let interaction = Interaction::new(&base_url);
     let usb_service = USBService::new(&base_url);
     let email = Email::new(&base_url);
+    let auth_runtime = build_auth_runtime().await;
 
     let state = AxumState {
         status,
@@ -176,6 +559,7 @@ async fn main() -> std::io::Result<()> {
         email,
         kv_store,
         resource_base_url: base_url.replace(":8080", ""),
+        auth_runtime: auth_runtime.clone(),
     };
 
     spawn(|| {
@@ -200,7 +584,11 @@ async fn main() -> std::io::Result<()> {
     });
 
     let secured_router = Router::new()
-        .route("/email/settings", get(get_email_settings).put(update_email_settings))
+        .route("/websocket", get(start_connection))
+        .route(
+            "/email/settings",
+            get(get_email_settings).put(update_email_settings),
+        )
         .route("/email/test", get(test_email))
         .route("/data/capability", get(get_capabilities_temperature))
         .route("/status", get(get_status))
@@ -239,7 +627,10 @@ async fn main() -> std::io::Result<()> {
         .route("/api/all", get(get_all_api))
         .route("/unmount", get(unmount_usb_storage))
         .route("/usb_storage", get(get_usb_status))
-        .route_layer(middleware::from_fn(basic_auth_middleware));
+        .route_layer(middleware::from_fn_with_state(
+            auth_runtime,
+            auth_middleware,
+        ));
 
     let app = Router::new()
         .route("/", get(root_redirect))
@@ -248,7 +639,6 @@ async fn main() -> std::io::Result<()> {
         .route("/health/live", get(liveness_probe))
         .route("/health/ready", get(readiness_probe))
         .route("/login", post(login))
-        .route("/websocket", get(start_connection))
         .route("/images/*tail", get(get_images))
         .route("/resources/*tail", get(get_resources))
         .route("/ui", get(ui_redirect))
@@ -296,95 +686,63 @@ async fn shutdown_signal() {
     log::info!("Shutdown signal received. Draining in-flight HTTP requests.");
 }
 
-async fn basic_auth_middleware(request: Request, next: Next) -> Response {
-    if var(BASIC_AUTH).is_err() {
-        return next.run(request).await;
-    }
-
-    let expected_username = match var(USERNAME_BASIC) {
-        Ok(value) => value,
-        Err(_) => {
-            return (
-                StatusCode::UNAUTHORIZED,
-                [(header::WWW_AUTHENTICATE, "Basic realm=\"LIVISI\"")],
-                "Unauthorized",
-            )
-                .into_response();
-        }
-    };
-    let expected_password = match var(PASSWORD_BASIC) {
-        Ok(value) => value,
-        Err(_) => {
-            return (
-                StatusCode::UNAUTHORIZED,
-                [(header::WWW_AUTHENTICATE, "Basic realm=\"LIVISI\"")],
-                "Unauthorized",
-            )
-                .into_response();
-        }
-    };
-
-    let authorization = request
-        .headers()
-        .get(header::AUTHORIZATION)
-        .and_then(|value| value.to_str().ok());
-
-    let Some(authorization) = authorization else {
-        return (
-            StatusCode::UNAUTHORIZED,
-            [(header::WWW_AUTHENTICATE, "Basic realm=\"LIVISI\"")],
-            "Unauthorized",
-        )
-            .into_response();
-    };
-
+fn validate_basic_credentials(authorization: &str, runtime: &BasicAuthRuntime) -> bool {
     let Some(encoded_part) = authorization.strip_prefix("Basic ") else {
-        return (
-            StatusCode::UNAUTHORIZED,
-            [(header::WWW_AUTHENTICATE, "Basic realm=\"LIVISI\"")],
-            "Unauthorized",
-        )
-            .into_response();
+        return false;
     };
 
     let decoded = match general_purpose::STANDARD.decode(encoded_part) {
         Ok(data) => data,
-        Err(_) => {
-            return (
-                StatusCode::UNAUTHORIZED,
-                [(header::WWW_AUTHENTICATE, "Basic realm=\"LIVISI\"")],
-                "Unauthorized",
-            )
-                .into_response();
-        }
+        Err(_) => return false,
     };
 
     let decoded = match String::from_utf8(decoded) {
         Ok(data) => data,
-        Err(_) => {
-            return (
-                StatusCode::UNAUTHORIZED,
-                [(header::WWW_AUTHENTICATE, "Basic realm=\"LIVISI\"")],
-                "Unauthorized",
-            )
-                .into_response();
-        }
+        Err(_) => return false,
     };
 
     let mut parts = decoded.splitn(2, ':');
     let username = parts.next().unwrap_or_default();
     let password = parts.next().unwrap_or_default();
 
-    if username != expected_username || password != expected_password {
-        return (
-            StatusCode::UNAUTHORIZED,
-            [(header::WWW_AUTHENTICATE, "Basic realm=\"LIVISI\"")],
-            "Unauthorized",
-        )
-            .into_response();
-    }
+    username == runtime.username && password == runtime.password
+}
 
-    next.run(request).await
+async fn auth_middleware(
+    State(auth_runtime): State<AuthRuntime>,
+    request: Request,
+    next: Next,
+) -> Response {
+    match auth_runtime {
+        AuthRuntime::None => next.run(request).await,
+        AuthRuntime::Basic(runtime) => {
+            let Some(authorization) = read_authorization(&request) else {
+                return basic_unauthorized_response();
+            };
+
+            if validate_basic_credentials(&authorization, &runtime) {
+                next.run(request).await
+            } else {
+                basic_unauthorized_response()
+            }
+        }
+        AuthRuntime::Oidc(runtime) => {
+            let Some(authorization) = read_authorization(&request) else {
+                return bearer_unauthorized_response();
+            };
+
+            let Some(token) = authorization.strip_prefix("Bearer ") else {
+                return bearer_unauthorized_response();
+            };
+
+            if let Err(error) = runtime.validate_token(token).await {
+                log::warn!("OIDC token validation failed: {}", error);
+                return bearer_unauthorized_response();
+            }
+
+            next.run(request).await
+        }
+    }
 }
 
 async fn root_redirect() -> impl IntoResponse {
@@ -421,7 +779,9 @@ async fn serve_ui_asset(path: String, fallback_to_index: bool) -> Response {
 
     if fallback_to_index {
         return serve_embedded_ui_file("index.html").unwrap_or_else(|| {
-            log::warn!("No embedded UI build found. index.html missing in api/static at compile time.");
+            log::warn!(
+                "No embedded UI build found. index.html missing in api/static at compile time."
+            );
             (
                 StatusCode::SERVICE_UNAVAILABLE,
                 "Embedded UI missing. Build ui-new and rebuild the Rust binary.",
@@ -475,7 +835,11 @@ async fn get_cached_remote_asset(state: AxumState, prefix: &str, tail: String) -
             .into_response();
     }
 
-    let shc_path = format!("{}{}", state.resource_base_url, requested_str.replace('\\', "/"));
+    let shc_path = format!(
+        "{}{}",
+        state.resource_base_url,
+        requested_str.replace('\\', "/")
+    );
     let data = match reqwest::get(shc_path).await {
         Ok(response) => match response.text().await {
             Ok(body) => body,
@@ -549,29 +913,8 @@ async fn websocket_session(mut socket: WebSocket) {
     }
 }
 
-async fn get_api_config() -> impl IntoResponse {
-    let basic_auth = var(BASIC_AUTH).is_ok();
-    let oidc_configured = var(OIDC_AUTH).is_ok();
-
-    let mut config = ConfigModel {
-        basic_auth,
-        oidc_configured,
-        oidc_config: None,
-    };
-
-    if oidc_configured {
-        config.oidc_config = Some(OidcConfigModel {
-            redirect_uri: var(OIDC_REDIRECT_URI)
-                .expect("OIDC redirect uri not configured"),
-            authority: var(OIDC_AUTHORITY)
-                .expect("OIDC authority not configured"),
-            client_id: var(OIDC_CLIENT_ID)
-                .expect("OIDC client id not configured"),
-            scope: var(OIDC_SCOPE).unwrap_or("openid profile email".to_string()),
-        });
-    }
-
-    Json(config)
+async fn get_api_config(State(state): State<AxumState>) -> impl IntoResponse {
+    Json(state.auth_runtime.to_config_model())
 }
 
 async fn liveness_probe() -> Response {
@@ -713,7 +1056,10 @@ fn sorted_devices_map_value(devices: &HashMap<String, DeviceStore>) -> Value {
     Value::Object(sorted_map)
 }
 
-fn sorted_locations(locations: &[LocationResponse], devices: &HashMap<String, DeviceStore>) -> Vec<LocationResponse> {
+fn sorted_locations(
+    locations: &[LocationResponse],
+    devices: &HashMap<String, DeviceStore>,
+) -> Vec<LocationResponse> {
     let mut sorted_locations = locations.to_vec();
     sorted_locations.sort_by(|left, right| {
         normalized_sort_key(&left.config.name)
@@ -735,8 +1081,9 @@ fn sorted_locations(locations: &[LocationResponse], devices: &HashMap<String, De
                     }
                     (Some(_), None) => Ordering::Less,
                     (None, Some(_)) => Ordering::Greater,
-                    (None, None) => normalized_sort_key(left_id)
-                        .cmp(&normalized_sort_key(right_id)),
+                    (None, None) => {
+                        normalized_sort_key(left_id).cmp(&normalized_sort_key(right_id))
+                    }
                 }
             });
             device_ids.dedup();
@@ -768,7 +1115,10 @@ fn sorted_data_value(data: &Data) -> Value {
     };
 
     if let Value::Object(map) = &mut value {
-        map.insert("devices".to_string(), sorted_devices_map_value(&data.devices));
+        map.insert(
+            "devices".to_string(),
+            sorted_devices_map_value(&data.devices),
+        );
         map.insert(
             "locations".to_string(),
             serde_json::to_value(sorted_locations(&data.locations, &data.devices))
@@ -784,19 +1134,24 @@ fn sorted_data_value(data: &Data) -> Value {
     value
 }
 
-async fn login(Json(auth): Json<LoginRequest>) -> Response {
-    if var(BASIC_AUTH).is_err() {
-        return (StatusCode::UNAUTHORIZED, Json(json!("Username or password incorrect")))
+async fn login(State(state): State<AxumState>, Json(auth): Json<LoginRequest>) -> Response {
+    let AuthRuntime::Basic(runtime) = &state.auth_runtime else {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(json!("Login endpoint is only available in basic auth mode")),
+        )
             .into_response();
-    }
+    };
 
-    let username = var(USERNAME_BASIC).unwrap_or_default();
-    let password = var(PASSWORD_BASIC).unwrap_or_default();
-    if auth.username == username && auth.password == password {
+    if auth.username == runtime.username && auth.password == runtime.password {
         return (StatusCode::OK, Json(json!("Login successful"))).into_response();
     }
 
-    (StatusCode::UNAUTHORIZED, Json(json!("Username or password incorrect"))).into_response()
+    (
+        StatusCode::UNAUTHORIZED,
+        Json(json!("Username or password incorrect")),
+    )
+        .into_response()
 }
 
 async fn get_status(State(state): State<AxumState>) -> impl IntoResponse {
@@ -858,9 +1213,12 @@ async fn update_message_by_id(
 ) -> Response {
     let response = state
         .messages
-        .update_mesage_read(message_id, MessageRead {
-            read: message_read.read,
-        })
+        .update_mesage_read(
+            message_id,
+            MessageRead {
+                read: message_read.read,
+            },
+        )
         .await;
     if response.status().is_success() {
         StatusCode::OK.into_response()
@@ -960,14 +1318,14 @@ async fn get_sun_times(State(state): State<AxumState>) -> Response {
 
     let now = Utc::now();
     let today = now.date_naive();
-    let tomorrow = today
-        .checked_add_days(Days::new(1))
-        .unwrap_or(today);
+    let tomorrow = today.checked_add_days(Days::new(1)).unwrap_or(today);
 
     let sunrise_today = solar_event_time_for_date(latitude, longitude, today, SolarEvent::Sunrise);
     let sunset_today = solar_event_time_for_date(latitude, longitude, today, SolarEvent::Sunset);
-    let sunrise_tomorrow = solar_event_time_for_date(latitude, longitude, tomorrow, SolarEvent::Sunrise);
-    let sunset_tomorrow = solar_event_time_for_date(latitude, longitude, tomorrow, SolarEvent::Sunset);
+    let sunrise_tomorrow =
+        solar_event_time_for_date(latitude, longitude, tomorrow, SolarEvent::Sunrise);
+    let sunset_tomorrow =
+        solar_event_time_for_date(latitude, longitude, tomorrow, SolarEvent::Sunset);
 
     let next_sunrise = first_future_event(now, sunrise_today, sunrise_tomorrow);
     let next_sunset = first_future_event(now, sunset_today, sunset_tomorrow);
@@ -1015,7 +1373,9 @@ async fn get_relationship(State(state): State<AxumState>) -> impl IntoResponse {
 }
 
 async fn get_interactions(State(state): State<AxumState>) -> impl IntoResponse {
-    Json(sorted_interactions(&state.interaction.get_interaction().await))
+    Json(sorted_interactions(
+        &state.interaction.get_interaction().await,
+    ))
 }
 
 async fn get_interaction_by_id(
@@ -1044,10 +1404,7 @@ async fn update_interaction_by_id(
     }
 }
 
-async fn trigger_interaction(
-    State(state): State<AxumState>,
-    Path(id): Path<String>,
-) -> Response {
+async fn trigger_interaction(State(state): State<AxumState>, Path(id): Path<String>) -> Response {
     match state.interaction.trigger_interaction(id).await {
         Ok(response) => (StatusCode::OK, Json(response)).into_response(),
         Err(err) => (StatusCode::BAD_GATEWAY, Json(json!({ "error": err }))).into_response(),
@@ -1092,10 +1449,7 @@ async fn test_email(State(state): State<AxumState>) -> impl IntoResponse {
     Json(state.email.test_email().await)
 }
 
-async fn get_capabilities_temperature(
-    State(state): State<AxumState>,
-    uri: Uri,
-) -> Response {
+async fn get_capabilities_temperature(State(state): State<AxumState>, uri: Uri) -> Response {
     if uri.path() != "/data/capability" {
         return (StatusCode::BAD_REQUEST, "Invalid URL").into_response();
     }
@@ -1242,15 +1596,14 @@ fn build_livisi_ws_url(base_url: &str, token: &str) -> Option<Url> {
         base_url.replacen("http://", "ws://", 1)
     };
 
-    let mut url = match Url::parse(
-        &(ws_base.trim_end_matches('/').to_string() + "/events?token=" + token),
-    ) {
-        Ok(url) => url,
-        Err(err) => {
-            log::error!("Could not parse websocket URL from BASE_URL: {}", err);
-            return None;
-        }
-    };
+    let mut url =
+        match Url::parse(&(ws_base.trim_end_matches('/').to_string() + "/events?token=" + token)) {
+            Ok(url) => url,
+            Err(err) => {
+                log::error!("Could not parse websocket URL from BASE_URL: {}", err);
+                return None;
+            }
+        };
 
     if let Err(err) = url.set_port(Some(9090)) {
         log::error!("Could not set websocket port to 9090: {:?}", err);

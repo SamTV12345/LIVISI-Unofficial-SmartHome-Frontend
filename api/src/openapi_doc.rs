@@ -14,8 +14,17 @@ pub struct OidcConfigDoc {
 }
 
 #[derive(Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum AuthModeDoc {
+    None,
+    Basic,
+    Oidc,
+}
+
+#[derive(Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ApiServerConfigDoc {
+    pub auth_mode: AuthModeDoc,
     pub basic_auth: bool,
     pub oidc_configured: bool,
     pub oidc_config: Option<OidcConfigDoc>,
@@ -322,6 +331,7 @@ fn get_capability_history_doc() {}
     components(
         schemas(
             OidcConfigDoc,
+            AuthModeDoc,
             ApiServerConfigDoc,
             HashDoc,
             ProductDoc,

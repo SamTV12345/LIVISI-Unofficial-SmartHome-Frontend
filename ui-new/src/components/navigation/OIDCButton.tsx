@@ -2,16 +2,19 @@ import {useAuth} from "react-oidc-context";
 import {useNavigate} from "react-router-dom";
 import {useTranslation} from "react-i18next";
 import {setAuthorizationHeader} from "@/src/api/authHeaderStore.ts";
+import {useEffect} from "react";
 
 export const OIDCLogin = () => {
     const auth = useAuth()
     const navigate = useNavigate()
     const {t} = useTranslation()
 
-    if (auth.isAuthenticated && auth.user){
-        setAuthorizationHeader('Bearer ' + auth.user.access_token);
-        navigate("/")
-    }
+    useEffect(() => {
+        if (auth.isAuthenticated && auth.user) {
+            setAuthorizationHeader('Bearer ' + auth.user.access_token);
+            navigate("/")
+        }
+    }, [auth.isAuthenticated, auth.user, navigate])
 
 
 

@@ -19,7 +19,7 @@ import {OIDCLogin} from "@/src/components/navigation/OIDCButton.tsx";
 import {useToast} from "@/src/hooks/useToast.ts";
 import {SubmitHandler, useForm} from "react-hook-form";
 import {Checkbox} from "@/src/components/actionComponents/CheckBox.tsx";
-import {FC} from "react";
+import {FC, useEffect} from "react";
 import {postJson} from "@/src/api/httpClient.ts";
 import {setAuthorizationHeader} from "@/src/api/authHeaderStore.ts";
 
@@ -76,12 +76,14 @@ export const LoginComponent:FC<LoginComponentProps> = () => {
             })
     }
 
+    useEffect(() => {
+        if (configModel?.authMode === "none") {
+            navigate("/")
+        }
+    }, [configModel?.authMode, navigate])
+
     if (!configModel){
         return <LoadingScreen/>
-    }
-
-    if (!(configModel.oidcConfigured||configModel.basicAuth)){
-         navigate("/")
     }
 
     return <section className="h-full">
@@ -96,7 +98,7 @@ export const LoginComponent:FC<LoginComponentProps> = () => {
                     <h1 className="text-xl font-bold leading-tight tracking-tight md:text-2xl text-white">
                         {t('sign-in')}
                     </h1>
-                    {configModel?.basicAuth&& <Form {...form}>
+                    {configModel.authMode === "basic" && <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 text-white">
                             <FormField
                                 control={form.control}
@@ -155,7 +157,7 @@ export const LoginComponent:FC<LoginComponentProps> = () => {
                             <Button type="submit" className="">Absenden</Button>
                         </form>
                     </Form>}
-                    {configModel.oidcConfigured&& configModel.oidcConfig&&
+                    {configModel.authMode === "oidc" && configModel.oidcConfig &&
                         <OIDCLogin/>
                     }
                 </div>

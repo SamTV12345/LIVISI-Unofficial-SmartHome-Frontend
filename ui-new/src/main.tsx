@@ -84,7 +84,7 @@ const router = createBrowserRouter(createRoutesFromElements(
             </Route>
 
         </Route>
-        <Route path="logincom" element={<LoginComponent/>}/>
+        <Route path="logincom" element={<AuthWrapper><LoginComponent/></AuthWrapper>}/>
         <Route path="*" element={<Page404/>}/>
     </Route>
 ), {

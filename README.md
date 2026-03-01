@@ -25,10 +25,46 @@ services:
       - BASE_URL=<your-livsi-url>
       - PASSWORD=<your-livisi-password>
       - USERNAME=<your-livisi-username>
+      - AUTH_MODE=none
 ```
 
 The url normally starts with http://<ip-address:8080 . Please don't add a / to the end of the url.
 The username is currently hardcoded in every LIVISI product admin. The password can be retrieved from the serial number of the device.
+
+## Authentication Modes
+
+`AUTH_MODE` controls how the UI and API are protected:
+
+- `AUTH_MODE=none`: No authentication required.
+- `AUTH_MODE=basic`: Browser/API require HTTP Basic authentication.
+- `AUTH_MODE=oidc`: Browser/API require OIDC bearer tokens (e.g. Keycloak, Authelia).
+
+### Basic Auth
+
+```yaml
+environment:
+  - AUTH_MODE=basic
+  - BASIC_USERNAME=<your-login-username>
+  - BASIC_PASSWORD=<your-login-password>
+```
+
+### OIDC
+
+```yaml
+environment:
+  - AUTH_MODE=oidc
+  - OIDC_CLIENT_ID=<your-oidc-client-id>
+  - OIDC_REDIRECT_URI=<https://your-host/ui/>
+  - OIDC_AUTHORITY=<https://your-provider-authority>
+  - OIDC_SCOPE=openid profile email
+  - OIDC_AUDIENCE=<optional-audience-override>
+```
+
+Notes:
+
+- `OIDC_AUDIENCE` is optional. Set it if your provider expects a specific audience check.
+- `OIDC_AUTHORITY` must expose a valid `/.well-known/openid-configuration` endpoint.
+- Legacy toggles `BASIC_AUTH` / `OIDC_AUTH` are still accepted as fallback if `AUTH_MODE` is not set.
 
 
 ## Deploying on Windows
@@ -39,8 +75,9 @@ The username is currently hardcoded in every LIVISI product admin. The password 
 4. Enter the base url e.g. `http://192.168.1.20:8080`
 5. Enter the username, normally `admin`
 6. Enter your livisi shc password
-7. Run the script with `.\run.bat`
-8. Visit the ip address of your computer on port 8000. You will be redirected to /ui.
+7. Set `AUTH_MODE` (`none`, `basic`, or `oidc`) and related variables if needed
+8. Run the script with `.\run.bat`
+9. Visit the ip address of your computer on port 8000. You will be redirected to /ui.
 
 # UI
 

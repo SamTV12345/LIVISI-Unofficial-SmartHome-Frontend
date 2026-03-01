@@ -631,10 +631,14 @@
       "ApiServerConfigDoc": {
         "type": "object",
         "required": [
+          "authMode",
           "basicAuth",
           "oidcConfigured"
         ],
         "properties": {
+          "authMode": {
+            "$ref": "#/components/schemas/AuthModeDoc"
+          },
           "basicAuth": {
             "type": "boolean"
           },
@@ -652,6 +656,14 @@
             "type": "boolean"
           }
         }
+      },
+      "AuthModeDoc": {
+        "type": "string",
+        "enum": [
+          "none",
+          "basic",
+          "oidc"
+        ]
       },
       "CapabilityHistoryDoc": {
         "type": "object",

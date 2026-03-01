@@ -297,10 +297,13 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         ApiServerConfigDoc: {
+            authMode: components["schemas"]["AuthModeDoc"];
             basicAuth: boolean;
             oidcConfig?: null | components["schemas"]["OidcConfigDoc"];
             oidcConfigured: boolean;
         };
+        /** @enum {string} */
+        AuthModeDoc: "none" | "basic" | "oidc";
         CapabilityHistoryDoc: {
             dataName: string;
             dataValue: string;

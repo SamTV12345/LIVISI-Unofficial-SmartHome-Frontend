@@ -1,8 +1,8 @@
+export type AuthMode = "none" | "basic" | "oidc";
+
 export interface ConfigModel {
-    podindexConfigured: boolean,
-    rssFeed: string
-    serverUrl: string,
-    basicAuth: string,
+    authMode: AuthMode,
+    basicAuth: boolean,
     oidcConfigured: boolean,
     oidcConfig?: {
         authority: string,
