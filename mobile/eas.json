@@ -4,27 +4,21 @@
       "autoIncrement": true,
       "developmentClient": true,
       "distribution": "internal",
-      "node": "20.19.4",
-      "pnpm": "10.11.0",
-      "env": {
-        "EXPO_USE_COMMUNITY_AUTOLINKING": "1"
+      "android": {
+        "buildType": "apk"
       }
     },
     "preview": {
       "autoIncrement": true,
       "distribution": "internal",
-      "node": "20.19.4",
-      "pnpm": "10.11.0",
-      "env": {
-        "EXPO_USE_COMMUNITY_AUTOLINKING": "1"
+      "android": {
+        "buildType": "apk"
       }
     },
     "production": {
       "autoIncrement": true,
-      "node": "20.19.4",
-      "pnpm": "10.11.0",
-      "env": {
-        "EXPO_USE_COMMUNITY_AUTOLINKING": "1"
+      "android": {
+        "buildType": "apk"
       }
     }
   },

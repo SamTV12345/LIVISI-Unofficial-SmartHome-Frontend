@@ -31,14 +31,25 @@ jobs:
       - name: Install dependencies
         working-directory: mobile
         run: pnpm install --frozen-lockfile
-      - name: Build
-        working-directory: mobile
-        run: pnpm dlx eas-cli@18.0.6 build --profile production --platform android --local --non-interactive
-      - name: Rename artifact
-        working-directory: mobile
-        run: mv *.aab app-release.aab
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+      - name: Setup Expo CLI
+        run: pnpm install -g @expo/cli@latest
+      - name: Generate native code with expo prebuild
+        run: npx expo prebuild --platform android
+      - name: Generate unsigned APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease
+      - name: Sign APK
+        uses: r0adkll/sign-android-release@v1
+        id: sign_app
         with:
-          path: mobile/app-release.aab
-          name: android-aab
+          releaseDirectory: mobile/android/app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.ANDROID_KEYSTORE }}
+          alias: ${{ secrets.ANDROID_KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      - name: Upload APK to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{steps.sign_app.outputs.signedReleaseFile}}
