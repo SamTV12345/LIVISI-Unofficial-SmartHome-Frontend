@@ -158,6 +158,8 @@ impl OidcAuthRuntime {
         validation.set_issuer(&[self.issuer.as_str()]);
         if let Some(audience) = &self.audience {
             validation.set_audience(&[audience.as_str()]);
+        } else {
+            validation.validate_aud = false;
         }
         validation.leeway = 15;
         validation
@@ -214,7 +216,18 @@ impl OidcAuthRuntime {
             };
 
             match decode::<Value>(token, &decoding_key, validation) {
-                Ok(_) => return Ok(()),
+                Ok(token_data) => {
+                    if self.audience.is_none() {
+                        let authorized_party = token_data.claims.get("azp").and_then(Value::as_str);
+                        if authorized_party != Some(self.config.client_id.as_str()) {
+                            last_error =
+                                "OIDC token validation failed: azp does not match OIDC_CLIENT_ID".to_string();
+                            continue;
+                        }
+                    }
+
+                    return Ok(());
+                }
                 Err(error) => {
                     last_error = error.to_string();
                 }
