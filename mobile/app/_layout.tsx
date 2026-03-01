@@ -10,6 +10,8 @@ import {queryClient} from "@/lib/queryClient";
 import {createGatewayQueryClient} from "@/lib/openapi/client";
 import {ConfigData} from "@/models/ConfigData";
 import {useNavigationTheme} from "@/hooks/useAppColors";
+import {resolveAuthMode} from "@/utils/authMode";
+import {clearAuthorizationHeader} from "@/lib/openapi/authHeaderStore";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -54,6 +56,13 @@ export default function RootLayout() {
         }
 
         useContentModel.getState().setConfig(config);
+        if (resolveAuthMode(config) === "oidc") {
+          clearAuthorizationHeader();
+          router.replace("/login");
+          return;
+        }
+
+        clearAuthorizationHeader();
         router.replace("/main/devices/(tabs)");
       } catch {
         router.replace("/login");

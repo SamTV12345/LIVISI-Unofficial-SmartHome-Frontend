@@ -1,6 +1,6 @@
 import {PropsWithChildren, ReactNode, useMemo} from "react";
-import {SafeAreaView} from "react-native-safe-area-context";
-import {ScrollView, StyleSheet, Text, View} from "react-native";
+import {SafeAreaView, useSafeAreaInsets} from "react-native-safe-area-context";
+import {KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View} from "react-native";
 import {AppPalette} from "@/constants/Colors";
 import {useAppColors} from "@/hooks/useAppColors";
 
@@ -22,6 +22,7 @@ export const AppScreen = ({
 }: AppScreenProps) => {
     const appColors = useAppColors();
     const styles = useMemo(() => createStyles(appColors), [appColors]);
+    const insets = useSafeAreaInsets();
 
     const content = (
         <View style={[styles.contentWrap, contentStyle]}>
@@ -42,19 +43,26 @@ export const AppScreen = ({
         <SafeAreaView style={styles.safeArea} edges={["top", "left", "right"]}>
             <View style={styles.backgroundBlobTop}/>
             <View style={styles.backgroundBlobBottom}/>
-            {scroll ? (
-                <ScrollView
-                    contentContainerStyle={styles.scrollContent}
-                    keyboardShouldPersistTaps="handled"
-                    showsVerticalScrollIndicator={false}
-                >
-                    {content}
-                </ScrollView>
-            ) : (
-                <View style={styles.nonScrollWrap}>
-                    {content}
-                </View>
-            )}
+            <KeyboardAvoidingView
+                style={styles.keyboardWrap}
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                keyboardVerticalOffset={Platform.OS === "ios" ? insets.top : 0}
+            >
+                {scroll ? (
+                    <ScrollView
+                        contentContainerStyle={[styles.scrollContent, {paddingBottom: insets.bottom + 24}]}
+                        keyboardShouldPersistTaps="handled"
+                        keyboardDismissMode="on-drag"
+                        showsVerticalScrollIndicator={false}
+                    >
+                        {content}
+                    </ScrollView>
+                ) : (
+                    <View style={styles.nonScrollWrap}>
+                        {content}
+                    </View>
+                )}
+            </KeyboardAvoidingView>
         </SafeAreaView>
     );
 };
@@ -83,6 +91,9 @@ const createStyles = (colors: AppPalette) => StyleSheet.create({
         bottom: -110,
         backgroundColor: colors.accentSoft,
         opacity: 0.55
+    },
+    keyboardWrap: {
+        flex: 1
     },
     scrollContent: {
         flexGrow: 1

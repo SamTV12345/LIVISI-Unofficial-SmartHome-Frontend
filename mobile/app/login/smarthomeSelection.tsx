@@ -12,6 +12,8 @@ import {resolveAuthMode} from "@/utils/authMode";
 import {useQueryClient} from "@tanstack/react-query";
 import {ConfigData} from "@/models/ConfigData";
 import {createGatewayQueryClient} from "@/lib/openapi/client";
+import {clearAuthorizationHeader, setAuthorizationHeader} from "@/lib/openapi/authHeaderStore";
+import {authenticateWithOidc, OidcAuthError} from "@/utils/oidcAuth";
 
 export default function SmartHomeSelection() {
     const router = useRouter();
@@ -54,12 +56,8 @@ export default function SmartHomeSelection() {
             ) as ConfigData;
             const authMode = resolveAuthMode(config);
 
-            if (authMode === "oidc") {
-                Alert.alert("Nicht unterstützt", "Dieses Gateway nutzt OIDC und kann in der Mobile-App aktuell nicht verbunden werden.");
-                return;
-            }
-
             if (authMode === "basic") {
+                clearAuthorizationHeader();
                 await queryClient.fetchQuery(
                     activeApi.queryOptions("post", "/login", {
                         body: {
@@ -70,16 +68,39 @@ export default function SmartHomeSelection() {
                 );
             }
 
+            if (authMode === "oidc") {
+                if (!config.oidcConfig) {
+                    Alert.alert("OIDC Fehler", "Die OIDC-Konfiguration des Gateways ist unvollständig.");
+                    return;
+                }
+
+                const accessToken = await authenticateWithOidc(config.oidcConfig);
+                setAuthorizationHeader(`Bearer ${accessToken}`);
+                gateway.username = "";
+                gateway.password = "";
+                await queryClient.fetchQuery(
+                    activeApi.queryOptions("get", "/status", undefined, {staleTime: 0})
+                );
+            } else {
+                clearAuthorizationHeader();
+            }
+
             saveGatewayConfig({
                 id: entry.id,
-                username: entry.username,
-                password: entry.password,
-                label: entry.label
+                username: gateway.username,
+                password: gateway.password,
+                label: gateway.label
             });
             setGateway(gateway);
             setConfig(config);
             router.replace("/main/devices/(tabs)");
-        } catch {
+        } catch (error) {
+            if (error instanceof OidcAuthError) {
+                clearAuthorizationHeader();
+                Alert.alert("OIDC Fehler", error.message);
+                return;
+            }
+
             Alert.alert("Verbindung fehlgeschlagen", "Das Gateway antwortet nicht mit den gespeicherten Daten.");
         } finally {
             setIsConnecting(null);

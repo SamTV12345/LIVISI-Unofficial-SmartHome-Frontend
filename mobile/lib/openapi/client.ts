@@ -2,6 +2,7 @@ import createFetchClient from "openapi-fetch";
 import createClient from "openapi-react-query";
 import {GatewayConfig} from "@/store/store";
 import {paths} from "@/lib/openapi/types";
+import {getAuthorizationHeader} from "@/lib/openapi/authHeaderStore";
 
 const trimTrailingSlash = (value: string) => value.trim().replace(/\/+$/, "");
 
@@ -20,7 +21,7 @@ const encodeBasicToken = (username: string, password: string): string | undefine
     return runtime.Buffer?.from(credentials, "utf-8").toString("base64");
 };
 
-const buildAuthorizationHeader = (gateway: GatewayConfig): string | undefined => {
+const buildAuthorizationHeader = (gateway: Pick<GatewayConfig, "username" | "password">): string | undefined => {
     const username = gateway.username?.trim() ?? "";
     const password = gateway.password ?? "";
     if (!username || !password) {
@@ -33,6 +34,12 @@ const buildAuthorizationHeader = (gateway: GatewayConfig): string | undefined =>
     return `Basic ${token}`;
 };
 
+const resolveAuthorizationHeader = (
+    gateway: Pick<GatewayConfig, "username" | "password">
+): string | undefined => {
+    return getAuthorizationHeader() ?? buildAuthorizationHeader(gateway);
+};
+
 type ClientOptions = {
     withoutAuth?: boolean;
 };
@@ -41,11 +48,23 @@ export const createGatewayFetchClient = (
     gateway: Pick<GatewayConfig, "baseURL" | "username" | "password">,
     options?: ClientOptions
 ) => {
-    const authorization = options?.withoutAuth ? undefined : buildAuthorizationHeader(gateway);
-    return createFetchClient<paths>({
-        baseUrl: normalizeGatewayBaseURL(gateway.baseURL),
-        headers: authorization ? {Authorization: authorization} : undefined
+    const client = createFetchClient<paths>({
+        baseUrl: normalizeGatewayBaseURL(gateway.baseURL)
     });
+
+    if (!options?.withoutAuth) {
+        client.use({
+            onRequest({request}) {
+                const authorization = resolveAuthorizationHeader(gateway);
+                if (authorization && !request.headers.has("Authorization")) {
+                    request.headers.set("Authorization", authorization);
+                }
+                return request;
+            }
+        });
+    }
+
+    return client;
 };
 
 export const createGatewayQueryClient = (

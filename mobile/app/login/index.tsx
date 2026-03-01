@@ -14,6 +14,8 @@ import {AuthMode, ConfigData} from "@/models/ConfigData";
 import {resolveAuthMode} from "@/utils/authMode";
 import {useGatewayApiFor} from "@/hooks/useGatewayApi";
 import {useQueryClient} from "@tanstack/react-query";
+import {clearAuthorizationHeader, setAuthorizationHeader} from "@/lib/openapi/authHeaderStore";
+import {authenticateWithOidc, OidcAuthError} from "@/utils/oidcAuth";
 
 type WizardAuthMode = "unknown" | AuthMode;
 
@@ -65,6 +67,10 @@ export default function LoginScreen() {
             if (detectedMode === "basic" && !username.trim()) {
                 setUsername("admin");
             }
+            if (detectedMode === "oidc") {
+                setUsername("");
+                setPassword("");
+            }
         } catch {
             setError("Gateway konnte nicht erreicht werden. Bitte URL und Netzwerk prüfen.");
         } finally {
@@ -86,8 +92,8 @@ export default function LoginScreen() {
             return;
         }
 
-        if (authMode === "oidc") {
-            setError("Dieses Gateway nutzt OIDC. Das ist in der Mobile-App aktuell nicht unterstützt.");
+        if (authMode === "oidc" && !probedConfig?.oidcConfig) {
+            setError("OIDC-Konfiguration fehlt im Gateway-Setup.");
             return;
         }
 
@@ -108,12 +114,30 @@ export default function LoginScreen() {
 
         try {
             if (authMode === "basic") {
+                clearAuthorizationHeader();
                 await verifyBasicLoginMutation.mutateAsync({
                     body: {
                         username: nextGateway.username,
                         password: nextGateway.password
                     }
                 });
+            }
+            if (authMode === "oidc") {
+                const oidcConfig = probedConfig?.oidcConfig;
+                if (!oidcConfig) {
+                    throw new OidcAuthError("OIDC-Konfiguration fehlt im Gateway-Setup.");
+                }
+
+                const accessToken = await authenticateWithOidc(oidcConfig);
+                setAuthorizationHeader(`Bearer ${accessToken}`);
+                nextGateway.username = "";
+                nextGateway.password = "";
+                await queryClient.fetchQuery(
+                    activeApi.queryOptions("get", "/status", undefined, {staleTime: 0})
+                );
+            }
+            if (authMode === "none") {
+                clearAuthorizationHeader();
             }
 
             const config = probedConfig ?? await queryClient.fetchQuery(
@@ -130,7 +154,16 @@ export default function LoginScreen() {
             setGateway(nextGateway);
             setConfig(config);
             router.replace("/main/devices/(tabs)");
-        } catch {
+        } catch (error) {
+            if (authMode === "oidc") {
+                clearAuthorizationHeader();
+                if (error instanceof OidcAuthError) {
+                    setError(error.message);
+                    return;
+                }
+                setError("OIDC-Anmeldung oder Token-Prüfung ist fehlgeschlagen.");
+                return;
+            }
             if (authMode === "basic") {
                 setError("Zugangsdaten ungültig. Bitte Benutzername und Passwort prüfen.");
                 return;
@@ -144,8 +177,11 @@ export default function LoginScreen() {
     const stepDescription = authMode === "basic"
         ? "Auth-Mode ist Basic. Benutzername und Passwort sind erforderlich."
         : authMode === "oidc"
-            ? "Auth-Mode ist OIDC. Dafür fehlt derzeit ein Login-Flow in der Mobile-App."
+            ? "Auth-Mode ist OIDC. Die Anmeldung erfolgt über den Identity Provider des Gateways."
             : "Auth-Mode ist None. Du kannst ohne Benutzername und Passwort verbinden.";
+    const primaryActionTitle = authMode === "oidc"
+        ? (isLoading ? "OIDC-Anmeldung..." : "Mit OIDC anmelden und verbinden")
+        : (isLoading ? "Verbinde..." : "Verbinden");
 
     return (
         <AppScreen
@@ -201,9 +237,18 @@ export default function LoginScreen() {
                         <Text style={styles.helperText}>{stepDescription}</Text>
 
                         {authMode === "oidc" ? (
-                            <Text style={styles.oidcHint}>
-                                Aktuell unterstützt die Mobile-App nur lokale Zugänge ohne Auth oder mit Basic Auth.
-                            </Text>
+                            <>
+                                <Text style={styles.oidcHint}>
+                                    Du wirst im nächsten Schritt zur OIDC-Anmeldung weitergeleitet.
+                                </Text>
+                                <FormField
+                                    label="Anzeigename (optional)"
+                                    value={label}
+                                    onChangeText={setLabel}
+                                    placeholder="Zuhause"
+                                    autoCapitalize="sentences"
+                                />
+                            </>
                         ) : (
                             <>
                                 <FormField
@@ -238,13 +283,11 @@ export default function LoginScreen() {
                         )}
                         {error ? <Text style={styles.errorText}>{error}</Text> : null}
                         <View style={styles.secondaryActions}>
-                            {authMode !== "oidc" ? (
-                                <ActionButton
-                                    title={isLoading ? "Verbinde..." : "Verbinden"}
-                                    onPress={connectGateway}
-                                    disabled={isLoading}
-                                />
-                            ) : null}
+                            <ActionButton
+                                title={primaryActionTitle}
+                                onPress={connectGateway}
+                                disabled={isLoading}
+                            />
                             <ActionButton
                                 title="Zurück zur URL"
                                 onPress={() => {

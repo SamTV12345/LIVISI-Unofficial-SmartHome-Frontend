@@ -11,6 +11,8 @@ import {resolveAuthMode} from "@/utils/authMode";
 import {useGatewayApiFor} from "@/hooks/useGatewayApi";
 import {useQueryClient} from "@tanstack/react-query";
 import {ConfigData} from "@/models/ConfigData";
+import {clearAuthorizationHeader, setAuthorizationHeader} from "@/lib/openapi/authHeaderStore";
+import {authenticateWithOidc, OidcAuthError} from "@/utils/oidcAuth";
 
 export default function SmarthomeDetailAdd() {
     const queryClient = useQueryClient();
@@ -41,11 +43,12 @@ export default function SmarthomeDetailAdd() {
 
         setIsSaving(true);
         setError("");
+        let detectedAuthMode: ReturnType<typeof resolveAuthMode> | "unknown" = "unknown";
         try {
             const config = await queryClient.fetchQuery(
                 probeApi.queryOptions("get", "/api/server", undefined, {staleTime: 0})
             ) as ConfigData;
-            const authMode = resolveAuthMode(config);
+            detectedAuthMode = resolveAuthMode(config);
 
             const gateway = {
                 baseURL: nextBaseURL,
@@ -54,12 +57,13 @@ export default function SmarthomeDetailAdd() {
                 label: label.trim()
             };
 
-            if (authMode === "oidc") {
-                setError("Dieses Gateway nutzt OIDC. Das ist in der Mobile-App aktuell nicht unterstützt.");
+            if (detectedAuthMode === "oidc" && !config.oidcConfig) {
+                setError("OIDC-Konfiguration fehlt im Gateway-Setup.");
                 return;
             }
 
-            if (authMode === "basic") {
+            if (detectedAuthMode === "basic") {
+                clearAuthorizationHeader();
                 if (!gateway.username || !gateway.password) {
                     setError("Dieses Gateway verlangt Benutzername und Passwort.");
                     return;
@@ -72,6 +76,23 @@ export default function SmarthomeDetailAdd() {
                 });
             }
 
+            if (detectedAuthMode === "oidc") {
+                const oidcConfig = config.oidcConfig;
+                if (!oidcConfig) {
+                    throw new OidcAuthError("OIDC-Konfiguration fehlt im Gateway-Setup.");
+                }
+
+                const accessToken = await authenticateWithOidc(oidcConfig);
+                setAuthorizationHeader(`Bearer ${accessToken}`);
+                gateway.username = "";
+                gateway.password = "";
+                await queryClient.fetchQuery(
+                    activeApi.queryOptions("get", "/status", undefined, {staleTime: 0})
+                );
+            } else {
+                clearAuthorizationHeader();
+            }
+
             saveGatewayConfig({
                 id: gateway.baseURL,
                 username: gateway.username,
@@ -80,7 +101,19 @@ export default function SmarthomeDetailAdd() {
             });
             updateServerConfig(config, gateway.baseURL);
             router.replace("/login/smarthomeSelection");
-        } catch {
+        } catch (error) {
+            if (error instanceof OidcAuthError) {
+                clearAuthorizationHeader();
+                setError(error.message);
+                return;
+            }
+
+            if (detectedAuthMode === "oidc") {
+                clearAuthorizationHeader();
+                setError("OIDC-Anmeldung oder Token-Prüfung ist fehlgeschlagen.");
+                return;
+            }
+
             if (username.trim() || password) {
                 setError("Zugangsdaten ungültig.");
                 return;
