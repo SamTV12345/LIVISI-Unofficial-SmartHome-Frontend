@@ -60,11 +60,26 @@ environment:
   - OIDC_AUDIENCE=<optional-audience-override>
 ```
 
+
+e.g. with Keycloak:
+
+```yaml
+  - name: "AUTH_MODE"
+    value: "oidc"
+  - name: "OIDC_CLIENT_ID"
+    value: "smarthome"
+  - name: "OIDC_REDIRECT_URI"
+    value: "https://smarthome.example.com/ui/"
+  - name: "OIDC_SCOPE"
+    value: "openid profile email"
+  - name: "OIDC_AUTHORITY"
+    value: "https://sso.keycloak.example/realms/prod"
+```
+
 Notes:
 
 - `OIDC_AUDIENCE` is optional. Set it if your provider expects a specific audience check.
 - `OIDC_AUTHORITY` must expose a valid `/.well-known/openid-configuration` endpoint.
-- Legacy toggles `BASIC_AUTH` / `OIDC_AUTH` are still accepted as fallback if `AUTH_MODE` is not set.
 
 
 ## Deploying on Windows
@@ -81,7 +96,7 @@ Notes:
 
 # UI
 
-The UI is available at /ui. It is a beautiful interface to view the cached data.
+The UI is available at /ui/. It is a beautiful interface to view the cached data.
 
 ![charts](/docs/interface.png)
 
