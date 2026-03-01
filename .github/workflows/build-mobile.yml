@@ -21,6 +21,8 @@ jobs:
         with:
           distribution: "temurin"
           java-version: "17"
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -46,11 +48,14 @@ jobs:
           cd android
           chmod +x gradlew
           ./gradlew assembleRelease
+      - name: Install Android Build Tools for signing
+        run: sdkmanager "build-tools;29.0.3"
       - name: Sign APK
         uses: r0adkll/sign-android-release@v1
         id: sign_app
         with:
           releaseDirectory: mobile/android/app/build/outputs/apk/release
+          buildToolsVersion: "29.0.3"
           signingKeyBase64: ${{ secrets.ANDROID_KEYSTORE }}
           alias: ${{ secrets.ANDROID_KEY_ALIAS }}
           keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
