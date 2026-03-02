@@ -1,0 +1,242 @@
+paths:
+  product:
+    get:
+      tags:
+        - Product
+      summary: Retrieves available products
+      description: The interface returns all available products for a given SHC or username. The selection is based on the SHC serial number or username, which are extracted from the Access Token.
+      operationId: getProduct
+      parameters:
+        - name: provisioned
+          description: used to filtered by the "provisioned" property
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: isService
+          description: used to filtered by the "isService" property
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - name: productKind
+          description: used to filtered by the "productKind" property
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [Free, Paid]
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/product"
+              example:
+                - type: Appliances.Miele
+                  version: '2.0'
+                  provisioned: false
+                  config:
+                    name: Miele Applicances 2.0
+                    productId: '1234566'
+                    productKind: Free
+                    prerequisitesMet: true
+                    prerequisites: ''
+                    isService: false
+                    isExtension: false
+                    isInternal: false
+                - type: WeatherStation.Netatmo
+                  version: '2.0'
+                  provisioned: true
+                  config:
+                    name: Netatmo Weather Station 2.0
+                    productId: '1234567'
+                    productKind: Free
+                    prerequisitesMet: true
+                    prerequisites: ''
+                    isService: false
+                    isExtension: false
+                    isInternal: false
+                  state:
+                    enabledByUser: true
+                    enabledByWebShop: true
+                    active: true
+                    updateAvailable: false
+                    fullVersion: 2.0.526.0
+                - type: Robolinho.ALKO
+                  version: '2.0'
+                  provisioned: false
+                  config:
+                    name: AL-KO Robolinho
+                    productId: Alko Robolinho
+                    productKind: Free
+                    prerequisitesMet: true
+                    prerequisites: ''
+                    isService: false
+                    isExtension: false
+                    isInternal: false
+  product_hash:
+    get:
+      tags:
+        - Product
+      summary: Retrieves the current product hash
+      description: The product hash acts as a version for the provisioned products. Clients can use this to cache the products and only retrieve them again if the hash is changed
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hash:
+                    type: string
+              example:
+                hash: 3d26c2b4cb474209b3c3
+  product_add_type:
+    get:
+      tags:
+        - Product
+      summary: Activates a free product
+      description: The interface triggers the provisioning of the product with type {type} (=appid) on a given SHC. The SHC serial number is taken out of the access token.
+      operationId: addProduct
+      parameters:
+        - name: type
+          description: The type of the product
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+  product_update_type:
+    get:
+      tags:
+        - Product
+      summary: Updates a product
+      description: The interface triggers the version update of provisioned products on a given SHC. If no type is specified, all products, for which an update is available, will be updated on the SHC.
+      parameters:
+        - name: type
+          description: The type of the product
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+  product_delete_type:
+    get:
+      tags:
+        - Product
+      summary: Deletes a product
+      description: The interface triggers the removal of a provisioned product on a given SHC. The SHC serial number will be taken out of the access token.
+      parameters:
+        - name: type
+          description: The type of the product
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+components:
+  schemas:
+    product:
+      description: |
+        The Product describes additional functionality for a SmartHome installation, which can be purchased or provisioned free of charge to a given SmartHome controller. The product can be either a Premium Service or an Add-In, which will be provisioned as additional component onto the SmartHome controller.    
+
+        Remarks:
+        *	The product entity cannot be changed by the client. All content is read only and can only be adapted by the backend.
+        *	In case a product is not yet provisioned to an SHC, the entity will only contain the config container, when request via the products interface.
+        *	If the list of provisioned products is received from the SHC, the individual product entities will only contain the State container.
+        *	Products with â€˜isInternalâ€™ configurarion property are handled by the backend, they cannot be provisioned or removed by request.
+      type: object
+      properties:
+        type:
+          type: string
+          description: Type of the product.
+        version:
+          type: string
+          description: Version of the product, which is equal to the major.minor version of the add-in.
+        provisioned:
+          type: boolean
+          description: Indicates whether the product has been provisioned for the given SHC.
+        config:
+          type: object
+          description: The Config container includes all properties, which are relevant for the product. Those are mainly entries, which support the purchase or installation decision of end customers.
+          properties:
+            name:
+              type: string
+              description: The name of the product
+            productId:
+              type: string
+              description: Technical id of the product
+            productKind:
+              type: string
+              description: Indicates whether the product is free or paid
+              enum: [Free, Paid]
+            prerequisitesMet:
+              type: boolean
+              description: Indicates whether the product can be installed on the current SHC from the dependencies point of view
+            prerequisites:
+              type: string
+              description: Indicates the dependencies on other products
+            isService:
+              type: boolean
+              description: Indicates whether the product is a service (i.e. runs in the backend)
+            isExtension:
+              type: boolean
+              description: Indicates whther the product can be purchased multiple times (e.g. SMS contingent is an extension product)
+            isInternal:
+              type: boolean
+              description: true for products provisioned by default, which cannot be uninstalled (e.g. VariableActuator.RWE)
+        state:
+          type: object
+          description: |
+            Includes well defined properties, which indicate the state of the product in the backend and on the SHC. This container will also contain any additional parameter, which is required for the operation of the Add-In or Service. 
+            
+            __Note:__
+            Available only for provisioned products
+          properties:
+            enabledByUser:
+              type: boolean
+              description: true, when product is enabled by the user
+            enabledByWebShop:
+              type: boolean
+              description: true, when product enabled in web shop
+            active:
+              type: boolean
+              description: true, when the product is active/running
+            updateAvailable:
+              type: boolean
+              description: true, when an update of the product is available
+            fullVersion:
+              type: string
+              description: Contains the full version of the underlying add-in
+  examples:
+    productExample:
+      value:
+        type: SunriseSunsetSensor.RWE
+        version: '2.0'
+        provisioned: true
+        config:
+          name: Sonnenaufgangs/-untergangs-Funktion
+          productId: '5'
+          productKind: Free
+          prerequisitesMet: true
+          prerequisites: ''
+          isService: false
+          isExtension: false
+          isInternal: false
+        state:
+          enabledByUser: true
+          enabledByWebShop: true
+          active: true
+          updateAvailable: false
+          fullVersion: 2.0.518.0

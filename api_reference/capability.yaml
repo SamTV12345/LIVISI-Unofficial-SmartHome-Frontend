@@ -1,0 +1,189 @@
+paths:
+  capability:
+    get:
+      tags:
+        - Capability
+      summary: Retrieves one or multiple capabilities
+      description: |
+        The interface returns one or many capability entities connected to
+        the concerned SmartHome controller. Optionally, the retrieval can be restricted
+        to a certain tag by specifying the key of the tag and the corresponding tag value. When using this interface without a parameter, the interface response can grow large, since it will include a full list of all attached capabilitys to a controller. Parameter values has to be URL encoded. 
+
+        __Required access rights__:
+        * __User:__ (CapabilityRead | CapabilityFull) & ControllerAccess 
+        * __Client:__ CoreRead | CoreFull
+      operationId: getCapability
+      parameters:
+        - name: tkey
+          in: query
+          description:
+            Key of the capability tag relevant for the search. In case this parameter
+            is specified also the value for the tag must be provided
+          schema:
+            type: string
+        - name: tval
+          in: query
+          description: Value of the capability tag, which should be considered for the query
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/capability"
+              example:
+                - id: 1044fc0eb79249d5b9964d8a1bbbbef0
+                  type: ThermostatActuator
+                  device: /device/2e12d5ea8b414cf586167544683e92c3
+                  config:
+                    activityLogActive: true
+                    childLock: false
+                    maxTemperature: 30
+                    minTemperature: 6
+                    name: Target Temperature
+                    windowOpenTemperature: 6
+    post:
+      tags:
+        - Capability
+      summary: Stores a capability in the SmartHome configuration
+      description: "__IMPORTANT__: No other requests that needs exclusive access to the configuration should be sent until one of the above notification is received since the system will reject such requests"
+      operationId: postCapability
+      requestBody:
+        description: The capability entity to be created
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/capability"
+            example:
+              $ref: "#/components/examples/capabilityExample/value"
+      responses:
+        200:
+          description: The request has been received and validated (acknowledge response), but it doesnâ€™t mean that the result was successful. The 200 OK request response will always be followed by an event received through the websocket connection containing the actual result state (detailed)
+        400:
+          description: If the capability is not valid from the attributes point of view (missing required attributes, invalid types) the 3001 error code is retrieved. If the capability has missing or wrong values for a specific property of that capability instance the 1005 error code is retrieved.
+  capability_id:
+    parameters:
+      - name: id
+        in: path
+        description: ID of the referred capability
+        required: true
+        schema:
+          type: integer
+          format: int64
+    get:
+      tags:
+        - Capability
+      summary: Find capability by ID
+      description: The capability with the capability id {id} is returned.
+      operationId: getCapabilityById
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/capability"
+              example:
+                $ref: "#/components/examples/capabilityExample/value"
+        400:
+          description: Invalid ID supplied
+          content: {}
+        404:
+          description: Capability not found
+          content: {}
+    delete:
+      tags:
+        - Capability
+      summary: Deletes a capability from the SmartHome configuration
+      description: "__IMPORTANT__: No other requests that needs exclusive access to the configuration should be sent until one of the above notification is received since the system will reject such requests"
+      operationId: deleteCapability
+      responses:
+        200:
+          description: The request has been received and validated (acknowledge response), but it doesnâ€™t mean that the result was successful. The 200 OK request response will always be followed by an event received through the websocket connection containing the actual result state (detailed)
+        400:
+          description: Invalid ID supplied
+        404:
+          description: Capability not found
+    put:
+      tags:
+        - Capability
+      summary: Updates a capability in the SmartHome configuration
+      description: |
+        Usage of the PUT capability interface should follow the next process:
+          1.  Use GET capability interface to obtain a capability entity
+          2.  Update the desired capability properties of the entity obtained in step 1
+          3.  Use PUT capability with the result from step 2 in the body of the request
+      operationId: updateCapability
+      requestBody:
+        description: |
+          Capability entity to be updated
+
+          __IMPORTANT:__ The body of the request is mandatory to be a full capability entity, containing both updated and unchanged properties. PUT capability should work only with entities obtained through the GET capability interface.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/capability"
+            example:
+              $ref: "#/components/examples/capabilityExample/value"
+        required: true
+      responses:
+        200:
+          description: The request has been received and validated (acknowledge response), but it doesnâ€™t mean that the result was successful. The 200 OK request response will always be followed by an event received through the websocket connection containing the actual result state (detailed).
+        400:
+          description: If the capability is not valid from the attributes point of view (missing required attributes, invalid types) the 3001 error code is retrieved. If the capability has missing or wrong values for a specific property of that capability instance the 1005 error code is retrieved.
+components:
+  schemas:
+    capability:
+      type: object
+      description: The Capability entity encloses all attributes, properties, events and actions in context with a capability of a device. A capability can be understood as a functionality of the device.
+      properties:
+        type:
+          type: string
+          readOnly: true
+          description: "Type of the capability as fully qualified name â€“ must be unique per device, since the device links to the capability via the type"
+        class:
+          type: string
+          readOnly: true
+          description: Capability class
+        id:
+          type: string
+          readOnly: true
+        location:
+          type: string
+          pattern: ^(\/location\/(\w+)$)
+          description: "The location contains the link to the location of the device."
+        device:
+          type: string
+          pattern: ^(\/device\/(\w+)$)
+          description: "Contains the link to the parent device, which offers the capability"
+        config:
+          type: object
+          items:
+            type: object
+          description: "This represents a container of all configuration properties like display name of the capability"
+        tags:
+          description: Container of Property for tagging the capability
+          type: object
+          additionalProperties:
+            type: string
+      required:
+        - type
+        - class
+  examples:
+    capabilityExample:
+      value:
+        id: 1044fc0eb79249d5b9964d8a1bbbbef0
+        type: ThermostatActuator
+        device: /device/2e12d5ea8b414cf586167544683e92c3
+        config:
+          activityLogActive: true
+          childLock: false
+          maxTemperature: 30
+          minTemperature: 6
+          name: Target Temperature
+          windowOpenTemperature: 6

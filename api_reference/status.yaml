@@ -1,0 +1,65 @@
+paths:
+  status:
+    get:
+      tags:
+        - Status
+      summary: Retrieves status information for various components.
+      description: |
+        The status interface is supposed to aggregate information about various components and states like API version, gateway general information, etc. 
+        
+        __Note__: In the current version the information relates only to the SHC
+        
+        __Required access rights__:
+        * __Client:__ CoreRead | CoreFull
+      operationId: getStatus
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/status"
+              example:
+                $ref: "#/components/examples/statusExample/value"
+components:
+  schemas:
+    status:
+      type: object
+      description: The Status entity contains information about the current state of the SHC
+      properties:
+        gateway:
+          type: object
+          readOnly: true
+          description: Container with properties describing the state of the SHC.
+          properties:
+            serialNumber:
+              type: string
+              description: Serial number of the SHC
+            connected:
+              type: boolean
+              description: Indicated whether the SHC is onlyne or not (i.e. connected to the SmartHome backend)
+            appVersion:
+              type: string
+              description: Contains the version of the application software
+            osVersion:
+              type: string
+              description: Contains the version of the operating system
+            configVersion:
+              type: string
+              description: Contains the current version of the SHC configuration. This can be used by clients in caching scenarios. (i.e. if the configuration with the latest version is already cached, there is no need to retrieve it again)
+            controllerType:
+              type: string
+              description: Indicates the type of the SHC
+              enum: [Avatar, Classic, Virtual]
+      required:
+        - gateway
+  examples:
+    statusExample:
+      value:
+        gateway:
+          serialNumber: '40156259078520000146'
+          connected: true
+          appVersion: '1.1.13.295'
+          osVersion: '8.16'
+          configVersion: '392'
+          controllerType: Avatar

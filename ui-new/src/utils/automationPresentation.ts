@@ -250,6 +250,10 @@ const readAutomationBooleanBinding = (interaction: Interaction): AutomationWrita
 };
 
 const readActionSetBoolean = (action: InteractionAction): boolean | undefined => {
+    if (readStringValue(action.type) === "SwitchOnWithOffTimer") {
+        return true;
+    }
+
     const params = toRecord(action.params);
     if (!params) return undefined;
 
@@ -266,6 +270,8 @@ const readActionSetBoolean = (action: InteractionAction): boolean | undefined =>
 
     return toBoolean(params.onState);
 };
+
+const BOOLEAN_ACTUATOR_CAPABILITY_TYPES = new Set(["BooleanStateActuator", "SwitchActuator"]);
 
 const readBooleanFromStateEntry = (state: unknown): boolean | undefined => {
     const stateRecord = toRecord(state);
@@ -321,13 +327,13 @@ const isBooleanStateActuatorCapability = (allThings: AxiosDeviceResponse | undef
     }).capabilities) ?? [];
 
     const topLevelMatch = topLevelCapabilities.find((capability) => normalizeCapabilityId(capability.id ?? "") === normalizedCapabilityId);
-    if (topLevelMatch?.type === "BooleanStateActuator") {
+    if (topLevelMatch?.type && BOOLEAN_ACTUATOR_CAPABILITY_TYPES.has(topLevelMatch.type)) {
         return true;
     }
 
     const devices = Object.values(allThings.devices ?? {}) as Device[];
     for (const device of devices) {
-        const deviceTags = toRecord(device.tags);
+        const deviceTags = toRecord(device.tags as unknown);
         const internalStateId = readStringValue(deviceTags?.internalStateId);
         if (!internalStateId) {
             continue;
@@ -339,7 +345,15 @@ const isBooleanStateActuatorCapability = (allThings: AxiosDeviceResponse | undef
         }
 
         const capabilityData = Array.isArray(device.capabilityData) ? device.capabilityData : [];
-        if (capabilityData.some((capability) => normalizeCapabilityId(capability.id) === normalizedCapabilityId)) {
+        if (capabilityData.some((capability) => {
+            if (normalizeCapabilityId(capability.id) !== normalizedCapabilityId) {
+                return false;
+            }
+            if (capability.type && BOOLEAN_ACTUATOR_CAPABILITY_TYPES.has(capability.type)) {
+                return true;
+            }
+            return Boolean(internalStateId);
+        })) {
             return true;
         }
     }
@@ -362,10 +376,12 @@ const readStateCapabilityBinding = (interaction: Interaction, allThings?: AxiosD
             if (!target) continue;
             const capabilityId = normalizeCapabilityId(target);
             if (!capabilityId) continue;
-            if (!isBooleanStateActuatorCapability(allThings, capabilityId)) continue;
+            const setsTo = readActionSetBoolean(action);
+            const capabilityLooksBoolean = isBooleanStateActuatorCapability(allThings, capabilityId);
+            if (!capabilityLooksBoolean && setsTo === undefined) continue;
             candidates.push({
                 capabilityId,
-                setsTo: readActionSetBoolean(action)
+                setsTo
             });
         }
     }
@@ -374,8 +390,31 @@ const readStateCapabilityBinding = (interaction: Interaction, allThings?: AxiosD
         return undefined;
     }
 
-    const preferredCandidate = candidates.find((candidate) => candidate.setsTo === true) ?? candidates[0];
-    return readCapabilityStateBoolean(allThings, preferredCandidate.capabilityId);
+    const evaluations: boolean[] = [];
+
+    for (const candidate of candidates) {
+        const currentValue = readCapabilityStateBoolean(allThings, candidate.capabilityId);
+        if (currentValue === undefined) {
+            continue;
+        }
+
+        if (candidate.setsTo !== undefined) {
+            evaluations.push(currentValue === candidate.setsTo);
+            continue;
+        }
+
+        evaluations.push(currentValue);
+    }
+
+    if (evaluations.length === 0) {
+        return undefined;
+    }
+
+    if (evaluations.includes(false)) {
+        return false;
+    }
+
+    return true;
 };
 
 export const buildAutomationPresentationLookup = (allThings?: AxiosDeviceResponse): AutomationPresentationLookup => {

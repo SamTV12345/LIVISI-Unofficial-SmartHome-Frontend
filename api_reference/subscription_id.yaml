@@ -1,0 +1,178 @@
+paths:
+  subscription:
+    get:
+      tags:
+        - Notification
+      summary: Retrieves all notification subscriptions
+      description: |
+        This interface returns all notification subscriptions for the given user account and channel type. 
+
+        __Required access rights__:
+        * __User:__ NotificationFull & ControllerAccess 
+        * __Client:__ CoreRead | CoreFull
+      operationId: getSubscription
+      parameters:
+        - name: accountname
+          in: query
+          description:
+            The user account whose subscriptions are to be retrieved.
+            If the user account is missing, it returns the subscriptions for all the accounts that have access to that SHC (the one from the access token scope).
+          schema:
+            type: string
+        - name: channel
+          in: query
+          description: The channel for which subscriptions are to be retrieved. If the channel is missing, it returns all subscriptions, regardless of what channel they belong
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/subscription"
+              example:
+                - id: '709708'
+                  account: owner146
+                  channel: Push
+                  channelProperties:
+                    platform: APNS
+                    deviceId: CE21ED59-036D-465F-8CA7-04FA97C8EC50
+                    token: f41e3e4a0968864b617b5fb2f4f765e613048cb1f05f5e60692e8b70ca1d149e
+                  filters:
+                    type: '["DeviceLowBattery","Custom"]'
+    post:
+      tags:
+        - Notification
+      summary: Creates a Subscription
+      operationId: createSubscription
+      description: |
+        The interface creates one Subscription resources. The account name is taken from the access token. 
+        
+        Considerations:
+        *	The id of the resource must not be provided.
+        * The token represents the registration token obtained by registering the device to the GCM/FCM/APNS server
+        *	The deviceId is a unique identifier of the physical device which enables the backend to identify orphan subscriptions (in case the same device obtains a different token from the push server) 
+
+        __Required access rights__:
+          * __User:__ NotificationFull & ControllerAccess 
+          * __Client:__ CoreFull
+      requestBody:
+        description: The subscription entity to be created
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/subscription"
+            example:
+              $ref: "#/components/examples/subscriptionExample/value"
+      responses:
+        200:
+          description: The request has been processed successfully
+  subscription_id:
+    parameters:
+      - name: id
+        in: path
+        description: ID of the referred subscription
+        required: true
+        schema:
+          type: integer
+          format: int64
+    put:
+      tags:
+        - Notification
+      summary: Updates a notification subscription
+      operationId: updateSubscription
+      description: |
+        The interface updates a Subscription resource. The account name is taken from the access 
+        
+        Considerations:
+        * The id of the resource must not be provided.
+        *	The token represents the registration token obtained by registering the device to the GCM/FCM/APNS server
+        * The deviceId is a unique identifier of the physical device which enables the backend to identify orphan subscriptions (in case the same device obtains a different token from the push server) 
+
+        __Required access rights__:
+          * __User:__ NotificationFull & ControllerAccess 
+          * __Client:__ CoreFull
+      requestBody:
+        description: The subscription entity to be created
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/subscription"
+            example:
+              $ref: "#/components/examples/subscriptionExample/value"
+      responses:
+        200:
+          description: The request has been processed successfully
+    delete:
+      tags:
+        - Notification
+      summary: Deletes a notification subscription
+      description: |
+        The interface deletes a subscription based on the provided ID. The account name is taken from the access token. 
+
+        __Required access rights__:
+          * __User:__ NotificationFull & ControllerAccess 
+          * __Client:__ CoreFull
+      operationId: deleteSubscription
+      responses:
+        200:
+          description: The request has been processed successfully
+components:
+  schemas:
+    subscription:
+      type: object
+      description: The subscription entity is used for subscribing to notifications sent by the system.
+      properties:
+        id:
+          type: string
+          description: The resource identifier of the subscription. The value is assigned by the system and must not be provided when creating a resource
+        account:
+          type: string
+          description: Chosen account name of the user. This field is ignored and can be left empty when creating a subscription. The value will be taken from the token.
+        channel:
+          type: string
+          description: The transport channel used for sending the notification.
+          enum: [SMS, Email, Push]
+        channelProperties:
+          type: object
+          description: |
+            Container for the additional channel configuration data. The properties will be only used for push notifications only. In that case, the following string properties are accepted: 
+              *	platform â€“ the platform of the receiving device. Possible values: APNS (for Apple iOS), GCM (for Google Android)
+              *	token â€“ the registration token assigned by APNS or GCM to the client application
+              *	deviceId Â¬ unique device identifier of the client device (e.g. mobile phone)
+            This container is only available to the owner of the subscription.
+          additionalProperties:
+            type: string
+        filters:
+          type: object
+          description: |
+            Container of properties used for filtering notifications based on their Product, type or attributes. In the first version Type, ProductId and Class will be accepted. 
+            They will be used if one wants to receive only notifications from a certain product or of a certain type/class (i.e. message or alert). 
+            Filters having distinct names are applied using AND. Filters having the same name are OR-ed.
+            Based on the properties provided, it is defined if the subcriptions applies for system or custom (interactions) generated notifications, by following these rules:
+            *	If the filter type is Custom then the subscription applies only for custom generated notifications.
+            *	If the filter types are Custom and at least one other Type (e.g. DeviceUnreachable) then all types of notifications will be handled by the subscription.
+            *	If the filter type is other than Custom then only system notifications will be handled.
+          additionalProperties:
+            type: string
+      required:
+        - channel
+  examples:
+    subscriptionExample:
+      value:
+        id: '709708'
+        account: owner146
+        channel: Push
+        channelProperties:
+          platform: APNS
+          deviceId: CE21ED59-036D-465F-8CA7-04FA97C8EC50
+          token: f41e3e4a0968864b617b5fb2f4f765e613048cb1f05f5e60692e8b70ca1d149e
+        filters:
+          type: '["DeviceLowBattery","Custom"]'
+
+

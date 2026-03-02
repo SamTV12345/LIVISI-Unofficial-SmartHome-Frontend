@@ -1,0 +1,191 @@
+paths:
+  message:
+    get:
+      tags:
+        - Message
+      summary: Retrieves one or multiple messages
+      description: |
+        The interface returns one or many messages. Optionally, the retrieval can be restricted to a certain tag by specifying the key of the tag and the corresponding tag value.
+
+        __Required access rights__:
+        * __User:__ (MessageRead | MessageFull) & ControllerAccess 
+        * __Client:__ CoreRead | CoreFull
+      operationId: getMessage
+      parameters:
+        - name: tkey
+          in: query
+          description:
+            Key of the message tag relevant for the search. In case this parameter
+            is specified also the value for the tag must be provided
+          schema:
+            type: string
+        - name: tval
+          in: query
+          description: Value of the message tag, which should be considered for the query
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/message"
+              example:
+                - id: 7e6acec6a55b46eab6e22da948ac8de3
+                  type: DeviceUnreachable
+                  read: false
+                  class: alert
+                  timestamp: '2019-10-31T11:54:44Z'
+                  messages:
+                    - /message/bfd86f7e1981448bb2eeb9a2cbe31bae
+                  capabilities: []
+                  properties:
+                    deviceLocation: Livingroom
+                    deviceName: 'BT-Shock: 20:E3'
+                    deviceSerial: '3C:A3:08:C3:20:E3'
+                  namespace: BLEMessages.Medion
+  message_id:
+    parameters:
+      - name: id
+        in: path
+        description: ID of the referred message
+        required: true
+        schema:
+          type: integer
+          format: int64
+    get:
+      tags:
+        - Message
+      summary: Find message by ID
+      description: The interface returns one message entity.
+      operationId: getMessageById
+      responses:
+        200:
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/message"
+              example:
+                $ref: "#/components/examples/messageExample/value"
+        400:
+          description: Invalid ID supplied
+          content: {}
+        404:
+          description: Message not found
+          content: {}
+    delete:
+      tags:
+        - Message
+      summary: Deletes a message from the SmartHome configuration
+      operationId: deleteMessage
+      responses:
+        200:
+          description: The request has been successfully executed
+        400:
+          description: Invalid ID supplied
+        404:
+          description: Message not found
+    put:
+      tags:
+        - Message
+      summary: Updates a message in the SmartHome configuration
+      description: All message fields are read-only, except the â€˜readâ€™ status. Any changes to the read-only fields will be discharded without any errors.
+      operationId: updateMessage
+      requestBody:
+        description: Message entity to be updated
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/message"
+            example:
+              $ref: "#/components/examples/messageExample/value"
+        required: true
+      responses:
+        200:
+          description: The request has been executed sucessfully.
+        400:
+          description: Invalid ID supplied
+        404:
+          description: Message not found
+components:
+  schemas:
+    message:
+      type: object
+      description: A message transports information for a certain event or situation in the system. Currently the SmartHome system supports Messages and Alerts. Both types are mapped onto the Message entity.
+      properties:
+        id:
+          type: string
+          readOnly: true
+          description: Identifier of the message â€“ must be unique.
+        type:
+          type: string
+          readOnly: false
+          description: Specifies the type of the message.
+        class:
+          type: string
+          readOnly: true
+          description: Defines whether it is an alert or a message, default is message.
+        namespace:
+          type: string
+          readOnly: false
+          description: The product (context) where the message is defined.
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp when the message was created.
+        read:
+          type: boolean
+          description: Defines whether the message has been viewed by a user.
+          readOnly: false
+        devices:
+          type: array
+          description: Reference to the underlying devices, which the message relates to.
+          items:
+            $ref: "Link.yaml#/components/schemas/link"
+        capabilities:
+          type: array
+          description: Reference to the underlying capabilities, which the message relates to.
+          items:
+            $ref: "Link.yaml#/components/schemas/link"
+        properties:
+          description: Container for all properties of the message.
+          type: object.
+          additionalProperties:
+            type: string
+        tags:
+          description: Container for tagging the message, e.g. if the message should only be visible to certain roles
+          type: object
+          additionalProperties:
+            type: string
+      required:
+        - id
+        - type
+        - timestamp
+        - namespace
+        - read
+  examples:
+    messageExample:
+      value:
+        id: 7e6acec6a55b46eab6e22da948ac8de3
+        type: DeviceUnreachable
+        read: true
+        class: alert
+        timestamp: '2019-10-31T11:54:44Z'
+        devices:
+          - /device/bfd86f7e1981448bb2eeb9a2cbe31bae
+        capabilities: []
+        properties:
+          deviceLocation: Livingroom
+          deviceName: 'BT-Shock: 20:E3'
+          deviceSerial: '3C:A3:08:C3:20:E3'
+        namespace: BLEMessages.Medion
+
+
+
+
+
+

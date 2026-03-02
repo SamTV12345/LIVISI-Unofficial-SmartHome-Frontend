@@ -1,0 +1,156 @@
+paths:
+  smartcode_pin:
+    get:
+      tags:
+        - Smart Code
+      summary: Retrieves information about a smart code
+      description: |
+        The interface is used for retrieving info about a smart code. The access is restricted for 60 minutes if 10 wrong pin codes are provided consecutively
+      operationId: getSmartcode
+      parameters:
+        - name: pin
+          in: path
+          description: The pin code (mandatory)
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success - smart code successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/smartcode"
+              example:
+                $ref: "#/components/examples/smartcodeExample/value"
+        400:
+          description: Bad Request - Invalid query parameters
+        401:
+          description: Success - Request authentication failed
+        404:
+          description: Not found - Smart Code does not exist
+        403:
+          description: Forbidden - Request not allowed or too many tries
+        500:
+          description: Internal server error
+  smartcode:
+    post:
+      tags:
+        - Smart Code
+      summary: Redeems a smart code
+      operationId: redeemSmartcode
+      description: |
+        The interface is used for redeeming a smart code. The only required field in the request is the pin, the rest are ignored. The access is restricted for 60 minutes if 10 wrong pin codes are provided consecutively
+      requestBody:
+        description: The smart code to be redeemed. Only the pin field is required
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/smartcode"
+            example:
+              $ref: "#/components/examples/smartcodeExample/value"
+      responses:
+        200:
+          description: Success - The smart code was successfully redeemed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/smartcode"
+              example:
+                $ref: "#/components/examples/smartcodeExample2/value"
+        401:
+          description: Success - Request authentication failed
+        404:
+          description: Not found - Smart Code does not exist
+        403:
+          description: Forbidden - Request not allowed or too many tries
+        500:
+          description: Internal server error
+components:
+  schemas:
+    smartcode:
+      type: object
+      description: The smartcode entity is used for provisioning premium products.
+      properties:
+        pin:
+          type: string
+          description: The pin code of the smart code.
+        createdBy:
+          type: string
+          description: Partner who created the code
+        state:
+          type: string
+          description: Current state of the smart code.
+          enum: [new, redeemed, blacklisted]
+        creationDate:
+          type: date-time
+          description: Date when the code was generated..
+        productPackage:
+          type: string
+          description: Link to the product package resource
+        properties:
+          type: object
+          description: Container of string key-value pairs.
+          additionalProperties:
+            type: string
+        items:
+          type: array
+          description: Collection of provisioning items
+          items:
+            type: object
+            properties:
+              productType:
+                type: string
+                description: Type of the product to be provisioned (e.g. DataStorageExten-sion.RWE)
+              parameters:
+                type: object
+                description: Container of provisioning parameters
+                additionalProperties:
+                  type: string
+              result:
+                type: string
+                description: The provisioning result. This field is only populated in the response of the redeeming request
+                enum: [success, alreadyProvisioned]
+  examples:
+    smartcodeExample:
+      value:
+        createdBy: livisi
+        pin: 2w4efsm4lo0p4e45
+        state: new
+        creationDate: '2012-04-23T18:25:43.511Z'
+        productPackage: "/productpackage/1"
+        properties:
+          name: SMA & System Access
+          description: Thanks for being at IFA
+        items:
+          - productType: SMSContingent.innogy
+            parameters:
+              QUOTA_EXTENSION: 25
+          - productType: SystemAccess.innogy
+            parameters:
+              EXPIRY_EXTENSION: 24
+          - productType: SunriseSunsetSensor.innogy
+    smartcodeExample2:
+      value:
+        createdBy: livisi
+        state: redeemed
+        creationDate: '2012-04-23T18:25:43.511Z'
+        productPackage: /productpackage/1
+        properties:
+          name: SMA & System Access
+          description: Thanks for being at IFA
+        items:
+          - productType: SMSContingent.innogy
+            parameters:
+              QUOTA_EXTENSION: 25
+            result: success
+          - productType: SystemAccess.innogy
+            parameters:
+              EXPIRY_EXTENSION: 24
+            result: success
+          - productType: SunriseSunsetSensor.innogy
+            result: alreadyProvisioned
+
+
+

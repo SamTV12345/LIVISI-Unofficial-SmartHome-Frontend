@@ -1,0 +1,153 @@
+openapi: 3.0.1
+info:
+  title: Livisi SmartHome
+  description: This is the Livisi SmartHome Home API
+  termsOfService: https://www.livisi.de/
+  contact:
+    email: info@livisi.de
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+servers:
+  - url: https://api.services-smarthome.de/api/1.1
+x-tagGroups:
+  - name: Home Configuration
+    tags:
+      - Status
+      - Device
+      - Capability
+      - Location
+      - Action
+      - Interaction
+  - name: Messages & Notifications
+    tags:
+      - Message
+      - Notification
+  - name: Product Management
+    tags:
+      - Smart Code
+      - Product
+tags:
+  - name: Status
+    description: This section describes the status interface used to check the health state of the system
+  - name: Device
+    description: This section describes the operations around the Device entity
+  - name: Capability
+    description: This section describes the operations around the Capability entity
+  - name: Location
+    description: This section describes the operations around the Location entity
+  - name: Action
+    description: This section describes the operations around the Action entity
+  - name: Interaction
+    description: This section describes the operations around the Interaction entity
+  - name: Message
+    description: This section describes the operations around the Message entity
+  - name: Notification
+    description: |
+      This section describes the operations around Notifications. These are updates sent by the system while the UI client is not active. SMS, Email and push notifications are supported.
+      
+      __Note__: SMS notifications are not sent for free. Various SMS contingents can be bought in the SmartHome webshop.
+  - name: Smart Code
+    description: This section describes the operations around the Smart Code entity
+  - name: Product
+    description: This section describes the operations around the Product entity
+security:
+  - smarthome_auth: []
+paths:
+  /status:
+    $ref: "Status.yaml#/paths/status"
+  /device:
+    $ref: "Device.yaml#/paths/device"
+  /device/{id}:
+    $ref: "Device.yaml#/paths/device_id"
+  /capability:
+    $ref: "Capability.yaml#/paths/capability"
+  /capability/{id}:
+    $ref: "Capability.yaml#/paths/capability_id"
+  /location:
+    $ref: "Location.yaml#/paths/location"
+  /location/{id}:
+    $ref: "Location.yaml#/paths/location_id"
+  /action:
+    $ref: "Action.yaml#/paths/action"
+  /interaction:
+    $ref: "Interaction.yaml#/paths/interaction"
+  /interaction/{id}:
+    $ref: "Interaction.yaml#/paths/interaction_id"
+  /message:
+    $ref: "Message.yaml#/paths/message"
+  /message/{id}:
+    $ref: "Message.yaml#/paths/message_id"
+  /subscription:
+    $ref: "Subscription.yaml#/paths/subscription"
+  /subscription/{id}:
+    $ref: "Subscription.yaml#/paths/subscription_id"
+  /smartcode/{pin}:
+    $ref: "SmartCode.yaml#/paths/smartcode_pin"
+  /smartcode:
+    $ref: "SmartCode.yaml#/paths/smartcode"
+  /product:
+    $ref: "Product.yaml#/paths/product"
+  /product/hash:
+    $ref: "Product.yaml#/paths/product_hash"
+  /product/add/{type}:
+    $ref: "Product.yaml#/paths/product_add_type"
+  /product/update/{type}:
+    $ref: "Product.yaml#/paths/product_update_type"
+  /product/remove/{type}:
+    $ref: "Product.yaml#/paths/product_delete_type"
+components:
+  schemas:
+    status:
+      $ref: "Status.yaml#/components/schemas/status"
+    device:
+      $ref: "Device.yaml#/components/schemas/device"
+    capability:
+      $ref: "Capability.yaml#/components/schemas/capability"
+    location:
+      $ref: "Location.yaml#/components/schemas/location"
+    action:
+      $ref: "Action.yaml#/components/schemas/action"
+    actionResponse:
+      $ref: "Action.yaml#/components/schemas/action"
+    interaction:
+      $ref: "Interaction.yaml#/components/schemas/interaction"
+    message:
+      $ref: "Message.yaml#/components/schemas/message"
+    subscription:
+      $ref: "Subscription.yaml#/components/schemas/subscription"
+    smartcode:
+      $ref: "SmartCode.yaml#/components/schemas/smartcode"
+    product:
+      $ref: "Product.yaml#/components/schemas/product"
+  examples:
+    statusExample:
+      $ref: "Status.yaml#/components/examples/statusExample"
+    deviceExample:
+      $ref: "Device.yaml#/components/examples/deviceExample"
+    interactionExample:
+      $ref: "Interaction.yaml#/components/examples/interactionExample"
+    locationExample:
+      $ref: "Location.yaml#/components/examples/locationExample"
+    capabilityExample:
+      $ref: "Capability.yaml#/components/examples/capabilityExample"
+    actionExample:
+      $ref: "Action.yaml#/components/examples/actionExample"
+    actionResponseExample:
+      $ref: "Action.yaml#/components/examples/actionResponseExample"
+    messageExample:
+      $ref: "Message.yaml#/components/examples/messageExample"
+    subscriptionExample:
+      $ref: "Subscription.yaml#/components/examples/subscriptionExample"
+    smartcodeExample:
+      $ref: "SmartCode.yaml#/components/examples/smartcodeExample"
+  securitySchemes:
+    smarthome_auth:
+      type: oauth2
+      description: This API uses OAuth 2 with the authorization code grant flow
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.services-smarthome.de/AUTH/authorize
+          tokenUrl: https://auth.services-smarthome.de/AUTH/token
+          scopes: {}

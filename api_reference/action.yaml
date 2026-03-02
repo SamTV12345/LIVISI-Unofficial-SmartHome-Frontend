@@ -1,0 +1,108 @@
+paths:
+  action:
+    post:
+      tags:
+        - Action
+      summary: Triggers the action of a product, device or capability
+      operationId: postAction
+      requestBody:
+        description: The action to be executed
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/action"
+            example:
+              $ref: "#/components/examples/actionExample/value"
+      responses:
+        200:
+          description: The request has been received and action is being executed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/actionResponse"
+              example:
+                $ref: "#/components/examples/actionResponseExample/value"
+        400:
+          description: "If the action is not valid from the attributes point of view (missing required attributes, invalid types) the 3001 error code is retrieved. If an action has missing or wrong values for a specific property of that action instance the 1005 error code is retrieved."
+components:
+  schemas:
+    action:
+      type: object
+      description: Action entity
+      properties:
+        id:
+          type: string
+          readOnly: true
+          description: Action identifier
+        type:
+          type: string
+          readOnly: false
+          description: Action type
+        namespace:
+          type: string
+          readOnly: false
+          description: The product (context) where the action is defined.
+        target:
+          description: Link to the entity supposed to execute the action.
+          $ref: "Link.yaml#/components/schemas/link"
+        params:
+          description: Dictionary of parameters (i.e. constants or functions) required for the intended execution of the action.
+          type: object
+          additionalProperties:
+            oneOf:
+              - $ref: "Constant.yaml#/components/schemas/constant"
+              - $ref: "Function.yaml#/components/schemas/function"
+        tags:
+          description: Dictionary of properties for tagging (identifying) an Action.
+          type: object
+          additionalProperties:
+            type: string
+      required:
+        - type
+        - target
+        - namespace
+    actionResponse:
+      type: object
+      readOnly: true
+      description: Action response entity
+      properties:
+        type:
+          type: string
+          description: Action response type
+        namespace:
+          type: string
+          description: Namespace (product identifier)
+        target:
+          type: string
+          description: Original action target entity link
+        resultCode:
+          enum:
+            - Success
+            - InvalidActionRequest
+            - UnexpectedFailure
+          description: Action response result code
+        properties:
+          type: object
+          description: Container of action response properties
+      required:
+        - type
+        - namespace
+        - resultCode
+  examples:
+    actionExample:
+      value:
+        type: SetState
+        namespace: core.RWE
+        target: /capability/b1ca66cd756f48beadd6f5a2bf6d07e3
+        params:
+          brightness:
+            type: Constant
+            value: 0
+    actionResponseExample:
+      value:
+        type: SetState
+        resultCode: Success
+        target: /capability/b1ca66cd756f48beadd6f5a2bf6d07e3
+        namespace: core.RWE
+        properties: {}
