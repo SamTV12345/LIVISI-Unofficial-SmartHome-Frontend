@@ -2107,16 +2107,16 @@
       "restart_title": "Zentrale neu starten"
     },
     "heating_device": {
-      "auto_saved": "Auto gespeichert",
+      "auto_saved": "Automatisch gespeichert",
       "current": "Aktuell",
       "current_short": "Aktuell kurz",
       "humidity": "Luftfeuchtigkeit",
-      "humidity_short": "Luftfeuchtigkeit kurz",
-      "last_event": "Letzte ereignis",
+      "humidity_short": "Aktuelle Luftfeuchtigkeit",
+      "last_event": "Letztes Ereignis",
       "saving": "Automatisch gespeichert",
       "setpoint": "Sollwert",
       "setpoint_save_failed": "Solltemperatur konnte nicht gespeichert werden.",
-      "target_short": "Ziel kurz"
+      "target_short": "Solltemperatur"
     },
     "heating_editor": {
       "add_period": "Zeitraum hinzufuegen",
@@ -2293,8 +2293,8 @@
       "unread_count": "{{count}} ungelesen"
     },
     "on_off": {
-      "off_upper": "Aus oberer",
-      "on_upper": "Ein oberer",
+      "off_upper": "Ausgeschaltet",
+      "on_upper": "Eingeschaltet",
       "switch_failed": "Schaltvorgang fehlgeschlagen.",
       "switch_off": "Schalter aus",
       "switch_on": "Schalter ein"
