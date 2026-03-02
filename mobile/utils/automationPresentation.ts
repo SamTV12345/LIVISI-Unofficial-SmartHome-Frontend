@@ -325,7 +325,7 @@ export const readAutomationCategory = (interaction: Interaction): string => {
     return CATEGORY_LABELS[rawCategory] ?? humanizeIdentifier(rawCategory) ?? rawCategory;
 };
 
-const BOOLEAN_KEYS = ["enabled", "isEnabled", "isActive", "scenarioActive", "active"];
+const BOOLEAN_KEYS = ["enabled", "isEnabled", "isActive", "scenarioActive"];
 
 const readBooleanFromRecord = (
     source: Record<string, unknown> | undefined,
@@ -355,6 +355,33 @@ const readAutomationBooleanBinding = (interaction: Interaction): boolean | undef
     }
 
     return undefined;
+};
+
+const readAutomationValidityBinding = (interaction: Interaction): boolean | undefined => {
+    const validFromRaw = toStringValue(interaction.validFrom);
+    const validToRaw = toStringValue(interaction.validTo);
+
+    if (!validFromRaw && !validToRaw) {
+        return undefined;
+    }
+
+    const now = Date.now();
+
+    if (validFromRaw) {
+        const validFromTs = Date.parse(validFromRaw);
+        if (!Number.isNaN(validFromTs) && now < validFromTs) {
+            return false;
+        }
+    }
+
+    if (validToRaw) {
+        const validToTs = Date.parse(validToRaw);
+        if (!Number.isNaN(validToTs) && now > validToTs) {
+            return false;
+        }
+    }
+
+    return true;
 };
 
 const readActionSetBoolean = (action: InteractionAction): boolean | undefined => {
@@ -527,6 +554,11 @@ export const readAutomationState = (
     interaction: Interaction,
     allThings?: AxiosDeviceResponse
 ): "Aktiv" | "Inaktiv" | "Unbekannt" => {
+    const validityBinding = readAutomationValidityBinding(interaction);
+    if (validityBinding !== undefined) {
+        return validityBinding ? "Aktiv" : "Inaktiv";
+    }
+
     const directBinding = readAutomationBooleanBinding(interaction);
     if (directBinding !== undefined) {
         return directBinding ? "Aktiv" : "Inaktiv";
@@ -537,5 +569,5 @@ export const readAutomationState = (
         return stateCapabilityValue ? "Aktiv" : "Inaktiv";
     }
 
-    return "Unbekannt";
+    return "Aktiv";
 };

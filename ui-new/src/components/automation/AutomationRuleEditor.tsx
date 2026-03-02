@@ -228,8 +228,8 @@ export const AutomationRuleEditor = ({drafts, catalog, onChange}: AutomationRule
                                     )}
                                 </div>
 
-                                <div className="rounded-lg border border-emerald-100 bg-emerald-50/50 p-3 dark:border-emerald-900/70 dark:bg-emerald-950/30">
-                                    <div className="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">{t("ui_new.automation.then")}</div>
+                                <div className="rounded-lg border border-emerald-300 bg-emerald-100/70 p-3 dark:border-emerald-800 dark:bg-emerald-950/50">
+                                    <div className="text-xs font-semibold uppercase tracking-wide text-emerald-900 dark:text-emerald-200">{t("ui_new.automation.then")}</div>
                                     <div className="mt-3 grid gap-3 md:grid-cols-2">
                                         <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
                                             {t("ui_new.rule_editor.action_label")}

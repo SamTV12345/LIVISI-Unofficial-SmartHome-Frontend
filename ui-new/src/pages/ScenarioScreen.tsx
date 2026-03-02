@@ -233,10 +233,10 @@ const ScenarioScreenContent = () => {
                                                         <span key={chip} className="rounded-md border border-cyan-100 bg-cyan-50 px-2 py-1 text-[11px] text-cyan-800 dark:border-cyan-900/70 dark:bg-cyan-950/40 dark:text-cyan-200">{chip}</span>
                                                     ))}
                                                 </div>
-                                                <div className="mt-3 text-[11px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">{t("ui_new.automation.then")}</div>
+                                                <div className="mt-3 text-[11px] font-semibold uppercase tracking-wide text-emerald-900 dark:text-emerald-200">{t("ui_new.automation.then")}</div>
                                                 <div className="mt-2 flex flex-wrap gap-2">
                                                     {(rulePreview.thenChips.length > 0 ? rulePreview.thenChips : [t("ui_new.automation.no_action")]).slice(0, 4).map((chip) => (
-                                                        <span key={chip} className="rounded-md border border-emerald-100 bg-emerald-50 px-2 py-1 text-[11px] text-emerald-800 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-200">{chip}</span>
+                                                        <span key={chip} className="rounded-md border border-emerald-300 bg-emerald-100 px-2 py-1 text-[11px] text-emerald-950 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-100">{chip}</span>
                                                     ))}
                                                 </div>
                                             </div>

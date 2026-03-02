@@ -1873,7 +1873,7 @@
       "edit_rules_title": "Regeln bearbeiten",
       "edit_subtitle": "Änderungen basieren direkt auf Livisi-Interaktionen.",
       "edit_title": "Automation bearbeiten",
-      "enabled": "Aktiviert",
+      "enabled": "Szenario aktiv",
       "enabled_readonly_hint": "Diese Option ist schreibgeschützt.",
       "execute": "Ausführen",
       "execute_now": "Jetzt ausführen",
@@ -1910,7 +1910,7 @@
       "search_placeholder": "Name, Beschreibung oder ID",
       "section_description": "WENN/DANN-Übersicht mit direkter Ausführung und Bearbeitung.",
       "section_title": "Automationen",
-      "show_on_home": "Anzeigen ein startseite",
+      "show_on_home": "Anzeigen auf der Startseite",
       "standard": "Standard",
       "stats_actions": "Aktionen",
       "stats_categories": "Kategorien",
@@ -1958,7 +1958,7 @@
       "yes": "Ja"
     },
     "device_detail": {
-      "activated": "Aktiviert",
+      "activated": "Aktiv",
       "analytics": "Analyse",
       "auto_save_changes": "Änderungen werden automatisch gespeichert.",
       "auto_save_short_delay": "Auto speichern kurz verzögerung",

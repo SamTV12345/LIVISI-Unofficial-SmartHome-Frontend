@@ -75,7 +75,8 @@ export default function AutomationDetailScreen() {
     }, [interaction, presentationLookup]);
 
     const category = interaction ? readAutomationCategory(interaction) : "-";
-    const state = interaction ? readAutomationState(interaction, allThings) : "Unbekannt";
+    const rawState = interaction ? readAutomationState(interaction, allThings) : "Unbekannt";
+    const state = rawState === "Unbekannt" ? "Aktiv" : rawState;
 
     const saveInteractionIntoStore = useCallback((nextInteraction: Interaction) => {
         const currentState = useContentModel.getState().allThings;

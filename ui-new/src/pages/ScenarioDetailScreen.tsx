@@ -50,6 +50,26 @@ const toISOStringOrUndefined = (localDateTime: string): string | undefined => {
     return parsed.toISOString();
 };
 
+const buildDisabledInteractionTimestampIso = (): string => {
+    const disabledDate = new Date();
+    disabledDate.setUTCFullYear(2000);
+    return disabledDate.toISOString();
+};
+
+const isLegacyDisabledWindow = (validFromInput: string, validToInput: string): boolean => {
+    if (!validFromInput || !validToInput) {
+        return false;
+    }
+
+    const validFromDate = new Date(validFromInput);
+    const validToDate = new Date(validToInput);
+    if (Number.isNaN(validFromDate.getTime()) || Number.isNaN(validToDate.getTime())) {
+        return false;
+    }
+
+    return validFromDate.getFullYear() === 2000 && validToDate.getFullYear() === 2000;
+};
+
 const ScenarioDetailContent = ({interactionId}: {interactionId: string}) => {
     const {t} = useTranslation();
     const allThings = useContentModel((state) => state.allThings);
@@ -66,7 +86,7 @@ const ScenarioDetailContent = ({interactionId}: {interactionId: string}) => {
     const category = useMemo(() => readAutomationCategory(interaction), [interaction]);
     const automationState = useMemo(() => readAutomationState(interaction, allThings), [allThings, interaction]);
     const writableStateBinding = useMemo(() => readAutomationWritableStateBinding(interaction), [interaction]);
-    const canPersistAutomationEnabled = writableStateBinding !== undefined;
+    const canPersistAutomationEnabled = writableStateBinding !== undefined || !interaction?.isInternal;
     const heatingAutomation = useMemo(() => isHeatingAutomation(interaction), [interaction]);
     const capabilityCatalog = useMemo(() => buildCapabilityCatalog(allThings), [allThings]);
 
@@ -340,7 +360,24 @@ const ScenarioDetailContent = ({interactionId}: {interactionId: string}) => {
                             <input
                                 type="checkbox"
                                 checked={automationEnabled}
-                                onChange={(event) => setAutomationEnabled(event.target.checked)}
+                                onChange={(event) => {
+                                    const nextEnabled = event.target.checked;
+                                    setAutomationEnabled(nextEnabled);
+
+                                    // Interactions without explicit enabled flag are toggled through validFrom/validTo.
+                                    if (!writableStateBinding && !interaction?.isInternal) {
+                                        if (nextEnabled) {
+                                            if (heatingAutomation || isLegacyDisabledWindow(validFrom, validTo)) {
+                                                setValidFrom("");
+                                                setValidTo("");
+                                            }
+                                        } else {
+                                            const disabledInput = toDateTimeInput(buildDisabledInteractionTimestampIso());
+                                            setValidFrom(disabledInput);
+                                            setValidTo(disabledInput);
+                                        }
+                                    }
+                                }}
                                 disabled={!canPersistAutomationEnabled}
                                 className="h-4 w-4 rounded border-gray-300"
                             />
