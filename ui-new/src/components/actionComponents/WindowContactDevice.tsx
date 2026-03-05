@@ -1,5 +1,5 @@
 import {Device} from "@/src/models/Device.ts";
-import {FC, useState} from "react";
+import {FC, useMemo} from "react";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/src/components/layout/Card.tsx";
 import {DoorOpen, DoorClosed} from "lucide-react";
 import {useNavigate} from "react-router-dom";
@@ -13,14 +13,14 @@ type WindowDeviceProps = {
 
 
 export const WindowContactDevice:FC<WindowDeviceProps> = ({device, showRoom}) => {
-    const [isOpen, _] = useState<boolean>(()=>{
-        for (const dev of device.capabilityState!){
-            if (dev.state && dev.state.isOpen && dev.state.isOpen.value){
+    const isOpen = useMemo(() => {
+        for (const capability of device.capabilityState ?? []) {
+            if (capability.state?.isOpen?.value === true) {
                 return true
             }
         }
         return false
-    })
+    }, [device.capabilityState])
     const navigate = useNavigate()
     const {t} = useTranslation();
 
