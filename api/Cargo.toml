@@ -20,7 +20,7 @@ clokwerk = "0.4.0"
 base64 = "0.22.1"
 kv = "0.24.0"
 jsonwebtoken = { version = "10.3.0", features = ["rust_crypto"] }
-env_logger = "0.11.9"
+env_logger = "0.11.10"
 path-clean = "1.0.1"
 clap = { version = "4.6.0", features = ["derive"] }
 sunrise = "3.0.0"
