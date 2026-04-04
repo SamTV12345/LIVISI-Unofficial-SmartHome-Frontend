@@ -21,4 +21,7 @@ REM set OIDC_SCOPE=openid profile email
 REM set OIDC_AUTHORITY=your-oidc-authority
 REM set OIDC_AUDIENCE=your-oidc-audience
 
+REM Required for sentry mode settings persistence
+set DATABASE_URL=postgres://smarthome:smarthome@localhost:5432/smarthome
+
 api.exe

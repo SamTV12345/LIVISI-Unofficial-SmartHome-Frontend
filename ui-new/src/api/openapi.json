@@ -1,4 +1,4 @@
-﻿{
+{
   "openapi": "3.1.0",
   "info": {
     "title": "api",
@@ -566,6 +566,68 @@
         }
       }
     },
+    "/sentry/settings": {
+      "get": {
+        "tags": [],
+        "operationId": "get_sentry_settings_doc",
+        "responses": {
+          "200": {
+            "description": "Sentry settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SentrySettingsDoc"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [],
+        "operationId": "put_sentry_settings_doc",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SentrySettingsDoc"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Sentry settings updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SentrySettingsDoc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sentry/test": {
+      "post": {
+        "tags": [],
+        "operationId": "post_sentry_test_doc",
+        "responses": {
+          "200": {
+            "description": "Sentry notification test result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SentryTestDoc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/service/sun-times": {
       "get": {
         "tags": [],
@@ -936,6 +998,52 @@
           }
         }
       },
+      "NotificationProviderConfigDoc": {
+        "oneOf": [
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TelegramProviderConfigDoc"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "kind"
+                ],
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "telegram"
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookProviderConfigDoc"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "kind"
+                ],
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "webhook"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
       "OidcConfigDoc": {
         "type": "object",
         "required": [
@@ -991,6 +1099,39 @@
               "string",
               "null"
             ]
+          }
+        }
+      },
+      "SentrySettingsDoc": {
+        "type": "object",
+        "required": [
+          "enabled",
+          "monitored_device_ids",
+          "provider"
+        ],
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "monitored_device_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "provider": {
+            "$ref": "#/components/schemas/NotificationProviderConfigDoc"
+          }
+        }
+      },
+      "SentryTestDoc": {
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "properties": {
+          "result": {
+            "type": "string"
           }
         }
       },
@@ -1051,6 +1192,28 @@
           }
         }
       },
+      "TelegramProviderConfigDoc": {
+        "type": "object",
+        "required": [
+          "bot_token",
+          "chat_id"
+        ],
+        "properties": {
+          "bot_token": {
+            "type": "string"
+          },
+          "chat_id": {
+            "type": "string"
+          },
+          "message_thread_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          }
+        }
+      },
       "UsbStorageDoc": {
         "type": "object",
         "required": [
@@ -1059,6 +1222,21 @@
         "properties": {
           "external_storage": {
             "type": "boolean"
+          }
+        }
+      },
+      "WebhookProviderConfigDoc": {
+        "type": "object",
+        "required": [
+          "url",
+          "bearer_token"
+        ],
+        "properties": {
+          "bearer_token": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
           }
         }
       }

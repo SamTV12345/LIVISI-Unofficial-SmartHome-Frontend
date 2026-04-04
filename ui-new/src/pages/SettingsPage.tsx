@@ -9,6 +9,7 @@ import {queryClient} from "@/src/api/queryClient.ts";
 import {PageSkeleton} from "@/src/components/layout/PageSkeleton.tsx";
 import {clearAuthorizationHeader} from "@/src/api/authHeaderStore.ts";
 import {useTranslation} from "react-i18next";
+import {BellRing} from "lucide-react";
 
 const SettingsPageContent = () => {
     const navigate = useNavigate();
@@ -22,6 +23,7 @@ const SettingsPageContent = () => {
         {title: t("ui_new.lan.title"), to: "/settings/lan", icon: <Router size={18}/>},
         {title: t("ui_new.wlan.title"), to: "/settings/wlan", icon: <Wifi size={18}/>},
         {title: t("ui_new.settings.card_email"), to: "/settings/email", icon: <Mail size={18}/>},
+        {title: t("ui_new.settings.card_sentry"), to: "/settings/sentry", icon: <BellRing size={18}/>},
         {title: t("ui_new.settings.card_imprint"), to: "/settings/imprint", icon: <Shield size={18}/>}
     ], [t]);
 
@@ -95,7 +97,7 @@ const SettingsPageContent = () => {
 
 export const SettingsPage = () => {
     return (
-        <Suspense fallback={<PageSkeleton cards={7}/>}>
+        <Suspense fallback={<PageSkeleton cards={8}/>}>
             <SettingsPageContent/>
         </Suspense>
     );

@@ -137,6 +137,44 @@ pub struct EmailTestDoc {
     pub result: String,
 }
 
+#[derive(Default, Serialize, Deserialize, Clone, Debug, ToSchema)]
+pub struct TelegramProviderConfigDoc {
+    pub bot_token: String,
+    pub chat_id: String,
+    pub message_thread_id: Option<i64>,
+}
+
+#[derive(Default, Serialize, Deserialize, Clone, Debug, ToSchema)]
+pub struct WebhookProviderConfigDoc {
+    pub url: String,
+    pub bearer_token: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, ToSchema)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum NotificationProviderConfigDoc {
+    Telegram(TelegramProviderConfigDoc),
+    Webhook(WebhookProviderConfigDoc),
+}
+
+impl Default for NotificationProviderConfigDoc {
+    fn default() -> Self {
+        Self::Telegram(TelegramProviderConfigDoc::default())
+    }
+}
+
+#[derive(Default, Serialize, Deserialize, Clone, Debug, ToSchema)]
+pub struct SentrySettingsDoc {
+    pub enabled: bool,
+    pub monitored_device_ids: Vec<String>,
+    pub provider: NotificationProviderConfigDoc,
+}
+
+#[derive(Default, Serialize, Deserialize, Clone, Debug, ToSchema)]
+pub struct SentryTestDoc {
+    pub result: String,
+}
+
 #[utoipa::path(
     get,
     path = "/api/server",
@@ -321,6 +359,28 @@ fn get_email_test_doc() {}
 
 #[utoipa::path(
     get,
+    path = "/sentry/settings",
+    responses((status = 200, description = "Sentry settings", body = SentrySettingsDoc))
+)]
+fn get_sentry_settings_doc() {}
+
+#[utoipa::path(
+    put,
+    path = "/sentry/settings",
+    request_body = SentrySettingsDoc,
+    responses((status = 200, description = "Sentry settings updated", body = SentrySettingsDoc))
+)]
+fn put_sentry_settings_doc() {}
+
+#[utoipa::path(
+    post,
+    path = "/sentry/test",
+    responses((status = 200, description = "Sentry notification test result", body = SentryTestDoc))
+)]
+fn post_sentry_test_doc() {}
+
+#[utoipa::path(
+    get,
     path = "/data/capability",
     params(
         ("entityId" = String, Query, description = "Entity id with capability suffix"),
@@ -361,6 +421,9 @@ fn get_capability_history_doc() {}
         get_email_settings_doc,
         put_email_settings_doc,
         get_email_test_doc,
+        get_sentry_settings_doc,
+        put_sentry_settings_doc,
+        post_sentry_test_doc,
         get_capability_history_doc
     ),
     components(
@@ -376,6 +439,11 @@ fn get_capability_history_doc() {}
             LocationDoc,
             EmailSettingsDoc,
             EmailTestDoc,
+            TelegramProviderConfigDoc,
+            WebhookProviderConfigDoc,
+            NotificationProviderConfigDoc,
+            SentrySettingsDoc,
+            SentryTestDoc,
             MessageResponseDoc,
             MessagePropertiesDoc,
             MessageReadDoc

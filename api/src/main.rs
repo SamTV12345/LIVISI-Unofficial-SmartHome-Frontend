@@ -2,6 +2,7 @@ mod api_lib;
 mod constants;
 mod models;
 mod openapi_doc;
+mod sentry;
 mod server;
 mod store;
 mod utils;
@@ -41,12 +42,14 @@ use crate::server::handlers::*;
 use crate::server::health::{liveness_probe, readiness_probe, shutdown_signal};
 use crate::server::ui::{get_images, get_resources, get_ui_file, index, root_redirect, ui_redirect};
 use crate::server::ws::{init_socket, start_connection};
+use crate::sentry::SentryService;
 use crate::store::Store;
 use crate::utils::connection::{Args, MemPrefill};
 use crate::utils::logging::init_logging;
 
 pub static CLIENT_DATA: OnceLock<Mutex<ClientData>> = OnceLock::new();
 pub static STORE_DATA: OnceLock<Store> = OnceLock::new();
+pub static SENTRY_SERVICE_DATA: OnceLock<SentryService> = OnceLock::new();
 
 #[derive(Clone)]
 struct AxumState {
@@ -64,6 +67,7 @@ struct AxumState {
     interaction: Interaction,
     usb_service: USBService,
     email: Email,
+    sentry_service: SentryService,
     kv_store: kv::Store,
     resource_base_url: String,
     auth_runtime: AuthRuntime,
@@ -79,6 +83,13 @@ async fn main() -> std::io::Result<()> {
     let args = Args::parse();
     init_socket(base_url.clone(), &args).await;
     MemPrefill::do_db_initialization(&args).await;
+    let sentry_service = SentryService::new().await.expect("Could not initialize sentry service");
+    let _ = SENTRY_SERVICE_DATA.set(sentry_service.clone());
+    if let Some(store_data) = STORE_DATA.get() {
+        if let Ok(mut data) = store_data.data.lock() {
+            data.set_sentry_settings(sentry_service.get_settings());
+        }
+    }
 
     let status = Status::new(&base_url);
     let users = User::new(&base_url);
@@ -112,6 +123,7 @@ async fn main() -> std::io::Result<()> {
         interaction,
         usb_service,
         email,
+        sentry_service,
         kv_store,
         resource_base_url: base_url.replace(":8080", ""),
         auth_runtime: auth_runtime.clone(),
@@ -145,6 +157,11 @@ async fn main() -> std::io::Result<()> {
             get(get_email_settings).put(update_email_settings),
         )
         .route("/email/test", get(test_email))
+        .route(
+            "/sentry/settings",
+            get(get_sentry_settings).put(update_sentry_settings),
+        )
+        .route("/sentry/test", post(test_sentry_notification))
         .route("/data/capability", get(get_capabilities_temperature))
         .route("/status", get(get_status))
         .route("/users", get(get_users))

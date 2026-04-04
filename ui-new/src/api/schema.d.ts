@@ -228,6 +228,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sentry/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_sentry_settings_doc"];
+        put: operations["put_sentry_settings_doc"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sentry/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_sentry_test_doc"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/service/sun-times": {
         parameters: {
             query?: never;
@@ -333,6 +365,41 @@ export interface components {
             id: string;
             tags?: unknown;
         };
+        MessagePropertiesDoc: {
+            changeReason?: string | null;
+            deviceLocation?: string | null;
+            deviceName?: string | null;
+            deviceSerial?: string | null;
+            /** Format: int32 */
+            expiresAfterMinutes?: number | null;
+            namespace?: string | null;
+            read?: boolean | null;
+            requesterInfo?: string | null;
+            shcRemoteRebootReason?: string | null;
+            timestamp?: string | null;
+        };
+        MessageReadDoc: {
+            read: boolean;
+        };
+        MessageResponseDoc: {
+            capabilities?: string[] | null;
+            class?: string | null;
+            devices?: string[] | null;
+            id: string;
+            messages?: string[] | null;
+            namespace?: string | null;
+            properties?: null | components["schemas"]["MessagePropertiesDoc"];
+            read: boolean;
+            timestamp: string;
+            type: string;
+        };
+        NotificationProviderConfigDoc: (components["schemas"]["TelegramProviderConfigDoc"] & {
+            /** @enum {string} */
+            kind: "telegram";
+        }) | (components["schemas"]["WebhookProviderConfigDoc"] & {
+            /** @enum {string} */
+            kind: "webhook";
+        });
         OidcConfigDoc: {
             authority: string;
             clientId: string;
@@ -348,6 +415,14 @@ export interface components {
             type: string;
             version?: string | null;
         };
+        SentrySettingsDoc: {
+            enabled: boolean;
+            monitored_device_ids: string[];
+            provider: components["schemas"]["NotificationProviderConfigDoc"];
+        };
+        SentryTestDoc: {
+            result: string;
+        };
         SunTimesDoc: {
             geoLocation: string;
             /** Format: double */
@@ -361,8 +436,18 @@ export interface components {
             sunrise?: string | null;
             sunset?: string | null;
         };
+        TelegramProviderConfigDoc: {
+            bot_token: string;
+            chat_id: string;
+            /** Format: int64 */
+            message_thread_id?: number | null;
+        };
         UsbStorageDoc: {
             external_storage: boolean;
+        };
+        WebhookProviderConfigDoc: {
+            bearer_token: string;
+            url: string;
         };
     };
     responses: never;
@@ -733,7 +818,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["MessageResponseDoc"][];
                 };
             };
         };
@@ -756,7 +841,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["MessageResponseDoc"];
                 };
             };
         };
@@ -773,7 +858,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": unknown;
+                "application/json": components["schemas"]["MessageReadDoc"];
             };
         };
         responses: {
@@ -783,7 +868,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["MessageResponseDoc"];
                 };
             };
         };
@@ -845,6 +930,70 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HashDoc"];
+                };
+            };
+        };
+    };
+    get_sentry_settings_doc: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sentry settings */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SentrySettingsDoc"];
+                };
+            };
+        };
+    };
+    put_sentry_settings_doc: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SentrySettingsDoc"];
+            };
+        };
+        responses: {
+            /** @description Sentry settings updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SentrySettingsDoc"];
+                };
+            };
+        };
+    };
+    post_sentry_test_doc: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sentry notification test result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SentryTestDoc"];
                 };
             };
         };

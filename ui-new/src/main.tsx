@@ -36,6 +36,7 @@ import {StatesScreen} from "@/src/pages/StatesScreen.tsx";
 import {queryClient} from "@/src/api/queryClient.ts";
 import {PageSkeleton} from "@/src/components/layout/PageSkeleton.tsx";
 import {AppErrorBoundary} from "@/src/components/layout/AppErrorBoundary.tsx";
+import {SentryPage} from "@/src/pages/SentryPage.tsx";
 
 const applySystemTheme = () => {
     if (typeof window === "undefined") return;
@@ -101,6 +102,7 @@ const router = createBrowserRouter(createRoutesFromElements(
                 <Route path="deviceLocations" element={<DeviceLocations/>}/>
                 <Route path="deviceLocations/:id" element={<LocationUpdateScreen/>}/>
                 <Route path="email" element={<EmailPage/>}/>
+                <Route path="sentry" element={<SentryPage/>}/>
                 <Route path="imprint" element={<Imprint/>}/>
             </Route>
             <Route path="help">

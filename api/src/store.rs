@@ -15,6 +15,7 @@ use crate::api_lib::status::StatusResponse;
 use crate::api_lib::user_storage::UserStorageResponse;
 use crate::models::socket_event::{Properties, SocketData, SocketEvent, Source};
 use crate::models::token::Token;
+use crate::sentry::{SentryAlert, SentrySettings};
 
 #[derive(Default,Serialize,Deserialize, Debug,Clone)]
 #[serde(rename_all = "camelCase")]
@@ -59,13 +60,15 @@ pub struct Data {
     pub(crate) capabilities: Vec<CapabilitiesStore>,
     pub messages: Vec<MessageResponse>,
     pub email: Option<EmailAPI>,
+    pub sentry_settings: Option<SentrySettings>,
     #[serde(default)]
     pub interactions: Vec<InteractionResponse>
 }
 
 
 impl Data {
-    pub fn handle_socket_event(&mut self, socket_event: &mut SocketEvent) {
+    pub fn handle_socket_event(&mut self, socket_event: &mut SocketEvent) -> Option<SentryAlert> {
+        let mut sentry_alert = None;
         match socket_event.get_source() {
             Source::Device => {
                 log::info!("device change")
@@ -77,6 +80,14 @@ impl Data {
                         let found_id = &socket_event.get_id();
                         if let Some(found_id) = found_id.clone() {
                             if capabilities.contains(&socket_event.source) {
+                                let sentry_device_type = device.r#type.clone();
+                                let sentry_device_id = device.id.clone();
+                                let sentry_device_name =
+                                    device.config.as_ref().and_then(|config| config.name.clone());
+                                let sentry_location_name = device
+                                    .location_data
+                                    .as_ref()
+                                    .map(|location| location.config.name.clone());
                                 let state = device.capability_state.as_mut();
                                 socket_event.device = Some(id.clone());
                                 if let Some(cap_state) = state {
@@ -159,6 +170,8 @@ impl Data {
                                                         Properties::IsOpen(is_open)=>{
                                                             let map = cap_s.state.as_mut();
                                                             if let Some(m) = map {
+                                                                let previous_is_open = m.get("isOpen")
+                                                                    .and_then(extract_boolean_capability_value);
                                                                 let current_value = Utc::now()
                                                                     .to_rfc3339();
                                                                 let cap_value = CapValueItem
@@ -169,6 +182,16 @@ impl Data {
                                                                     });
 
                                                                 m.insert("isOpen".to_string(), cap_value);
+                                                                if previous_is_open != Some(is_open.is_open) {
+                                                                    sentry_alert = build_sentry_alert(
+                                                                        &sentry_device_type,
+                                                                        sentry_device_id.clone(),
+                                                                        sentry_device_name.clone(),
+                                                                        sentry_location_name.clone(),
+                                                                        is_open.is_open,
+                                                                        &socket_event.timestamp,
+                                                                    );
+                                                                }
                                                             }
                                                         }
                                                         Properties::Reachable(_) => {
@@ -254,10 +277,15 @@ impl Data {
 
             }
         }
+        sentry_alert
     }
 
     pub fn set_email(&mut self, email: EmailAPI) {
         self.email = Some(email);
+    }
+
+    pub fn set_sentry_settings(&mut self, sentry_settings: SentrySettings) {
+        self.sentry_settings = Some(sentry_settings);
     }
 
     pub fn set_devices(&mut self, devices: DeviceResponse) {
@@ -393,9 +421,44 @@ impl Store {
                 capabilities: Vec::new(),
                 messages: Vec::new(),
                 email: None,
+                sentry_settings: None,
                 interactions: Vec::new(),
             })
         }
     }
+}
+
+fn extract_boolean_capability_value(capability_value: &crate::api_lib::capability::CapValueType) -> Option<bool> {
+    match capability_value {
+        crate::api_lib::capability::CapValueType::CapabilityInnerVal(value) => match &value.value.value {
+            Some(interaction::FieldValue::BooleanValue(value)) => Some(*value),
+            _ => None,
+        },
+        crate::api_lib::capability::CapValueType::CapValueItem(value) => match &value.value {
+            Some(interaction::FieldValue::BooleanValue(value)) => Some(*value),
+            _ => None,
+        },
+    }
+}
+
+fn build_sentry_alert(
+    device_type: &str,
+    device_id: Option<String>,
+    device_name: Option<String>,
+    location_name: Option<String>,
+    is_open: bool,
+    occurred_at: &str,
+) -> Option<SentryAlert> {
+    if device_type != "WDS" {
+        return None;
+    }
+
+    Some(SentryAlert {
+        device_id: device_id?,
+        device_name: device_name?,
+        location_name,
+        is_open,
+        occurred_at: occurred_at.to_string(),
+    })
 }
 

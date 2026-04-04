@@ -48,6 +48,7 @@ export type AxiosDeviceResponse = {
     locations: LocationResponse[],
     messages: Message[],
     email: EmailConfig,
+    sentry_settings?: SentrySettings,
     interactions?: Interaction[]
 }
 
@@ -59,6 +60,27 @@ export type EmailConfig = {
     recipient_list: string[]
     notifications_device_unreachable: boolean,
     notification_device_low_battery: boolean,
+}
+
+export type TelegramProviderConfig = {
+    kind: "telegram",
+    bot_token: string,
+    chat_id: string,
+    message_thread_id?: number | null,
+}
+
+export type WebhookProviderConfig = {
+    kind: "webhook",
+    url: string,
+    bearer_token: string,
+}
+
+export type SentryProviderConfig = TelegramProviderConfig | WebhookProviderConfig;
+
+export type SentrySettings = {
+    enabled: boolean,
+    monitored_device_ids: string[],
+    provider: SentryProviderConfig,
 }
 
 

@@ -1,13 +1,27 @@
 version: '3'
 services:
+    postgres:
+      image: postgres:18-alpine
+      environment:
+        - POSTGRES_DB=smarthome
+        - POSTGRES_USER=smarthome
+        - POSTGRES_PASSWORD=smarthome
+      volumes:
+        - postgres-data:/var/lib/postgresql/data
+      ports:
+        - "5432:5432"
+
     gateway:
       image: samuel19982/gateway:latest
+      depends_on:
+        - postgres
       volumes:
         - "./db:/app/db"
       ports:
         - "80:8000"
       environment:
         - BASE_URL=<your-base-url>
+        - DATABASE_URL=postgres://smarthome:smarthome@postgres:5432/smarthome
         - AUTH_MODE=none
         - PASSWORD=<livisi-password>
         - USERNAME=<livisi-username>
@@ -20,3 +34,6 @@ services:
         # OIDC_SCOPE=openid profile email
         # OIDC_AUTHORITY=<https://keycloak-or-authelia-authority>
         # OIDC_AUDIENCE=<optional-audience-override>
+
+volumes:
+    postgres-data:

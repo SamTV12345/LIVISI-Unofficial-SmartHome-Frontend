@@ -23,6 +23,8 @@ export default defineConfig({
             '/hash':target,
             '/api/server': target,
             '/api/all': target
+            ,
+            '/sentry': target
         }
     }
 })

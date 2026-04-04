@@ -14,6 +14,7 @@ use crate::api_lib::livisi_response_type::{ErrorConstruct, LivisResponseType};
 use crate::api_lib::location::LocationResponse;
 use crate::api_lib::message::MessageRead;
 use crate::openapi_doc;
+use crate::sentry::SentrySettings;
 use crate::server::sorting::{
     sorted_data_value, sorted_devices_map_value, sorted_interactions, sorted_locations,
 };
@@ -329,6 +330,56 @@ pub(crate) async fn update_email_settings(
 
 pub(crate) async fn test_email(State(state): State<AxumState>) -> impl IntoResponse {
     Json(state.email.test_email().await)
+}
+
+pub(crate) async fn get_sentry_settings(State(state): State<AxumState>) -> impl IntoResponse {
+    Json(state.sentry_service.get_settings())
+}
+
+pub(crate) async fn update_sentry_settings(
+    State(state): State<AxumState>,
+    Json(sentry_settings): Json<SentrySettings>,
+) -> Response {
+    match state
+        .sentry_service
+        .update_settings(sentry_settings.clone())
+        .await
+    {
+        Ok(updated_settings) => {
+            if let Some(store_data) = STORE_DATA.get() {
+                if let Ok(mut store) = store_data.data.lock() {
+                    store.set_sentry_settings(updated_settings.clone());
+                }
+            }
+            (StatusCode::OK, Json(updated_settings)).into_response()
+        }
+        Err(err) => (
+            StatusCode::BAD_REQUEST,
+            Json(json!({
+                "error": err
+            })),
+        )
+            .into_response(),
+    }
+}
+
+pub(crate) async fn test_sentry_notification(State(state): State<AxumState>) -> Response {
+    match state.sentry_service.test_notification().await {
+        Ok(_) => (
+            StatusCode::OK,
+            Json(json!({
+                "result": "sent"
+            })),
+        )
+            .into_response(),
+        Err(err) => (
+            StatusCode::BAD_REQUEST,
+            Json(json!({
+                "error": err
+            })),
+        )
+            .into_response(),
+    }
 }
 
 pub(crate) async fn get_capabilities_temperature(

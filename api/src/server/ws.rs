@@ -11,7 +11,7 @@ use tungstenite::connect;
 use crate::models::socket_event::Properties::Value as SocketValue;
 use crate::models::socket_event::{SocketData, SocketEvent};
 use crate::utils::connection::{Args, MemPrefill};
-use crate::STORE_DATA;
+use crate::{SENTRY_SERVICE_DATA, STORE_DATA};
 
 static WS_BROADCAST: std::sync::OnceLock<broadcast::Sender<String>> = std::sync::OnceLock::new();
 
@@ -96,7 +96,7 @@ fn process_socket_payload(payload: &str) {
         }
     };
 
-    if let Some(store_data) = STORE_DATA.get() {
+    let sentry_alert = if let Some(store_data) = STORE_DATA.get() {
         match store_data.data.lock() {
             Ok(mut data) => data.handle_socket_event(&mut parsed_message),
             Err(err) => {
@@ -107,6 +107,12 @@ fn process_socket_payload(payload: &str) {
     } else {
         log::warn!("Store is not initialized yet. Dropping websocket event.");
         return;
+    };
+
+    if let Some(alert) = sentry_alert {
+        if let Some(sentry_service) = SENTRY_SERVICE_DATA.get() {
+            sentry_service.dispatch_alert(alert);
+        }
     }
 
     if let Some(SocketValue(props)) = &parsed_message.properties {
