@@ -61,7 +61,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react-swc": "^4.2.3",
     "autoprefixer": "^10.4.27",
-    "eslint": "^10.0.2",
+    "eslint": "^10.2.0",
     "globals": "^17.4.0",
     "msw": "^2.11.6",
     "openapi-typescript": "^7.13.0",
