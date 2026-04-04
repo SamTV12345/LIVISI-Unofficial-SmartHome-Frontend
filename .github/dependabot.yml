@@ -9,14 +9,35 @@ updates:
     directory: "/mobile"
     schedule:
       interval: "weekly"
+    groups:
+      mobile-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
 
   - package-ecosystem: "npm"
     directory: "/ui-new"
     schedule:
       interval: "weekly"
+    groups:
+      ui-new-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
 
   - package-ecosystem: "cargo"
     directory: "/api"
     schedule:
       interval: "weekly"
+    groups:
+      api-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
 
