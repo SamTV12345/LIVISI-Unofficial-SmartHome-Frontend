@@ -1,7 +1,6 @@
 import logo from "@/src/assets/livisi-logo.png";
 import {LinkNav} from "@/src/components/navigation/Link.tsx";
-import {useLocation} from "react-router";
-import {useNavigate} from "react-router-dom";
+import {useLocation, useNavigate} from "react-router-dom";
 import {Menu, X} from "lucide-react";
 import {useState} from "react";
 import * as Dialog from "@radix-ui/react-dialog";

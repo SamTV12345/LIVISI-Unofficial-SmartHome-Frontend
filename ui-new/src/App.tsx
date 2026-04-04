@@ -1,5 +1,5 @@
 import './App.css'
-import {Outlet} from "react-router";
+import {Outlet} from "react-router-dom";
 import {NavBar} from "@/src/components/layout/NavBar.tsx";
 import {useRealtimeSync} from "@/src/hooks/useRealtimeSync.ts";
 import {apiQueryClient} from "@/src/api/openapiClient.ts";

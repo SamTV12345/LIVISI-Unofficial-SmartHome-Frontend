@@ -1,6 +1,6 @@
 import {PageComponent} from "@/src/components/actionComponents/PageComponent.tsx";
 import {PageBox} from "@/src/components/actionComponents/PageBox.tsx";
-import {useParams} from "react-router";
+import {useParams} from "react-router-dom";
 import {Suspense, useEffect, useMemo, useState} from "react";
 import {LocationResponse} from "@/src/models/Location.ts";
 import {Device} from "@/src/models/Device.ts";

@@ -1,4 +1,4 @@
-import {useParams} from "react-router";
+import {useParams} from "react-router-dom";
 import {useContentModel} from "@/src/store.tsx";
 import {Suspense, useEffect} from "react";
 import {PageComponent} from "@/src/components/actionComponents/PageComponent.tsx";
