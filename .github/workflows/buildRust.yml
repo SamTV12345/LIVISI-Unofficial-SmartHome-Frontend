@@ -27,6 +27,8 @@ jobs:
         working-directory: ui-new
         run: |
           pnpm install --frozen-lockfile
+          pnpm exec playwright install --with-deps chromium
+          pnpm run test:browser
           pnpm run build:copy
       - name: Compile
         working-directory: api

@@ -13,6 +13,26 @@ pipeline {
   }
 
   stages {
+    stage('UI Browser Tests') {
+      steps {
+        sh '''
+          set -euo pipefail
+
+          corepack enable || true
+          corepack prepare pnpm@10.11.0 --activate || true
+
+          pnpm -C ui-new install --frozen-lockfile
+
+          # Install Chromium for Vitest Browser mode in CI.
+          if ! pnpm -C ui-new exec playwright install --with-deps chromium; then
+            pnpm -C ui-new exec playwright install chromium
+          fi
+
+          pnpm -C ui-new run test:browser
+        '''
+      }
+    }
+
     stage('Build UI (embedded)') {
       steps {
         sh '''

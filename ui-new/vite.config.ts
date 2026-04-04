@@ -1,11 +1,36 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react-swc'
 import tsconfigPaths from 'vite-tsconfig-paths'
-import svgr from "vite-plugin-svgr";
+import { playwright } from '@vitest/browser-playwright'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [tsconfigPaths(),react()],
+  test: {
+    setupFiles: ['./src/test/setup.ts'],
+    include: ['src/**/*.browser.test.{ts,tsx}'],
+    onConsoleLog(log) {
+      if (
+        log.includes('Documentation: https://mswjs.io/docs') ||
+        log.includes('Found an issue? https://github.com/mswjs/msw/issues') ||
+        log.includes('Worker script URL:') ||
+        log.includes('Worker scope:') ||
+        log.includes('Client ID:') ||
+        log.includes('Request {') ||
+        log.includes('Handler: HttpHandler {') ||
+        log.includes('Response {') ||
+        log.includes('[MSW] Mocking disabled.') ||
+        log.includes('i18next is maintained with support from Locize')
+      ) {
+        return false
+      }
+    },
+    browser: {
+      enabled: false,
+      provider: playwright(),
+      instances: [{ browser: 'chromium' }]
+    }
+  },
   base: '/ui/',
   server:{
     port: 3000,

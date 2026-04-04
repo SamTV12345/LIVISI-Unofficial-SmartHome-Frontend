@@ -6,6 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "test": "vitest --browser.enabled --run",
+    "test:browser": "vitest --browser.enabled --run",
+    "msw:init": "msw init public --save",
     "lint": "eslint src --ext ts,tsx --max-warnings 0",
     "generate:schema": "openapi-typescript src/api/openapi.json -o src/api/schema.d.ts",
     "generate:openapi": "cargo run --manifest-path ../api/Cargo.toml --bin export_openapi > src/api/openapi.json && pnpm run generate:schema",
@@ -51,6 +54,7 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
+    "@vitest/browser": "^4.1.2",
     "@eslint/js": "^10.0.1",
     "@tailwindcss/postcss": "^4.2.1",
     "@types/react": "^19.2.14",
@@ -59,11 +63,20 @@
     "autoprefixer": "^10.4.27",
     "eslint": "^10.0.2",
     "globals": "^17.4.0",
+    "msw": "^2.11.6",
     "openapi-typescript": "^7.13.0",
+    "playwright": "^1.59.1",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.2.1",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.56.1",
-    "vite": "^7.3.1"
+    "vite": "^7.3.1",
+    "vitest": "^4.1.2",
+    "@vitest/browser-playwright": "^4.1.2"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
   }
 }
