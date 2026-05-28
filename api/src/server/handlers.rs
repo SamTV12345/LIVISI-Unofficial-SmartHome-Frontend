@@ -34,8 +34,22 @@ struct SunTimesResponse {
     next_event_at: Option<String>,
 }
 
-pub(crate) async fn get_status(State(state): State<AxumState>) -> impl IntoResponse {
-    Json(state.status.get_status().await)
+/// Maps a failed upstream Livisi request to a 502 Bad Gateway instead of
+/// panicking the request handler.
+fn upstream_error(err: reqwest::Error) -> Response {
+    log::error!("Upstream Livisi request failed: {}", err);
+    (
+        StatusCode::BAD_GATEWAY,
+        Json(json!({ "error": err.to_string() })),
+    )
+        .into_response()
+}
+
+pub(crate) async fn get_status(State(state): State<AxumState>) -> Response {
+    match state.status.get_status().await {
+        Ok(status) => Json(status).into_response(),
+        Err(err) => upstream_error(err),
+    }
 }
 
 pub(crate) async fn get_users(State(state): State<AxumState>) -> impl IntoResponse {
@@ -63,8 +77,11 @@ pub(crate) async fn get_products(State(state): State<AxumState>) -> impl IntoRes
     Json(state.product.get_products().await)
 }
 
-pub(crate) async fn get_messages(State(state): State<AxumState>) -> impl IntoResponse {
-    Json(state.messages.get_messages().await)
+pub(crate) async fn get_messages(State(state): State<AxumState>) -> Response {
+    match state.messages.get_messages().await {
+        Ok(messages) => Json(messages).into_response(),
+        Err(err) => upstream_error(err),
+    }
 }
 
 pub(crate) async fn get_message_by_id(
@@ -146,8 +163,11 @@ pub(crate) async fn get_capabilities() -> Response {
     Json(capabilities.clone()).into_response()
 }
 
-pub(crate) async fn get_capability_states(State(state): State<AxumState>) -> impl IntoResponse {
-    Json(state.capabilities.get_all_capability_states().await)
+pub(crate) async fn get_capability_states(State(state): State<AxumState>) -> Response {
+    match state.capabilities.get_all_capability_states().await {
+        Ok(states) => Json(states).into_response(),
+        Err(err) => upstream_error(err),
+    }
 }
 
 pub(crate) async fn get_user_storage() -> Response {
@@ -252,10 +272,11 @@ pub(crate) async fn get_relationship(State(state): State<AxumState>) -> impl Int
     Json(state.relationship.get_relationship().await)
 }
 
-pub(crate) async fn get_interactions(State(state): State<AxumState>) -> impl IntoResponse {
-    Json(sorted_interactions(
-        &state.interaction.get_interaction().await,
-    ))
+pub(crate) async fn get_interactions(State(state): State<AxumState>) -> Response {
+    match state.interaction.get_interaction().await {
+        Ok(interactions) => Json(sorted_interactions(&interactions)).into_response(),
+        Err(err) => upstream_error(err),
+    }
 }
 
 pub(crate) async fn get_interaction_by_id(
@@ -272,11 +293,18 @@ pub(crate) async fn update_interaction_by_id(
 ) -> Response {
     match state.interaction.update_interaction_by_id(id, body).await {
         Ok(response) => {
-            let refreshed_interactions = state.interaction.get_interaction().await;
-            if let Some(store_data) = STORE_DATA.get() {
-                if let Ok(mut data) = store_data.data.lock() {
-                    data.set_interactions(refreshed_interactions);
+            match state.interaction.get_interaction().await {
+                Ok(refreshed_interactions) => {
+                    if let Some(store_data) = STORE_DATA.get() {
+                        if let Ok(mut data) = store_data.data.lock() {
+                            data.set_interactions(refreshed_interactions);
+                        }
+                    }
                 }
+                Err(err) => log::error!(
+                    "Updated interaction but could not refresh the cached list: {}",
+                    err
+                ),
             }
             (StatusCode::OK, Json(response)).into_response()
         }
@@ -309,8 +337,11 @@ pub(crate) async fn get_usb_status(State(state): State<AxumState>) -> impl IntoR
     Json(state.usb_service.get_usb_status().await)
 }
 
-pub(crate) async fn get_email_settings(State(state): State<AxumState>) -> impl IntoResponse {
-    Json(state.email.get_email_settings().await)
+pub(crate) async fn get_email_settings(State(state): State<AxumState>) -> Response {
+    match state.email.get_email_settings().await {
+        Ok(email) => Json(email).into_response(),
+        Err(err) => upstream_error(err),
+    }
 }
 
 pub(crate) async fn update_email_settings(
@@ -395,8 +426,10 @@ pub(crate) async fn get_capabilities_temperature(
         .map(|path_and_query| path_and_query.as_str().to_string())
         .unwrap_or_else(|| uri.path().to_string());
 
-    let response = state.capabilities.get_historic_data(&full_url).await;
-    Json(response).into_response()
+    match state.capabilities.get_historic_data(&full_url).await {
+        Ok(response) => Json(response).into_response(),
+        Err(err) => upstream_error(err),
+    }
 }
 
 fn parse_geo_location(geo_location: &str) -> Option<(f64, f64)> {

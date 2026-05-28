@@ -139,35 +139,51 @@ pub(crate) async fn init_socket(base_url: String, x: &Args) {
         return;
     }
 
-    let token = match MemPrefill::get_token().await {
-        Ok(token) => token,
-        Err(err) => {
-            log::error!("Could not get token for websocket subscription: {:?}", err);
-            return;
-        }
-    };
-
-    let token_encoded = urlencoding::encode(token.access_token.as_str()).into_owned();
     spawn(move || {
-        let Some(url) = build_livisi_ws_url(&base_url, &token_encoded) else {
-            return;
+        // The reconnect loop relies on tungstenite's blocking `connect`/`read`,
+        // so we keep a small runtime around purely to drive the async token fetch.
+        let rt = match tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+        {
+            Ok(rt) => rt,
+            Err(err) => {
+                log::error!("Could not build websocket runtime: {}", err);
+                return;
+            }
         };
 
-        let mut retry_delay = Duration::from_secs(1);
+        let reset_delay = Duration::from_secs(1);
         let max_retry_delay = Duration::from_secs(60);
+        let mut retry_delay = reset_delay;
 
         loop {
-            match connect(url.as_str()) {
-                Ok((mut socket, _response)) => {
-                    log::info!("Connected to Livisi websocket.");
-                    retry_delay = Duration::from_secs(1);
-                    while let Ok(msg) = socket.read() {
-                        process_socket_payload(&msg.to_string());
+            // Re-fetch a fresh token on every (re)connect. The token captured at
+            // startup eventually expires; without refreshing it here a reconnect
+            // would silently fail forever and realtime updates would stop until
+            // the gateway is restarted.
+            match rt.block_on(MemPrefill::get_token()) {
+                Ok(token) => {
+                    let token_encoded =
+                        urlencoding::encode(token.access_token.as_str()).into_owned();
+                    if let Some(url) = build_livisi_ws_url(&base_url, &token_encoded) {
+                        match connect(url.as_str()) {
+                            Ok((mut socket, _response)) => {
+                                log::info!("Connected to Livisi websocket.");
+                                retry_delay = reset_delay;
+                                while let Ok(msg) = socket.read() {
+                                    process_socket_payload(&msg.to_string());
+                                }
+                                log::warn!("Livisi websocket disconnected.");
+                            }
+                            Err(err) => {
+                                log::warn!("Livisi websocket connection failed: {}", err);
+                            }
+                        }
                     }
-                    log::warn!("Livisi websocket disconnected.");
                 }
                 Err(err) => {
-                    log::warn!("Livisi websocket connection failed: {}", err);
+                    log::warn!("Could not get token for websocket subscription: {:?}", err);
                 }
             }
 

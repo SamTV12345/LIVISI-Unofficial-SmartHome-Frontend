@@ -57,7 +57,7 @@ impl Message {
         }
     }
 
-    pub async fn get_messages(&self) -> Vec<MessageResponse> {
+    pub async fn get_messages(&self) -> Result<Vec<MessageResponse>, reqwest::Error> {
         let api_client;
         {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
@@ -65,12 +65,10 @@ impl Message {
         }
         let response = api_client.get(self.base_url.clone())
             .send()
-            .await
-            .unwrap();
+            .await?;
 
             response.json::<Vec<MessageResponse>>()
             .await
-            .unwrap()
     }
 
     pub async fn get_message_by_id(&self, message_id: String) -> MessageResponse {

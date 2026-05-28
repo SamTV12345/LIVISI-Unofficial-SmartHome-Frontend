@@ -87,7 +87,7 @@ impl Device {
             base_url:format!("{}{}", server_url, "/device")
         }
     }
-   pub async fn get_devices(&self)  ->DeviceResponse{
+   pub async fn get_devices(&self) -> Result<DeviceResponse, reqwest::Error> {
        let api_client;
        {
            let locked_client = CLIENT_DATA.get().unwrap().lock();
@@ -96,11 +96,9 @@ impl Device {
        let response = api_client.get(self.base_url.clone())
            .headers(HeaderUtils::get_auth_token_header())
             .send()
-            .await
-            .unwrap();
+            .await?;
         response.json::<DeviceResponse>()
             .await
-            .unwrap()
     }
 
 

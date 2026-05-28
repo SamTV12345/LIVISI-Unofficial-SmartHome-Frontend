@@ -106,7 +106,7 @@ impl Capability{
         }
     }
 
-    pub async fn get_historic_data(&self, path: &str) -> Vec<CapabilityTempData> {
+    pub async fn get_historic_data(&self, path: &str) -> Result<Vec<CapabilityTempData>, reqwest::Error> {
         let api_client;
             {
                 let locked_client = CLIENT_DATA.get().unwrap().lock();
@@ -114,16 +114,14 @@ impl Capability{
             }
         let response = api_client.get(self.server_url.clone()+path)
             .send()
-            .await
-            .unwrap();
+            .await?;
 
             response
                 .json::<Vec<CapabilityTempData>>()
                 .await
-                .unwrap()
     }
 
-    pub async fn get_capabilities(&self) -> CapabilityResponse {
+    pub async fn get_capabilities(&self) -> Result<CapabilityResponse, reqwest::Error> {
         let api_client;
         {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
@@ -132,19 +130,17 @@ impl Capability{
 
         let response = api_client.get(self.base_url.clone())
             .send()
-            .await
-            .unwrap();
+            .await?;
 
             response
                 .json::<CapabilityResponse>()
                 .await
-                .unwrap()
     }
 
 
 
 
-    pub async fn get_all_capability_states(&self) -> CapabilityStateResponse {
+    pub async fn get_all_capability_states(&self) -> Result<CapabilityStateResponse, reqwest::Error> {
         let api_client;
         {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
@@ -152,12 +148,10 @@ impl Capability{
         }
         let response = api_client.get(self.base_url.clone()+"/states")
             .send()
-            .await
-            .unwrap();
+            .await?;
 
             response
                 .json::<CapabilityStateResponse>()
                 .await
-                .unwrap()
     }
 }

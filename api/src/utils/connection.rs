@@ -1,6 +1,5 @@
 use std::env::var;
 use std::fs;
-use std::process::exit;
 use std::sync::Mutex;
 use crate::models::token::{Token, TokenRequest};
 use crate::utils::header_utils::HeaderUtils;
@@ -26,7 +25,7 @@ use clap::Parser;
 use crate::api_lib::livisi_response_type::LivisResponseType;
 
 /// Simple program to greet a person
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone)]
 #[command(version, about, long_about = None)]
 pub struct Args {
     /// Name of the person to greet
@@ -55,14 +54,14 @@ impl MemPrefill {
                                 return Ok(e)
                             }
                             LivisResponseType::Err(e) => {
-                                log::error!("Error: {}", e);
-                                exit(1)
+                                log::error!("Livisi rejected token request: {}", e);
+                                return Err(());
                             }
                         }
                     }
                     Err(e) => {
-                        log::error!("{}" ,e);
-                        exit(1)
+                        log::error!("Could not parse Livisi token response: {}" ,e);
+                        return Err(());
                     }
                 }
             }
@@ -149,31 +148,38 @@ impl MemPrefill {
                     let mut store_tmp = STORE_DATA.get();
                     let store = store_tmp.as_mut().unwrap();
 
-                    let found_devices = devices.get_devices().await;
-                    lock_and_call!(store, set_devices, found_devices);
+                    // Refresh each resource independently. A transient upstream
+                    // failure (network blip, firmware update returning garbage, etc.)
+                    // must not crash the gateway nor wipe the cache: on error we log
+                    // and keep whatever was cached before, then retry on the next tick.
+                    macro_rules! refresh {
+                        ($fetch:expr, $setter:ident, $label:literal) => {
+                            match $fetch.await {
+                                Ok(value) => lock_and_call!(store, $setter, value),
+                                Err(err) => log::error!(
+                                    "Failed to refresh {} from Livisi, keeping cached data: {}",
+                                    $label,
+                                    err
+                                ),
+                            }
+                        };
+                    }
 
-                    let capabilities_found = capabilities.get_capabilities()
-                        .await;
-                    lock_and_call!(store, set_capabilities, capabilities_found);
-
-                    let locations = locations.get_locations().await;
-                    lock_and_call!(store, set_locations, locations);
-                    let cap_state  = capabilities.get_all_capability_states().await;
-                    lock_and_call!(store, set_capabilities_state, cap_state);
-
-                    let user_storage_data = user_storage.get_user_storage()
-                        .await;
-                    let status = status.get_status().await;
-                    lock_and_call!(store, set_status, status);
-                    lock_and_call!(store, set_user_storage, user_storage_data);
-
-                    let message_data = message.get_messages().await;
-                    lock_and_call!(store, set_messages, message_data);
-
-                    let email_data = email.get_email_settings().await;
-                    let interaction_data = interaction.get_interaction().await;
-                    lock_and_call!(store, set_email, email_data);
-                    lock_and_call!(store, set_interactions, interaction_data);
+                    // Devices must be refreshed before the joins below (locations,
+                    // capabilities, capability states all attach onto the device map).
+                    refresh!(devices.get_devices(), set_devices, "devices");
+                    refresh!(capabilities.get_capabilities(), set_capabilities, "capabilities");
+                    refresh!(locations.get_locations(), set_locations, "locations");
+                    refresh!(
+                        capabilities.get_all_capability_states(),
+                        set_capabilities_state,
+                        "capability states"
+                    );
+                    refresh!(user_storage.get_user_storage(), set_user_storage, "user storage");
+                    refresh!(status.get_status(), set_status, "status");
+                    refresh!(message.get_messages(), set_messages, "messages");
+                    refresh!(email.get_email_settings(), set_email, "email settings");
+                    refresh!(interaction.get_interaction(), set_interactions, "interactions");
                 }
             }
         }

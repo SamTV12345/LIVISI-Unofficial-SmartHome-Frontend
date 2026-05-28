@@ -47,7 +47,7 @@ impl Status {
             base_url: format!("{}{}", server_url, "/status")
         }
     }
-   pub async fn get_status(&self) -> StatusResponse {
+   pub async fn get_status(&self) -> Result<StatusResponse, reqwest::Error> {
        let api_client;
        {
            let locked_client = CLIENT_DATA.get().unwrap().lock();
@@ -55,10 +55,9 @@ impl Status {
        }
         let response = api_client.get(self.base_url.clone())
             .send()
-            .await.unwrap();
+            .await?;
 
             response.json::<StatusResponse>()
             .await
-            .unwrap()
     }
 }

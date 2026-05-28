@@ -11,12 +11,9 @@ use axum::middleware;
 use axum::routing::{get, post};
 use axum::Router;
 use clap::Parser;
-use clokwerk::{Job, Scheduler, TimeUnits};
 use kv::Config;
 use std::env::var;
 use std::sync::{Mutex, OnceLock};
-use std::thread;
-use std::thread::spawn;
 use std::time::Duration;
 
 use crate::api_lib::action::Action;
@@ -129,24 +126,19 @@ async fn main() -> std::io::Result<()> {
         auth_runtime: auth_runtime.clone(),
     };
 
-    spawn(|| {
-        let args = Args::parse();
+    let scheduler_args = args.clone();
+    tokio::spawn(async move {
         log::info!("Starting scheduler");
-        let mut scheduler = Scheduler::new();
-        scheduler.every(1.days()).plus(10.minutes()).run(move || {
-            let rt = tokio::runtime::Builder::new_current_thread()
-                .enable_all()
-                .build()
-                .unwrap();
-            rt.block_on(async {
-                log::info!("Fetching data");
-                MemPrefill::do_db_initialization(&args).await;
-            });
-        });
-
+        // Refresh the cache slightly more than once a day, matching the previous
+        // schedule (1 day + 10 minutes). `interval` fires immediately on its first
+        // tick, which we discard so we don't repeat the initial refresh done above.
+        let period = Duration::from_secs(24 * 60 * 60 + 10 * 60);
+        let mut interval = tokio::time::interval(period);
+        interval.tick().await;
         loop {
-            scheduler.run_pending();
-            thread::sleep(Duration::from_secs(10));
+            interval.tick().await;
+            log::info!("Fetching data");
+            MemPrefill::do_db_initialization(&scheduler_args).await;
         }
     });
 

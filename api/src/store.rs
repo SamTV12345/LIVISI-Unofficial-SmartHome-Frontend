@@ -38,8 +38,6 @@ pub struct DeviceStore {
     pub tags: Option<Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub location_data: Option<LocationResponse>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub capability_data: Option<Vec<CapabilitiesStore>>,
     pub capability_state: Option<CapabilityStateResponse>
 }
 
@@ -97,91 +95,49 @@ impl Data {
                                                 None => {}
                                                 Some(props) => {
                                                     match props {
-                                                        Properties::HumidityChange(h)=>{
-                                                            let map = cap_s.state.as_mut();
-                                                            if let Some(m) = map {
-                                                                let current_value = Utc::now()
-                                                                    .to_rfc3339();
-                                                                let cap_value = CapValueItem
-                                                                    (capability::CapValueItem{
-                                                                        value: Some
-                                                                            (interaction::FieldValue::FloatValue(h.humidity as f32)),
-                                                                        last_changed: current_value
-                                                                    });
-
-                                                                m.insert("humidity".to_string(),
-                                                                         cap_value);
-                                                            }
+                                                        Properties::HumidityChange(h) => {
+                                                            upsert_capability_value(
+                                                                &mut cap_s.state,
+                                                                "humidity",
+                                                                interaction::FieldValue::FloatValue(h.humidity as f32),
+                                                            );
                                                         }
-                                                        Properties::PointTemperature(_) => {}
                                                         Properties::Temperature(temp) => {
-                                                            let map = cap_s.state.as_mut();
-                                                            if let Some(m) = map {
-                                                                let current_value = Utc::now()
-                                                                    .to_rfc3339();
-                                                                let cap_value = CapValueItem
-                                                                    (capability::CapValueItem{
-                                                                        value: Some
-                                                                            (interaction::FieldValue::FloatValue(temp.temperature as f32)),
-                                                                        last_changed: current_value
-                                                                    });
-
-                                                                m.insert("temperature".to_string(),
-                                                                         cap_value);
-                                                            }
+                                                            upsert_capability_value(
+                                                                &mut cap_s.state,
+                                                                "temperature",
+                                                                interaction::FieldValue::FloatValue(temp.temperature as f32),
+                                                            );
                                                         }
-                                                        Properties::Threshold(_) => {}
                                                         Properties::OnState(e) => {
-                                                            let map = cap_s.state.as_mut();
-                                                            if let Some(m) = map {
-                                                                let current_value = Utc::now()
-                                                                    .to_rfc3339();
-                                                                let cap_value = CapValueItem
-                                                                    (capability::CapValueItem{
-                                                                        value: Some
-                                                                            (interaction::FieldValue::BooleanValue(e.on_state)),
-                                                                        last_changed: current_value
-                                                                    });
-
-                                                                m.insert("onState".to_string(),
-                                                                         cap_value);
-                                                            }
+                                                            upsert_capability_value(
+                                                                &mut cap_s.state,
+                                                                "onState",
+                                                                interaction::FieldValue::BooleanValue(e.on_state),
+                                                            );
                                                         }
-                                                        Properties::ConfigVersion(_) => {}
-                                                        Properties::ZustandChange(_) => {}
-                                                        Properties::DeviceConfigurationState(_) => {}
                                                         Properties::HeatingSetPoint(v) => {
-                                                            let map = cap_s.state.as_mut();
-                                                            if let Some(m) = map {
-                                                                let current_value = Utc::now()
-                                                                    .to_rfc3339();
-                                                                let cap_value = CapValueItem
-                                                                    (capability::CapValueItem{
-                                                                        value: Some
-                                                                            (interaction::FieldValue::FloatValue(v.setpoint_temperature as f32)),
-                                                                        last_changed: current_value
-                                                                    });
-
-                                                                m.insert("setpointTemperature".to_string(), cap_value);
-                                                            }
+                                                            upsert_capability_value(
+                                                                &mut cap_s.state,
+                                                                "setpointTemperature",
+                                                                interaction::FieldValue::FloatValue(v.setpoint_temperature as f32),
+                                                            );
                                                         }
-                                                        Properties::CPUUsage(_) => {}
-                                                        Properties::Value(_) => {}
-                                                        Properties::IsOpen(is_open)=>{
-                                                            let map = cap_s.state.as_mut();
-                                                            if let Some(m) = map {
-                                                                let previous_is_open = m.get("isOpen")
+                                                        Properties::IsOpen(is_open) => {
+                                                            // Only react when the capability already has a
+                                                            // state map (matching the previous behaviour);
+                                                            // a sentry alert is raised on an actual change.
+                                                            if cap_s.state.is_some() {
+                                                                let previous_is_open = cap_s
+                                                                    .state
+                                                                    .as_ref()
+                                                                    .and_then(|map| map.get("isOpen"))
                                                                     .and_then(extract_boolean_capability_value);
-                                                                let current_value = Utc::now()
-                                                                    .to_rfc3339();
-                                                                let cap_value = CapValueItem
-                                                                    (capability::CapValueItem{
-                                                                        value: Some
-                                                                            (interaction::FieldValue::BooleanValue(is_open.is_open)),
-                                                                        last_changed: current_value
-                                                                    });
-
-                                                                m.insert("isOpen".to_string(), cap_value);
+                                                                upsert_capability_value(
+                                                                    &mut cap_s.state,
+                                                                    "isOpen",
+                                                                    interaction::FieldValue::BooleanValue(is_open.is_open),
+                                                                );
                                                                 if previous_is_open != Some(is_open.is_open) {
                                                                     sentry_alert = build_sentry_alert(
                                                                         &sentry_device_type,
@@ -193,9 +149,6 @@ impl Data {
                                                                     );
                                                                 }
                                                             }
-                                                        }
-                                                        Properties::Reachable(_) => {
-
                                                         }
                                                         _ => {}
                                                     }
@@ -303,7 +256,6 @@ impl Data {
                 capabilities: device.capabilities.clone(),
                 tags: device.tags.clone(),
                 location_data: None,
-                capability_data: None,
                 capability_state: None
             };
             self.devices.insert(device.id.clone().unwrap(), device_store);
@@ -351,25 +303,12 @@ impl Data {
         self.capabilities = capabilities.0
             .iter()
             .map(|capability| CapabilitiesStore {
-            id: capability.id.clone(),
-            r#type: capability.r#type.clone(),
-            device: capability.device.clone(),
-            config: capability.config.clone()
-        })
+                id: capability.id.clone(),
+                r#type: capability.r#type.clone(),
+                device: capability.device.clone(),
+                config: capability.config.clone(),
+            })
             .collect::<Vec<_>>();
-
-        self.capabilities.iter().for_each(|cap|{
-           self.devices.contains_key(&cap.device).then(||{
-               let found_device = self.devices.get_mut(&cap.device.replace("/device/","")).unwrap();
-               if found_device.capability_data.is_none() {
-                   found_device.capability_data = Some(vec![cap.clone()]);
-               }
-               else {
-                   found_device.capability_data.as_mut().unwrap().push(cap.clone());
-               }
-               self.devices.get_mut(&cap.device).unwrap().capabilities = Some(vec![cap.id.clone()]);
-           });
-        });
     }
 
 
@@ -428,6 +367,25 @@ impl Store {
     }
 }
 
+/// Inserts/overwrites a single capability value (stamped with the current time)
+/// into a capability's state map, if that map exists. Centralises the repeated
+/// "build a CapValueItem and insert it" logic from `handle_socket_event`.
+fn upsert_capability_value(
+    state: &mut Option<HashMap<String, crate::api_lib::capability::CapValueType>>,
+    key: &str,
+    value: interaction::FieldValue,
+) {
+    if let Some(map) = state.as_mut() {
+        map.insert(
+            key.to_string(),
+            CapValueItem(capability::CapValueItem {
+                value: Some(value),
+                last_changed: Utc::now().to_rfc3339(),
+            }),
+        );
+    }
+}
+
 fn extract_boolean_capability_value(capability_value: &crate::api_lib::capability::CapValueType) -> Option<bool> {
     match capability_value {
         crate::api_lib::capability::CapValueType::CapabilityInnerVal(value) => match &value.value.value {
@@ -460,5 +418,156 @@ fn build_sentry_alert(
         is_open,
         occurred_at: occurred_at.to_string(),
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::api_lib::capability::{CapValueType, CapabilityStateResponse};
+    use crate::api_lib::device::DeviceResponse;
+    use crate::api_lib::location::LocationResponse;
+    use crate::models::socket_event::SocketEvent;
+    use serde_json::json;
+
+    /// A single WDS contact sensor (`device-1`) carrying one capability
+    /// (`cap-1`) whose cached state starts as `isOpen: false`.
+    fn wds_device_data() -> Data {
+        let mut data = Data::default();
+        let devices: DeviceResponse = serde_json::from_value(json!([
+            {
+                "manufacturer": "RWE",
+                "type": "WDS",
+                "version": "1.0",
+                "product": "SHC.RWE",
+                "serialNumber": "serial-1",
+                "id": "device-1",
+                "location": "/location/loc-1",
+                "capabilities": ["/capability/cap-1"],
+                "config": { "name": "Front Door" }
+            }
+        ]))
+        .unwrap();
+        data.set_devices(devices);
+
+        let states: CapabilityStateResponse = serde_json::from_value(json!([
+            {
+                "id": "cap-1",
+                "state": {
+                    "isOpen": { "value": false, "lastChanged": "2024-01-01T00:00:00Z" }
+                }
+            }
+        ]))
+        .unwrap();
+        data.set_capabilities_state(states);
+        data
+    }
+
+    fn capability_event(properties: serde_json::Value) -> SocketEvent {
+        serde_json::from_value(json!({
+            "type": "StateChanged",
+            "namespace": "core.RWE",
+            "desc": "/desc",
+            "source": "/capability/cap-1",
+            "timestamp": "2024-01-02T00:00:00Z",
+            "properties": properties
+        }))
+        .unwrap()
+    }
+
+    fn cached_value<'a>(data: &'a Data, device_id: &str, key: &str) -> Option<&'a CapValueType> {
+        let device = data.devices.get(device_id)?;
+        let inner = device
+            .capability_state
+            .as_ref()?
+            .0
+            .iter()
+            .find(|c| c.id == "cap-1")?;
+        inner.state.as_ref()?.get(key)
+    }
+
+    #[test]
+    fn set_devices_indexes_by_id() {
+        let data = wds_device_data();
+        assert_eq!(data.devices.len(), 1);
+        assert!(data.devices.contains_key("device-1"));
+    }
+
+    #[test]
+    fn capability_state_is_attached_to_its_device() {
+        let data = wds_device_data();
+        let value = cached_value(&data, "device-1", "isOpen").expect("isOpen should be cached");
+        assert_eq!(extract_boolean_capability_value(value), Some(false));
+    }
+
+    #[test]
+    fn is_open_change_updates_cache_and_emits_alert() {
+        let mut data = wds_device_data();
+        let mut event = capability_event(json!({ "isOpen": true }));
+
+        let alert = data.handle_socket_event(&mut event);
+
+        let value = cached_value(&data, "device-1", "isOpen").unwrap();
+        assert_eq!(extract_boolean_capability_value(value), Some(true));
+
+        let alert = alert.expect("an open/close change on a WDS sensor must raise an alert");
+        assert_eq!(alert.device_id, "device-1");
+        assert_eq!(alert.device_name, "Front Door");
+        assert!(alert.is_open);
+    }
+
+    #[test]
+    fn is_open_without_change_does_not_emit_alert() {
+        let mut data = wds_device_data();
+        let mut event = capability_event(json!({ "isOpen": false }));
+
+        let alert = data.handle_socket_event(&mut event);
+
+        assert!(alert.is_none());
+        let value = cached_value(&data, "device-1", "isOpen").unwrap();
+        assert_eq!(extract_boolean_capability_value(value), Some(false));
+    }
+
+    #[test]
+    fn temperature_event_updates_cached_value() {
+        let mut data = wds_device_data();
+        let mut event = capability_event(json!({ "temperature": 21.5 }));
+
+        let _ = data.handle_socket_event(&mut event);
+
+        let value = cached_value(&data, "device-1", "temperature").expect("temperature cached");
+        match value {
+            CapValueType::CapValueItem(item) => match item.value.as_ref().unwrap() {
+                interaction::FieldValue::FloatValue(v) => {
+                    assert!((*v - 21.5).abs() < f32::EPSILON)
+                }
+                other => panic!("unexpected value variant: {:?}", other),
+            },
+            other => panic!("unexpected cap value variant: {:?}", other),
+        }
+    }
+
+    #[test]
+    fn set_locations_links_device_and_location() {
+        let mut data = wds_device_data();
+        let locations: Vec<LocationResponse> = serde_json::from_value(json!([
+            { "id": "loc-1", "config": { "name": "Hallway", "type": "Room" } }
+        ]))
+        .unwrap();
+
+        data.set_locations(locations);
+
+        let device = data.devices.get("device-1").unwrap();
+        let location_data = device
+            .location_data
+            .as_ref()
+            .expect("device should be linked to its location");
+        assert_eq!(location_data.config.name, "Hallway");
+
+        let location = data.locations.iter().find(|l| l.id == "loc-1").unwrap();
+        assert_eq!(
+            location.devices.as_deref(),
+            Some(&["device-1".to_string()][..])
+        );
+    }
 }
 

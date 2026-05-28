@@ -142,7 +142,7 @@ impl Interaction{
         }
     }
 
-    pub async fn get_interaction(&self) -> Vec<InteractionResponse> {
+    pub async fn get_interaction(&self) -> Result<Vec<InteractionResponse>, reqwest::Error> {
         let api_client;
         {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
@@ -151,12 +151,10 @@ impl Interaction{
 
         let response = api_client.get(self.base_url.clone())
             .send()
-            .await
-            .unwrap();
+            .await?;
 
             response.json::<Vec<InteractionResponse>>()
             .await
-            .unwrap()
     }
 
     pub async fn get_interaction_by_id(&self, id:String) ->

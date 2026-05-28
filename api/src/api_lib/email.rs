@@ -30,7 +30,7 @@ impl Email {
         }
     }
 
-    pub async fn get_email_settings(&self) -> EmailAPI {
+    pub async fn get_email_settings(&self) -> Result<EmailAPI, reqwest::Error> {
         let api_client;
         {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
@@ -38,13 +38,11 @@ impl Email {
         }
         let response = api_client.get(self.base_url.clone()+"/settings")
             .send()
-            .await
-            .unwrap();
+            .await?;
 
             response
                 .json::<EmailAPI>()
             .await
-            .unwrap()
     }
 
 

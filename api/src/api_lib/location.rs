@@ -87,7 +87,7 @@ impl Location {
             .unwrap()
     }
 
-    pub async fn get_locations(&self) -> Vec<LocationResponse> {
+    pub async fn get_locations(&self) -> Result<Vec<LocationResponse>, reqwest::Error> {
         let api_client;
         {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
@@ -96,13 +96,11 @@ impl Location {
 
         let response = api_client.get(self.base_url.clone())
             .send()
-            .await
-            .unwrap();
+            .await?;
 
             response
                 .json::<Vec<LocationResponse>>()
             .await
-            .unwrap()
     }
 
     pub async fn get_location_by_id(&self, location_id: String) -> LocationResponse {

@@ -18,7 +18,7 @@ impl UserStorage {
         }
     }
 
-    pub async fn get_user_storage(&self) -> UserStorageResponse {
+    pub async fn get_user_storage(&self) -> Result<UserStorageResponse, reqwest::Error> {
         let api_client;
         {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
@@ -27,11 +27,9 @@ impl UserStorage {
         let response = api_client.get(self.base_url.clone())
             .headers(HeaderUtils::get_auth_token_header())
             .send()
-            .await
-            .unwrap();
+            .await?;
 
             response.json::<UserStorageResponse>()
             .await
-            .unwrap()
     }
 }
