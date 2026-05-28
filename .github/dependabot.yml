@@ -2,6 +2,14 @@
 # package ecosystems to update and where the package manifests are located.
 # Please see the documentation for all configuration options:
 # https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+#
+# Grouping strategy:
+#   * <eco>-minor-patch  -> batches minor/patch *version* updates into one PR.
+#   * <eco>-security      -> batches *security* updates into one PR (applies-to
+#                            security-updates). Security fixes ship together
+#                            regardless of semver bump.
+#   Major version updates are intentionally left ungrouped so a breaking major
+#   lands as its own PR and can't block an otherwise-mergeable batch.
 
 version: 2
 updates:
@@ -11,11 +19,16 @@ updates:
       interval: "weekly"
     groups:
       mobile-minor-patch:
+        applies-to: version-updates
         patterns:
           - "*"
         update-types:
           - "minor"
           - "patch"
+      mobile-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
 
   - package-ecosystem: "npm"
     directory: "/ui-new"
@@ -23,11 +36,16 @@ updates:
       interval: "weekly"
     groups:
       ui-new-minor-patch:
+        applies-to: version-updates
         patterns:
           - "*"
         update-types:
           - "minor"
           - "patch"
+      ui-new-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
 
   - package-ecosystem: "cargo"
     directory: "/api"
@@ -35,9 +53,13 @@ updates:
       interval: "weekly"
     groups:
       api-minor-patch:
+        applies-to: version-updates
         patterns:
           - "*"
         update-types:
           - "minor"
           - "patch"
-
+      api-security:
+        applies-to: security-updates
+        patterns:
+          - "*"

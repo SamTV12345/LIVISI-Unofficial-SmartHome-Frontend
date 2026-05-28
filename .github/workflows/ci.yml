@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rust:
+    name: rust
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: api
+      - name: Build and test
+        working-directory: api
+        run: |
+          cargo build --verbose
+          cargo test --verbose
+
+  web:
+    name: web
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.11.0
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: ui-new/pnpm-lock.yaml
+      - name: Install dependencies
+        working-directory: ui-new
+        run: pnpm install --frozen-lockfile
+      - name: Build
+        working-directory: ui-new
+        run: pnpm run build
+
+  mobile:
+    name: mobile
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.11.0
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: mobile/pnpm-lock.yaml
+      # The mobile gate is dependency-resolution only: it verifies the bumped
+      # lockfile is consistent and installable. A stricter `tsc --noEmit` /
+      # `expo install --check` is intentionally omitted because both are already
+      # red on main for pre-existing reasons (an Expo SDK 54 project carrying
+      # some SDK 55 packages, plus a long-standing Colors.ts type error).
+      - name: Install dependencies
+        working-directory: mobile
+        run: pnpm install --frozen-lockfile
