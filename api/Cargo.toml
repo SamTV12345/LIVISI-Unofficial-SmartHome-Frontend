@@ -8,14 +8,14 @@ edition = "2024"
 urlencoding = "2.1.3"
 reqwest = { version = "0.13.4", features = ["blocking", "json"] }
 serde = { version = "1.0.228" }
-chrono = "0.4.44"
+chrono = "0.4.45"
 tokio = { version = "1.52.3", features = ["full"] }
 serde_derive = "1.0.228"
 serde_json = "1.0.150"
 axum = { version = "0.8.9", features = ["ws"] }
-log = "0.4.30"
+log = "0.4.32"
 tungstenite = { version = "0.29.0", features = ["native-tls"] }
-uuid = { version = "1.23.1", features = ["v4", "serde"] }
+uuid = { version = "1.23.2", features = ["v4", "serde"] }
 base64 = "0.22.1"
 kv = "0.24.0"
 jsonwebtoken = { version = "10.4.0", features = ["rust_crypto"] }
