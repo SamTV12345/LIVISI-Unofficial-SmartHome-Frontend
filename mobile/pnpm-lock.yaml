@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@expo/html-elements':
-        specifier: ^0.10.1
-        version: 0.10.1
+        specifier: ^57.0.0
+        version: 57.0.0(react-native-web@0.21.2(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-native@0.85.3(@babel/core@7.29.7)(@react-native-community/cli@13.6.9)(@react-native/jest-preset@0.85.3(@babel/core@7.29.7)(react@19.2.6))(@react-native/metro-config@0.84.1(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.6))(react@19.2.6)
       '@expo/metro-runtime':
         specifier: ~6.1.2
         version: 6.1.2(expo@57.0.0)(react-dom@19.2.6(react@19.2.6))(react-native@0.85.3(@babel/core@7.29.7)(@react-native-community/cli@13.6.9)(@react-native/jest-preset@0.85.3(@babel/core@7.29.7)(react@19.2.6))(@react-native/metro-config@0.84.1(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.6))(react@19.2.6)
@@ -1014,8 +1014,15 @@ packages:
     resolution: {integrity: sha512-cSI7UsxcaaQAxykEZkiwX9c+sw976JBQpBN16fFgpFJVA92CfSpEIO0EcjVEXBrIZWfETxMJ6iyNk0gSu8cEzg==}
     hasBin: true
 
-  '@expo/html-elements@0.10.1':
-    resolution: {integrity: sha512-3PTmtkV15D7+lykXVtvkH1jQ5Y6JE+e3zCaoMMux7z2cSLGQUNwDEUwG37gew3OEB1/E4/SEWgjvg8m7E6/e2Q==}
+  '@expo/html-elements@57.0.0':
+    resolution: {integrity: sha512-KseR8RMRo2nKdEoWhXdvMJoCTM4y50cH/+oSev+/T5z77RPEGhqqwLEWg4Jvix2LkB13msGt2FE3bf7g3xozuA==}
+    peerDependencies:
+      react: '*'
+      react-native: '*'
+      react-native-web: '*'
+    peerDependenciesMeta:
+      react-native-web:
+        optional: true
 
   '@expo/image-utils@0.11.0':
     resolution: {integrity: sha512-tXFTMAl79rOiK3q8cCw00CioMxv1XfM31B6B+9IK/yeWKJrwny8sSIJ0IzZWqHy6F23rW5AQVIyT5PJZ5p/hmA==}
@@ -7186,7 +7193,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@expo/html-elements@0.10.1': {}
+  '@expo/html-elements@57.0.0(react-native-web@0.21.2(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-native@0.85.3(@babel/core@7.29.7)(@react-native-community/cli@13.6.9)(@react-native/jest-preset@0.85.3(@babel/core@7.29.7)(react@19.2.6))(@react-native/metro-config@0.84.1(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.6))(react@19.2.6)':
+    dependencies:
+      react: 19.2.6
+      react-native: 0.85.3(@babel/core@7.29.7)(@react-native-community/cli@13.6.9)(@react-native/jest-preset@0.85.3(@babel/core@7.29.7)(react@19.2.6))(@react-native/metro-config@0.84.1(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.6)
+    optionalDependencies:
+      react-native-web: 0.21.2(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
 
   '@expo/image-utils@0.11.0(typescript@5.9.3)':
     dependencies:
