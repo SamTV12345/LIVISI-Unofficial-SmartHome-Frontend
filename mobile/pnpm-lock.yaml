@@ -42,8 +42,8 @@ importers:
         specifier: ~8.0.11
         version: 8.0.12(expo@57.0.0)(react-native@0.85.3(@babel/core@7.29.7)(@react-native-community/cli@13.6.9)(@react-native/jest-preset@0.85.3(@babel/core@7.29.7)(react@19.2.6))(@react-native/metro-config@0.84.1(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.6))(react@19.2.6)
       expo-localization:
-        specifier: ~17.0.8
-        version: 17.0.9(expo@57.0.0)(react@19.2.6)
+        specifier: ~57.0.0
+        version: 57.0.0(expo@57.0.0)(react@19.2.6)
       expo-router:
         specifier: ~6.0.23
         version: 6.0.24(9290806adc941c3fb77e377e7a21bd1b)
@@ -3233,8 +3233,8 @@ packages:
       react: '*'
       react-native: '*'
 
-  expo-localization@17.0.9:
-    resolution: {integrity: sha512-k5eYHr7iLMob3M8cHH6bgDrDRmqnZG8xKGLhpx8ST+LsFXmSgYpJ/t0VwWm0gz64C/K669XhObdG3D6QwCGqhw==}
+  expo-localization@57.0.0:
+    resolution: {integrity: sha512-6/o4SE4p1K8f0vXrm5oqt7SxyRPLomdhsANsZOwAqduTC/rzkLsqh5FidgppoTR6lPKT58z+jfk5R3grmbjQtA==}
     peerDependencies:
       expo: '*'
       react: '*'
@@ -10200,7 +10200,7 @@ snapshots:
       - expo
       - supports-color
 
-  expo-localization@17.0.9(expo@57.0.0)(react@19.2.6):
+  expo-localization@57.0.0(expo@57.0.0)(react@19.2.6):
     dependencies:
       expo: 57.0.0(@babel/core@7.29.7)(@expo/dom-webview@55.0.3)(@expo/metro-runtime@6.1.2)(expo-router@6.0.24)(react-dom@19.2.6(react@19.2.6))(react-native-web@0.21.2(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-native-worklets@0.9.1(@babel/core@7.29.7)(@react-native/metro-config@0.84.1(@babel/core@7.29.7))(react-native@0.85.3(@babel/core@7.29.7)(@react-native-community/cli@13.6.9)(@react-native/jest-preset@0.85.3(@babel/core@7.29.7)(react@19.2.6))(@react-native/metro-config@0.84.1(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.6))(react@19.2.6))(react-native@0.85.3(@babel/core@7.29.7)(@react-native-community/cli@13.6.9)(@react-native/jest-preset@0.85.3(@babel/core@7.29.7)(react@19.2.6))(@react-native/metro-config@0.84.1(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.6))(react@19.2.6)(typescript@5.9.3)
       react: 19.2.6
