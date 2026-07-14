@@ -22,7 +22,7 @@
     "@react-navigation/native": "^7.3.8",
     "@tanstack/react-query": "^5.90.21",
     "expo": "~57.0.0",
-    "expo-auth-session": "^7.0.10",
+    "expo-auth-session": "^57.0.2",
     "expo-build-properties": "~56.0.16",
     "expo-constants": "~18.0.13",
     "expo-font": "~14.0.11",
