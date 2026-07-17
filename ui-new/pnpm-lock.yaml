@@ -45,8 +45,8 @@ importers:
         specifier: ^5.101.2
         version: 5.101.2(react@19.2.7)
       apexcharts:
-        specifier: ^5.16.0
-        version: 5.16.0
+        specifier: ^6.0.0
+        version: 6.0.0
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -79,7 +79,7 @@ importers:
         version: 19.2.7
       react-apexcharts:
         specifier: ^2.1.1
-        version: 2.1.1(apexcharts@5.16.0)(react@19.2.7)
+        version: 2.1.1(apexcharts@6.0.0)(react@19.2.7)
       react-dom:
         specifier: ^19.2.7
         version: 19.2.7(react@19.2.7)
@@ -1589,8 +1589,8 @@ packages:
     resolution: {integrity: sha512-zbB9rCJAT1rbjiVDb2hqKFHNYLxgtk8NURxZ3IZwD3F6NtxbXZQCnnSi1Lkx+IDohdPlFp222wVALIheZJQSEg==}
     engines: {node: '>=8'}
 
-  apexcharts@5.16.0:
-    resolution: {integrity: sha512-ULO3Gqrm0/26uwBcYz49u181uIp8Fy6BQQgg9QUDajs+JAs/EbXxiAmdc6BLy1JY29/JXroM7P0j0t2JPDApdg==}
+  apexcharts@6.0.0:
+    resolution: {integrity: sha512-vFto9h6yimqtGK4X1NpRgwrq1xrqRg4g2hGTB68tf4AhS0laAQcybGcGAW3cBySHGoCE8L3Q+xm9P+4Ki5+Shw==}
 
   argparse@2.0.1:
     resolution: {integrity: sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==}
@@ -4072,7 +4072,7 @@ snapshots:
     dependencies:
       color-convert: 2.0.1
 
-  apexcharts@5.16.0: {}
+  apexcharts@6.0.0: {}
 
   argparse@2.0.1: {}
 
@@ -4712,9 +4712,9 @@ snapshots:
 
   punycode@2.3.1: {}
 
-  react-apexcharts@2.1.1(apexcharts@5.16.0)(react@19.2.7):
+  react-apexcharts@2.1.1(apexcharts@6.0.0)(react@19.2.7):
     dependencies:
-      apexcharts: 5.16.0
+      apexcharts: 6.0.0
       prop-types: 15.8.1
       react: 19.2.7
 
