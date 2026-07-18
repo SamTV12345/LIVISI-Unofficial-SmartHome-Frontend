@@ -7,11 +7,26 @@ import {StatusPill} from "@/components/ui/StatusPill";
 import {ActionButton} from "@/components/ui/ActionButton";
 import {Colors} from "@/constants/Colors";
 import {Href, router} from "expo-router";
-import {FENSTERKONTAKT, HEATING, RAUCHMELDER, WANDSENDER, ZWISCHENSTECKER, ZWISCHENSTECKER_OUTDOOR} from "@/constants/FieldConstants";
+import {
+    BEWEGUNGSMELDER,
+    BEWEGUNGSMELDER_OUTDOOR,
+    DIMMER,
+    FENSTERKONTAKT,
+    HEATING,
+    LICHTSCHALTER,
+    LICHTSCHALTER_2,
+    RADIATOR_THERMOSTAT,
+    RAUCHMELDER,
+    ROLLLADEN,
+    WANDSENDER,
+    ZWISCHENSTECKER,
+    ZWISCHENSTECKER_OUTDOOR
+} from "@/constants/FieldConstants";
 import i18n from "@/i18n/i18n";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import {useGatewayApi} from "@/hooks/useGatewayApi";
 import {buildLocationLookups, resolveDeviceLocation} from "@/utils/location";
+import {formatTime} from "@/utils/timeUtils";
 
 type DeviceDeciderProps = {
     device: Device;
@@ -19,7 +34,7 @@ type DeviceDeciderProps = {
 
 type CapabilityEntry = {
     id: string;
-    state?: Record<string, {value: unknown}>;
+    state?: Record<string, {value: unknown; lastChanged?: string}>;
 };
 
 const getCapabilityByField = (device: Device, key: string): CapabilityEntry | undefined => {
@@ -66,6 +81,8 @@ export const DeviceDecider: FC<DeviceDeciderProps> = ({device}) => {
     const [isSaving, setIsSaving] = useState(false);
     const [localOnState, setLocalOnState] = useState<boolean | undefined>(undefined);
     const [localSetpoint, setLocalSetpoint] = useState<number | undefined>(undefined);
+    const [localDimLevel, setLocalDimLevel] = useState<number | undefined>(undefined);
+    const [localShutterLevel, setLocalShutterLevel] = useState<number | undefined>(undefined);
 
     const onStateCapability = useMemo(() => getCapabilityByField(device, "onState"), [device]);
     const windowStateCapability = useMemo(() => getCapabilityByField(device, "isOpen"), [device]);
@@ -73,6 +90,10 @@ export const DeviceDecider: FC<DeviceDeciderProps> = ({device}) => {
     const temperatureCapability = useMemo(() => getCapabilityByField(device, "temperature"), [device]);
     const humidityCapability = useMemo(() => getCapabilityByField(device, "humidity"), [device]);
     const setpointCapability = useMemo(() => getCapabilityByField(device, "setpointTemperature"), [device]);
+    const dimCapability = useMemo(() => getCapabilityByField(device, "dimLevel"), [device]);
+    const shutterCapability = useMemo(() => getCapabilityByField(device, "shutterLevel"), [device]);
+    const luminanceCapability = useMemo(() => getCapabilityByField(device, "luminance"), [device]);
+    const motionCapability = useMemo(() => getCapabilityByField(device, "motionDetectedCount"), [device]);
 
     const locationLookups = useMemo(
         () => buildLocationLookups(allThings?.locations ?? []),
@@ -89,29 +110,83 @@ export const DeviceDecider: FC<DeviceDeciderProps> = ({device}) => {
     const currentHumidity = readNumber(humidityCapability, "humidity");
     const isOpen = readBoolean(windowStateCapability, "isOpen");
     const isSmokeDetected = readBoolean(smokeStateCapability, "isSmokeAlarm");
-    const isSwitchDevice = device.type === ZWISCHENSTECKER || device.type === ZWISCHENSTECKER_OUTDOOR;
+    const currentDimLevel = localDimLevel ?? readNumber(dimCapability, "dimLevel") ?? 0;
+    const currentShutterLevel = localShutterLevel ?? readNumber(shutterCapability, "shutterLevel") ?? 0;
+    const luminance = readNumber(luminanceCapability, "luminance");
+    const lastMotionRaw = motionCapability?.state?.motionDetectedCount?.lastChanged;
+    // 1970 epoch means "never triggered" on the gateway
+    const lastMotion = lastMotionRaw && !lastMotionRaw.startsWith("1970-01-01T00:00:00") ? lastMotionRaw : undefined;
+    // ponytail: RST field names setpointTemperature/pointTemperature/valvePosition unverified against a real RST payload (same as ui-new)
+    const radiatorSetpoint = readNumber(setpointCapability, "setpointTemperature")
+        ?? readNumber(getCapabilityByField(device, "pointTemperature"), "pointTemperature");
+    const valvePosition = readNumber(getCapabilityByField(device, "valvePosition"), "valvePosition");
+    const isSwitchDevice = device.type === ZWISCHENSTECKER || device.type === ZWISCHENSTECKER_OUTDOOR
+        || device.type === LICHTSCHALTER || device.type === LICHTSCHALTER_2;
     const isHeating = device.type === HEATING;
     const isSmokeDetector = device.type === RAUCHMELDER;
     const isWallSwitch = device.type === WANDSENDER;
     const isWindowContact = device.type === FENSTERKONTAKT;
+    const isDimmer = device.type === DIMMER;
+    const isShutter = device.type === ROLLLADEN;
+    const isMotionSensor = device.type === BEWEGUNGSMELDER || device.type === BEWEGUNGSMELDER_OUTDOOR;
+    const isRadiatorThermostat = device.type === RADIATOR_THERMOSTAT;
 
-    const saveAction = async (
-        capabilityId: string | undefined,
-        params: Record<string, {type: "Constant"; value: unknown}>
-    ) => {
+    const sendBody = async (capabilityId: string | undefined, body: unknown) => {
         if (!gateway?.baseURL || !capabilityId || isSaving) {
             return;
         }
         setIsSaving(true);
         try {
-            await actionMutation.mutateAsync({
-                body: buildPayload(device, capabilityId, params)
-            });
+            await actionMutation.mutateAsync({body});
         } catch {
             Alert.alert("Aktion fehlgeschlagen", "Das Gateway hat die Änderung nicht übernommen.");
         } finally {
             setIsSaving(false);
         }
+    };
+
+    const saveAction = async (
+        capabilityId: string | undefined,
+        params: Record<string, {type: "Constant"; value: unknown}>
+    ) => {
+        if (!capabilityId) {
+            return;
+        }
+        await sendBody(capabilityId, buildPayload(device, capabilityId, params));
+    };
+
+    // ponytail: like ui-new, namespace comes from device.product for the CoSIP actuators (unverified against real ISD2/ISR2 hardware).
+    const saveDimLevel = (next: number) => {
+        setLocalDimLevel(next);
+        void sendBody(dimCapability?.id, {
+            id: dimCapability?.id,
+            target: `/capability/${dimCapability?.id}`,
+            namespace: device.product,
+            type: "SetState",
+            params: {dimLevel: {type: "Constant", value: Math.round(next)}}
+        });
+    };
+
+    const saveShutterLevel = (next: number) => {
+        setLocalShutterLevel(next);
+        void sendBody(shutterCapability?.id, {
+            id: shutterCapability?.id,
+            target: `/capability/${shutterCapability?.id}`,
+            namespace: device.product,
+            type: "SetState",
+            params: {shutterLevel: {type: "Constant", value: Math.round(next)}}
+        });
+    };
+
+    const sendRamp = (type: "StartRamp" | "StopRamp", direction?: "RampUp" | "RampDown") => {
+        setLocalShutterLevel(undefined);
+        void sendBody(shutterCapability?.id, {
+            id: shutterCapability?.id,
+            target: `/capability/${shutterCapability?.id}`,
+            namespace: device.product,
+            type,
+            ...(direction ? {params: {rampDirection: {type: "Constant", value: direction}}} : {})
+        });
     };
 
     const openDetail = () => {
@@ -134,6 +209,18 @@ export const DeviceDecider: FC<DeviceDeciderProps> = ({device}) => {
         if (isSmokeDetector) {
             return <StatusPill label={isSmokeDetected ? "Rauch erkannt" : "Kein Alarm"} tone={isSmokeDetected ? "warning" : "success"}/>;
         }
+        if (isDimmer) {
+            return <StatusPill label={`${Math.round(currentDimLevel)} %`} tone={currentDimLevel > 0 ? "success" : "neutral"}/>;
+        }
+        if (isShutter) {
+            return <StatusPill label={`${Math.round(currentShutterLevel)} % offen`} tone="primary"/>;
+        }
+        if (isMotionSensor) {
+            return <StatusPill label={lastMotion ? `Bewegung ${formatTime(lastMotion)}` : "Keine Bewegung"} tone="neutral"/>;
+        }
+        if (isRadiatorThermostat && typeof currentTemperature === "number") {
+            return <StatusPill label={`${currentTemperature.toFixed(1)} °C`} tone="primary"/>;
+        }
         return <StatusPill label="Bereit" tone="neutral"/>;
     })();
 
@@ -154,6 +241,38 @@ export const DeviceDecider: FC<DeviceDeciderProps> = ({device}) => {
                         <Text style={styles.metricLabel}>Raumtemperatur</Text>
                         <Text style={styles.metricValue}>{currentHumidity?.toFixed(0) ?? "-"} %</Text>
                         <Text style={styles.metricLabel}>Luftfeuchte</Text>
+                    </View>
+                )}
+
+                {isMotionSensor && (
+                    <View style={styles.metricRow}>
+                        <Text style={styles.metricValue}>{typeof luminance === "number" ? `${Math.round(luminance)} %` : "-"}</Text>
+                        <Text style={styles.metricLabel}>Helligkeit</Text>
+                        <Text style={styles.metricValue}>{lastMotion ? formatTime(lastMotion) : "-"}</Text>
+                        <Text style={styles.metricLabel}>Letzte Bewegung</Text>
+                    </View>
+                )}
+
+                {isRadiatorThermostat && (
+                    <View style={styles.metricRow}>
+                        {typeof currentTemperature === "number" && (
+                            <>
+                                <Text style={styles.metricValue}>{currentTemperature.toFixed(1)} °C</Text>
+                                <Text style={styles.metricLabel}>Temperatur</Text>
+                            </>
+                        )}
+                        {typeof radiatorSetpoint === "number" && (
+                            <>
+                                <Text style={styles.metricValue}>{radiatorSetpoint.toFixed(1)} °C</Text>
+                                <Text style={styles.metricLabel}>Zieltemperatur</Text>
+                            </>
+                        )}
+                        {typeof valvePosition === "number" && (
+                            <>
+                                <Text style={styles.metricValue}>{Math.round(valvePosition)} %</Text>
+                                <Text style={styles.metricLabel}>Ventil</Text>
+                            </>
+                        )}
                     </View>
                 )}
 
@@ -223,10 +342,70 @@ export const DeviceDecider: FC<DeviceDeciderProps> = ({device}) => {
                             </Pressable>
                         </View>
                     )}
-                    {!isHeating && !isSwitchDevice && !isSmokeDetector && (
+                    {isDimmer && (
+                        <>
+                            <View style={styles.heatingControlRow}>
+                                <Pressable
+                                    style={styles.stepButton}
+                                    disabled={isSaving}
+                                    onPress={() => saveDimLevel(Math.max(0, currentDimLevel - 10))}
+                                >
+                                    <Text style={styles.stepButtonLabel}>-</Text>
+                                </Pressable>
+                                <Text style={styles.stepValue}>{Math.round(currentDimLevel)} %</Text>
+                                <Pressable
+                                    style={styles.stepButton}
+                                    disabled={isSaving}
+                                    onPress={() => saveDimLevel(Math.min(100, currentDimLevel + 10))}
+                                >
+                                    <Text style={styles.stepButtonLabel}>+</Text>
+                                </Pressable>
+                            </View>
+                            <View style={{marginTop: 8}}>
+                                <ActionButton
+                                    title={currentDimLevel > 0 ? "Ausschalten" : "Einschalten"}
+                                    onPress={() => saveDimLevel(currentDimLevel > 0 ? 0 : 100)}
+                                    disabled={isSaving}
+                                />
+                            </View>
+                        </>
+                    )}
+                    {isShutter && (
+                        <>
+                            <View style={styles.shutterButtonRow}>
+                                <View style={{flex: 1}}>
+                                    <ActionButton title="Auf" onPress={() => sendRamp("StartRamp", "RampUp")} disabled={isSaving}/>
+                                </View>
+                                <View style={{flex: 1}}>
+                                    <ActionButton title="Stop" onPress={() => sendRamp("StopRamp")} variant="ghost" disabled={isSaving}/>
+                                </View>
+                                <View style={{flex: 1}}>
+                                    <ActionButton title="Zu" onPress={() => sendRamp("StartRamp", "RampDown")} disabled={isSaving}/>
+                                </View>
+                            </View>
+                            <View style={[styles.heatingControlRow, {marginTop: 8}]}>
+                                <Pressable
+                                    style={styles.stepButton}
+                                    disabled={isSaving}
+                                    onPress={() => saveShutterLevel(Math.max(0, currentShutterLevel - 10))}
+                                >
+                                    <Text style={styles.stepButtonLabel}>-</Text>
+                                </Pressable>
+                                <Text style={styles.stepValue}>{Math.round(currentShutterLevel)} % offen</Text>
+                                <Pressable
+                                    style={styles.stepButton}
+                                    disabled={isSaving}
+                                    onPress={() => saveShutterLevel(Math.min(100, currentShutterLevel + 10))}
+                                >
+                                    <Text style={styles.stepButtonLabel}>+</Text>
+                                </Pressable>
+                            </View>
+                        </>
+                    )}
+                    {!isHeating && !isSwitchDevice && !isSmokeDetector && !isDimmer && !isShutter && (
                         <ActionButton title="Details öffnen" onPress={openDetail} variant="ghost"/>
                     )}
-                    {(isHeating || isSwitchDevice || isSmokeDetector) && (
+                    {(isHeating || isSwitchDevice || isSmokeDetector || isDimmer || isShutter) && (
                         <View style={{marginTop: 8}}>
                             <ActionButton title="Details" onPress={openDetail} variant="ghost"/>
                         </View>
@@ -281,6 +460,10 @@ const styles = StyleSheet.create({
     },
     actionsRow: {
         marginTop: 4
+    },
+    shutterButtonRow: {
+        flexDirection: "row",
+        gap: 8
     },
     heatingControlRow: {
         flexDirection: "row",

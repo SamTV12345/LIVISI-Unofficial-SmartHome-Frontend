@@ -11,7 +11,7 @@ import {Device} from "@/models/Device";
 import {useAllThingsRefresh} from "@/hooks/useAllThingsRefresh";
 import {ErrorBanner} from "@/components/ErrorBanner";
 import i18n from "@/i18n/i18n";
-import {FENSTERKONTAKT, HEATING, RAUCHMELDER, ZWISCHENSTECKER, ZWISCHENSTECKER_OUTDOOR} from "@/constants/FieldConstants";
+import {FENSTERKONTAKT, HEATING, LICHTSCHALTER, LICHTSCHALTER_2, RAUCHMELDER, ZWISCHENSTECKER, ZWISCHENSTECKER_OUTDOOR} from "@/constants/FieldConstants";
 import {useGatewayApi} from "@/hooks/useGatewayApi";
 import {buildLocationLookups, resolveDeviceLocation} from "@/utils/location";
 
@@ -89,7 +89,8 @@ export default function DeviceDetailScreen() {
     const windowCapability = findCapability(device, "isOpen");
     const smokeCapability = findCapability(device, "isSmokeAlarm");
 
-    const isSwitchDevice = device.type === ZWISCHENSTECKER || device.type === ZWISCHENSTECKER_OUTDOOR;
+    const isSwitchDevice = device.type === ZWISCHENSTECKER || device.type === ZWISCHENSTECKER_OUTDOOR
+        || device.type === LICHTSCHALTER || device.type === LICHTSCHALTER_2;
     const isHeating = device.type === HEATING;
     const isWindow = device.type === FENSTERKONTAKT;
     const isSmoke = device.type === RAUCHMELDER;

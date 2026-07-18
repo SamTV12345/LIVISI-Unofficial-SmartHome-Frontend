@@ -21,7 +21,14 @@ const resources = {
             WDS: "Fensterkontakt",
             WSD2: "Rauchmelder",
             WSC2: "Wandsender",
-            VRCC: "Heizkörperthermostat"
+            VRCC: "Heizkörperthermostat",
+            RST: "Heizkörperthermostat (Ventil)",
+            ISS: "Lichtschalter",
+            ISS2: "Lichtschalter",
+            ISD2: "Dimmer",
+            ISR2: "Rollladen",
+            WMD: "Bewegungsmelder",
+            WMDO: "Bewegungsmelder Outdoor"
         }
     }
 } as const;
