@@ -2,10 +2,10 @@ import {Device} from "@/src/models/Device.ts";
 import {FC, MouseEvent, useCallback, useEffect, useMemo, useState} from "react";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/src/components/layout/Card.tsx";
 import {SliderCDN} from "@/src/components/actionComponents/Slider.tsx";
-import {ACTION_ENDPOINT, CAPABILITY_PREFIX} from "@/src/constants/FieldConstants.ts";
+import {CAPABILITY_PREFIX} from "@/src/constants/FieldConstants.ts";
 import {ArrowDown, ArrowUp, Blinds, Square} from "lucide-react";
 import {useNavigate} from "react-router-dom";
-import {postJson} from "@/src/api/httpClient.ts";
+import {postAction} from "@/src/api/openapiClient.ts";
 import {useTranslation} from "react-i18next";
 
 type ShutterDeviceProps = {
@@ -42,7 +42,7 @@ export const ShutterDevice: FC<ShutterDeviceProps> = ({device, showRoom}) => {
             return;
         }
         setError(undefined);
-        postJson(ACTION_ENDPOINT, {
+        postAction({
             id: shutterCapability.id,
             target: CAPABILITY_PREFIX + shutterCapability.id,
             type,
@@ -58,7 +58,7 @@ export const ShutterDevice: FC<ShutterDeviceProps> = ({device, showRoom}) => {
         const timeout = setTimeout(() => {
             setPending(true);
             setError(undefined);
-            postJson(ACTION_ENDPOINT, {
+            postAction({
                 id: shutterCapability.id,
                 target: CAPABILITY_PREFIX + shutterCapability.id,
                 type: "SetState",

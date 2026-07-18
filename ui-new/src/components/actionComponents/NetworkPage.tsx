@@ -3,7 +3,7 @@ import {useNavigate} from "react-router-dom";
 import {PageComponent} from "@/src/components/actionComponents/PageComponent.tsx";
 import {PageBox} from "@/src/components/actionComponents/PageBox.tsx";
 import {PrimaryButton} from "@/src/components/actionComponents/PrimaryButton.tsx";
-import {HttpRequestError, postJson} from "@/src/api/httpClient.ts";
+import {ApiError, postAction} from "@/src/api/openapiClient.ts";
 import {useContentModel} from "@/src/store.tsx";
 import {isWifiProfilePresent, useNetworkStatus} from "@/src/hooks/useNetworkStatus.ts";
 import {useTranslation} from "react-i18next";
@@ -46,7 +46,7 @@ export const NetworkPage = ()=>{
 
         for (const type of actionTypes) {
             try {
-                await postJson("/action", {
+                await postAction({
                     id: shc.id,
                     type,
                     target: "/device/" + shc.id,
@@ -54,7 +54,7 @@ export const NetworkPage = ()=>{
                 });
                 return true;
             } catch (error) {
-                if (error instanceof HttpRequestError) {
+                if (error instanceof ApiError) {
                     const maybeUnknownAction = error.responseText.includes("Action [") && error.responseText.includes("not found in entity");
                     if (maybeUnknownAction) {
                         continue;

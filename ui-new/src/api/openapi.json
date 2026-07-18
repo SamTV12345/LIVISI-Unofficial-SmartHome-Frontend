@@ -9,6 +9,38 @@
     "version": "0.1.0"
   },
   "paths": {
+    "/action": {
+      "post": {
+        "tags": [],
+        "operationId": "post_action_doc",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "LIVISI action result",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "400": {
+            "description": "LIVISI rejected the action",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/all": {
       "get": {
         "tags": [],
@@ -114,6 +146,27 @@
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/CapabilityHistoryDoc"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/device/states": {
+      "get": {
+        "tags": [],
+        "operationId": "get_device_states_doc",
+        "responses": {
+          "200": {
+            "description": "Live device states from LIVISI",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DeviceStateDoc"
                   }
                 }
               }
@@ -413,6 +466,54 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/LocationDoc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/login": {
+      "post": {
+        "tags": [],
+        "operationId": "post_login_doc",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequestDoc"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Login endpoint only available in basic auth mode",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Username or password incorrect",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
@@ -765,6 +866,43 @@
           }
         }
       },
+      "DeviceStateDoc": {
+        "type": "object",
+        "required": [
+          "id",
+          "state"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "state": {
+            "type": "object",
+            "description": "Map of state key (e.g. \"onState\", \"isReachable\") to its current value",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/DeviceStateEntryDoc"
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "DeviceStateEntryDoc": {
+        "type": "object",
+        "required": [
+          "value",
+          "lastChanged"
+        ],
+        "properties": {
+          "lastChanged": {
+            "type": "string"
+          },
+          "value": {
+            "description": "Capability value; type depends on the capability (bool, number, string, ...)"
+          }
+        }
+      },
       "EmailSettingsDoc": {
         "type": "object",
         "required": [
@@ -847,6 +985,21 @@
             "type": "string"
           },
           "tags": {}
+        }
+      },
+      "LoginRequestDoc": {
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "properties": {
+          "password": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          }
         }
       },
       "MessagePropertiesDoc": {

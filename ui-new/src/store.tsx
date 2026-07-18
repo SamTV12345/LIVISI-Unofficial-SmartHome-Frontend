@@ -39,7 +39,7 @@ type Status = {
 }
 
 
-export type AxiosDeviceResponse = {
+export type AllThingsResponse = {
     devices:{
         [key: string]: Device
     }
@@ -85,8 +85,8 @@ export type SentrySettings = {
 
 
 interface ContentModelState {
-    allThings: AxiosDeviceResponse|undefined
-    setAllThings(data: AxiosDeviceResponse): void;
+    allThings: AllThingsResponse|undefined
+    setAllThings(data: AllThingsResponse): void;
     mapOfStates: Map<string, CapabilityState>
     setLocations(data: LocationResponse[]): void;
     locations: LocationResponse[]|undefined,
@@ -114,7 +114,7 @@ interface ContentModelState {
 
 export const useContentModel = create<ContentModelState>((set)=>({
     allThings: undefined,
-    setAllThings(data: AxiosDeviceResponse) {
+    setAllThings(data: AllThingsResponse) {
         set(()=>({allThings: data}))
     },
     deviceIdMap: new Map<string, Device>(),

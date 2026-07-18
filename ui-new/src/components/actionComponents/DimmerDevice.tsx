@@ -2,10 +2,10 @@ import {Device} from "@/src/models/Device.ts";
 import {FC, useEffect, useMemo, useState} from "react";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/src/components/layout/Card.tsx";
 import {SliderCDN} from "@/src/components/actionComponents/Slider.tsx";
-import {ACTION_ENDPOINT, CAPABILITY_PREFIX} from "@/src/constants/FieldConstants.ts";
+import {CAPABILITY_PREFIX} from "@/src/constants/FieldConstants.ts";
 import {Lightbulb, Power} from "lucide-react";
 import {useNavigate} from "react-router-dom";
-import {postJson} from "@/src/api/httpClient.ts";
+import {postAction} from "@/src/api/openapiClient.ts";
 import {useTranslation} from "react-i18next";
 
 type DimmerDeviceProps = {
@@ -40,7 +40,7 @@ export const DimmerDevice: FC<DimmerDeviceProps> = ({device, showRoom}) => {
         const timeout = setTimeout(() => {
             setPending(true);
             setError(undefined);
-            postJson(ACTION_ENDPOINT, {
+            postAction({
                 id: dimCapability.id,
                 target: CAPABILITY_PREFIX + dimCapability.id,
                 type: "SetState",

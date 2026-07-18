@@ -1,5 +1,5 @@
 import {useCallback, useEffect, useRef} from "react";
-import {AxiosDeviceResponse, useContentModel} from "@/src/store.tsx";
+import {AllThingsResponse, useContentModel} from "@/src/store.tsx";
 import {SocketClient} from "@/src/realtime/socketClient.ts";
 import {SocketMessage} from "@/src/models/SocketMessage.ts";
 import {applyRealtimeMessage} from "@/src/realtime/applyRealtimeMessage.ts";
@@ -32,7 +32,7 @@ export const useRealtimeSync = ({skipInitialFetch = false}: RealtimeSyncOptions 
                 console.error("Could not refresh /api/all");
                 return;
             }
-            setAllThings(response.data as AxiosDeviceResponse);
+            setAllThings(response.data as AllThingsResponse);
         } catch (error) {
             console.error("Could not refresh /api/all", error);
         } finally {

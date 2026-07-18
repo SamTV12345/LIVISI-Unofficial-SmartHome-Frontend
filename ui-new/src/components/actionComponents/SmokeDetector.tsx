@@ -6,8 +6,7 @@ import {useNavigate} from "react-router-dom";
 import {SirenOff} from "@/src/icons/SirenOff.tsx";
 import {CapabilityState} from "@/src/models/CapabilityState.ts";
 import {useDebounce} from "@/src/utils/useDebounce.ts";
-import {ACTION_ENDPOINT} from "@/src/constants/FieldConstants.ts";
-import {postJson} from "@/src/api/httpClient.ts";
+import {postAction} from "@/src/api/openapiClient.ts";
 import {useTranslation} from "react-i18next";
 
 type WindowDeviceProps = {
@@ -63,7 +62,7 @@ export const SmokeDetector: FC<WindowDeviceProps> = ({device, showRoom}) => {
     useDebounce(()=>{
         if (!alarmCap) return
         const switchModel = constructSmokeDetectorPostModel(alarmCap)
-        postJson(ACTION_ENDPOINT,switchModel)
+        postAction(switchModel)
             .then(()=>{
                 console.log('Alarm switched')
             })

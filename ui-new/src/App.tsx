@@ -3,7 +3,7 @@ import {Outlet} from "react-router-dom";
 import {NavBar} from "@/src/components/layout/NavBar.tsx";
 import {useRealtimeSync} from "@/src/hooks/useRealtimeSync.ts";
 import {apiQueryClient} from "@/src/api/openapiClient.ts";
-import {AxiosDeviceResponse, useContentModel} from "@/src/store.tsx";
+import {AllThingsResponse, useContentModel} from "@/src/store.tsx";
 import {useEffect} from "react";
 import {queryClient} from "@/src/api/queryClient.ts";
 
@@ -14,7 +14,7 @@ function App() {
 
     useEffect(() => {
         if (allApiData) {
-            setAllThings(allApiData as AxiosDeviceResponse);
+            setAllThings(allApiData as AllThingsResponse);
         }
     }, [allApiData, setAllThings]);
 

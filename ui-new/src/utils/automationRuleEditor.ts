@@ -1,5 +1,5 @@
 import {Interaction, InteractionAction, InteractionRule} from "@/src/models/Interaction.ts";
-import {AxiosDeviceResponse} from "@/src/store.tsx";
+import {AllThingsResponse} from "@/src/store.tsx";
 import {Device} from "@/src/models/Device.ts";
 
 type DeviceCapabilityRecord = {
@@ -423,7 +423,7 @@ export const buildInteractionRulesFromDrafts = (drafts: AutomationRuleDraft[], c
         });
 };
 
-const readTopLevelCapabilities = (allThings?: AxiosDeviceResponse): Array<{id: string, type?: string, capabilityName?: string, deviceId?: string}> => {
+const readTopLevelCapabilities = (allThings?: AllThingsResponse): Array<{id: string, type?: string, capabilityName?: string, deviceId?: string}> => {
     const topLevel = ((allThings as unknown as {
         capabilities?: Array<{id?: string, type?: string, config?: {name?: string}, device?: string}>
     })?.capabilities) ?? [];
@@ -442,7 +442,7 @@ const readTopLevelCapabilities = (allThings?: AxiosDeviceResponse): Array<{id: s
     return results;
 };
 
-export const buildCapabilityCatalog = (allThings?: AxiosDeviceResponse): CapabilityCatalog => {
+export const buildCapabilityCatalog = (allThings?: AllThingsResponse): CapabilityCatalog => {
     const deviceById = new Map<string, Device>();
     const deviceNameById = new Map<string, string>();
     const capabilityRecords = new Map<string, DeviceCapabilityRecord>();

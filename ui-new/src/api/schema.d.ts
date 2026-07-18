@@ -4,6 +4,22 @@
  */
 
 export interface paths {
+    "/action": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_action_doc"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/all": {
         parameters: {
             query?: never;
@@ -44,6 +60,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["get_capability_history_doc"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/device/states": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_device_states_doc"];
         put?: never;
         post?: never;
         delete?: never;
@@ -159,6 +191,22 @@ export interface paths {
         put: operations["put_location_doc"];
         post?: never;
         delete: operations["delete_location_doc"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_login_doc"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -343,6 +391,18 @@ export interface components {
             eventTime: string;
             eventType: string;
         };
+        DeviceStateDoc: {
+            id: string;
+            /** @description Map of state key (e.g. "onState", "isReachable") to its current value */
+            state: {
+                [key: string]: components["schemas"]["DeviceStateEntryDoc"];
+            };
+        };
+        DeviceStateEntryDoc: {
+            lastChanged: string;
+            /** @description Capability value; type depends on the capability (bool, number, string, ...) */
+            value: unknown;
+        };
         EmailSettingsDoc: {
             email_password: string;
             email_username: string;
@@ -364,6 +424,10 @@ export interface components {
             devices?: string[] | null;
             id: string;
             tags?: unknown;
+        };
+        LoginRequestDoc: {
+            password: string;
+            username: string;
         };
         MessagePropertiesDoc: {
             changeReason?: string | null;
@@ -458,6 +522,39 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    post_action_doc: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": unknown;
+            };
+        };
+        responses: {
+            /** @description LIVISI action result */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description LIVISI rejected the action */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
     get_api_all_doc: {
         parameters: {
             query?: never;
@@ -527,6 +624,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CapabilityHistoryDoc"][];
+                };
+            };
+        };
+    };
+    get_device_states_doc: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Live device states from LIVISI */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeviceStateDoc"][];
                 };
             };
         };
@@ -799,6 +916,48 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LocationDoc"];
+                };
+            };
+        };
+    };
+    post_login_doc: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequestDoc"];
+            };
+        };
+        responses: {
+            /** @description Login successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+            /** @description Login endpoint only available in basic auth mode */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
+                };
+            };
+            /** @description Username or password incorrect */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/plain": string;
                 };
             };
         };

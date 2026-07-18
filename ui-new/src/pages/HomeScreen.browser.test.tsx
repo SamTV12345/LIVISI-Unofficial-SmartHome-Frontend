@@ -8,7 +8,7 @@ import { i18next } from "@/src/language/i18n";
 import { useContentModel } from "@/src/store";
 import { worker } from "@/src/test/msw/browser";
 import { TestProviders } from "@/src/test/renderWithProviders";
-import type { AxiosDeviceResponse } from "@/src/store";
+import type { AllThingsResponse } from "@/src/store";
 import type { Device } from "@/src/models/Device";
 
 let root: Root | null = null;
@@ -39,7 +39,7 @@ const createDevice = (overrides: Partial<Device>): Device => ({
   ...overrides
 });
 
-const createAllThings = (devices: Device[]): AxiosDeviceResponse => ({
+const createAllThings = (devices: Device[]): AllThingsResponse => ({
   devices: Object.fromEntries(devices.map((device) => [device.id, device])),
   status: {
     appVersion: "1.0.0",

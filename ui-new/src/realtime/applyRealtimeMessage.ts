@@ -1,11 +1,11 @@
 import {SocketMessage} from "@/src/models/SocketMessage.ts";
-import {AxiosDeviceResponse} from "@/src/store.tsx";
+import {AllThingsResponse} from "@/src/store.tsx";
 import {Device} from "@/src/models/Device.ts";
 import {Message} from "@/src/models/Messages.ts";
 import {Interaction} from "@/src/models/Interaction.ts";
 
 type RealtimePatchResult = {
-    nextAllThings: AxiosDeviceResponse | undefined,
+    nextAllThings: AllThingsResponse | undefined,
     patched: boolean,
     needsRefresh: boolean
 }
@@ -98,7 +98,7 @@ const collectCapabilityUpdates = (
 };
 
 const patchCapabilityState = (
-    current: AxiosDeviceResponse,
+    current: AllThingsResponse,
     message: SocketMessage
 ): RealtimePatchResult => {
     const capabilityId = getCapabilityId(message);
@@ -184,7 +184,7 @@ const patchCapabilityState = (
 const DEVICE_STATE_KEYS = ["isReachable", "isBatteryLow"];
 
 const patchDeviceState = (
-    current: AxiosDeviceResponse,
+    current: AllThingsResponse,
     message: SocketMessage
 ): RealtimePatchResult => {
     const deviceId = message.source.replace("/device/", "");
@@ -260,7 +260,7 @@ const buildMessageFromSocket = (message: SocketMessage, existing?: Message): Mes
     return nextMessage;
 };
 
-const patchMessage = (current: AxiosDeviceResponse, message: SocketMessage): RealtimePatchResult => {
+const patchMessage = (current: AllThingsResponse, message: SocketMessage): RealtimePatchResult => {
     if (!message.id) {
         return {
             nextAllThings: current,
@@ -306,7 +306,7 @@ const patchMessage = (current: AxiosDeviceResponse, message: SocketMessage): Rea
 };
 
 const patchConfigAndInteractions = (
-    current: AxiosDeviceResponse,
+    current: AllThingsResponse,
     message: SocketMessage
 ): RealtimePatchResult => {
     const properties = isRecord(message.properties) ? message.properties : undefined;
@@ -349,7 +349,7 @@ const patchConfigAndInteractions = (
 };
 
 export const applyRealtimeMessage = (
-    current: AxiosDeviceResponse | undefined,
+    current: AllThingsResponse | undefined,
     message: SocketMessage
 ): RealtimePatchResult => {
     if (!current) {

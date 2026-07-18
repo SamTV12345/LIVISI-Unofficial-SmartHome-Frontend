@@ -1,5 +1,5 @@
 import {Interaction, InteractionAction, InteractionRule} from "@/src/models/Interaction.ts";
-import {AxiosDeviceResponse} from "@/src/store.tsx";
+import {AllThingsResponse} from "@/src/store.tsx";
 import {Device} from "@/src/models/Device.ts";
 
 export type AutomationRulePreview = {
@@ -276,7 +276,7 @@ const readAutomationValidityBinding = (interaction: Interaction): boolean | unde
     return true;
 };
 
-export const buildAutomationPresentationLookup = (allThings?: AxiosDeviceResponse): AutomationPresentationLookup => {
+export const buildAutomationPresentationLookup = (allThings?: AllThingsResponse): AutomationPresentationLookup => {
     const capabilityById = new Map<string, CapabilityPresentation>();
     const deviceNameById = new Map<string, string>();
 
@@ -498,7 +498,7 @@ export const readAutomationWritableStateBinding = (interaction: Interaction): Au
 
 export const readAutomationState = (
     interaction: Interaction,
-    allThings?: AxiosDeviceResponse
+    allThings?: AllThingsResponse
 ): "Aktiv" | "Inaktiv" | "Unbekannt" => {
     const validityBinding = readAutomationValidityBinding(interaction);
     if (validityBinding !== undefined) {

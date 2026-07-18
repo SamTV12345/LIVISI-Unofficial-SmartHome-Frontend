@@ -4,7 +4,7 @@ import {PageComponent} from "@/src/components/actionComponents/PageComponent.tsx
 import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "@/src/components/actionComponents/Accordion.tsx";
 import {SliderCDN} from "@/src/components/actionComponents/Slider.tsx";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/src/components/layout/Card.tsx";
-import {ACTION_ENDPOINT, CAPABILITY_PREFIX, HEATING} from "@/src/constants/FieldConstants.ts";
+import {CAPABILITY_PREFIX, HEATING} from "@/src/constants/FieldConstants.ts";
 import {useContentModel} from "@/src/store.tsx";
 import {Device} from "@/src/models/Device.ts";
 import {Interaction} from "@/src/models/Interaction.ts";
@@ -32,8 +32,7 @@ import {
     Wifi
 } from "lucide-react";
 import TimeSeriesChart, {DataPoint} from "@/src/components/layout/TimeSeriesChart.tsx";
-import {apiQueryClient} from "@/src/api/openapiClient.ts";
-import {postJson} from "@/src/api/httpClient.ts";
+import {apiQueryClient, postAction} from "@/src/api/openapiClient.ts";
 import {useTranslation} from "react-i18next";
 import {i18next} from "@/src/language/i18n.ts";
 
@@ -297,7 +296,7 @@ export const DeviceDetailPage = () => {
         const timeout = setTimeout(() => {
             setSetpointPending(true);
             setSetpointError(undefined);
-            postJson(ACTION_ENDPOINT, {
+            postAction({
                 id: setpointCapability.id,
                 target: CAPABILITY_PREFIX + setpointCapability.id,
                 type: "SetState",
@@ -320,7 +319,7 @@ export const DeviceDetailPage = () => {
         setSwitchPending(true);
         setSwitchError(undefined);
         try {
-            await postJson(ACTION_ENDPOINT, {
+            await postAction({
                 id: onStateCapability.id,
                 target: CAPABILITY_PREFIX + onStateCapability.id,
                 namespace: device.product,

@@ -20,7 +20,7 @@ import {useToast} from "@/src/hooks/useToast.ts";
 import {SubmitHandler, useForm} from "react-hook-form";
 import {Checkbox} from "@/src/components/actionComponents/CheckBox.tsx";
 import {FC, useEffect} from "react";
-import {postJson} from "@/src/api/httpClient.ts";
+import {openapiFetchClient} from "@/src/api/openapiClient.ts";
 import {setAuthorizationHeader} from "@/src/api/authHeaderStore.ts";
 
 const formSchema = z.object({
@@ -55,8 +55,11 @@ export const LoginComponent:FC<LoginComponentProps> = () => {
 
     const onSubmit: SubmitHandler<z.infer<typeof formSchema>> = (data, p) => {
         p?.preventDefault()
-        postJson("/login", data)
-            .then(() => {
+        openapiFetchClient.POST("/login", {body: data, parseAs: "text", signal: AbortSignal.timeout(15_000)})
+            .then(({error, response}) => {
+                if (error !== undefined || !response.ok) {
+                    throw new Error(`Login failed with status ${response.status}`);
+                }
                 const basicAuthString = btoa(data.username + ":" + data.password)
                 if (data.rememberMe){
                     localStorage.setItem("auth", basicAuthString)

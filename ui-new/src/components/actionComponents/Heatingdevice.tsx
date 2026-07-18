@@ -3,10 +3,10 @@ import {FC, useEffect, useMemo, useState} from "react";
 import {Thermometer, Waves} from "lucide-react";
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/src/components/layout/Card.tsx";
 import {SliderCDN} from "@/src/components/actionComponents/Slider.tsx";
-import {ACTION_ENDPOINT, CAPABILITY_PREFIX} from "@/src/constants/FieldConstants.ts";
+import {CAPABILITY_PREFIX} from "@/src/constants/FieldConstants.ts";
 import {formatTime} from "@/src/utils/timeUtils.ts";
 import {useNavigate} from "react-router-dom";
-import {postJson} from "@/src/api/httpClient.ts";
+import {postAction} from "@/src/api/openapiClient.ts";
 import {useTranslation} from "react-i18next";
 
 type HeatingdeviceProps = {
@@ -71,7 +71,7 @@ export const Heatingdevice: FC<HeatingdeviceProps> = ({device}) => {
             setPending(true);
             setError(undefined);
 
-            postJson(ACTION_ENDPOINT, {
+            postAction({
                 id: setpointCapability.id,
                 target: CAPABILITY_PREFIX + setpointCapability.id,
                 type: "SetState",

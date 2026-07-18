@@ -4,7 +4,7 @@ import {useNavigate} from "react-router-dom";
 import {PageComponent} from "@/src/components/actionComponents/PageComponent.tsx";
 import {PageBox} from "@/src/components/actionComponents/PageBox.tsx";
 import {PrimaryButton} from "@/src/components/actionComponents/PrimaryButton.tsx";
-import {postJson} from "@/src/api/httpClient.ts";
+import {postAction} from "@/src/api/openapiClient.ts";
 import {useTranslation} from "react-i18next";
 
 type LoggingReq = {
@@ -49,13 +49,13 @@ export const ErrorPage = () => {
     const [countDown, setCountDown] = useState<number>(0)
 
     const retrieveLogging = ()=>{
-        postJson<LoggingResp>("/action",{
+        postAction({
             id: shc!.id,
             type: "GetLoggingConfig",
             target: "/device/" + shc!.id,
             namespace: "core.RWE",
         } satisfies LoggingReq).then((resp)=>{
-            setLoggingConf(resp)
+            setLoggingConf(resp as LoggingResp)
         })
     }
 
@@ -79,7 +79,7 @@ export const ErrorPage = () => {
         <div className="space-y-4 p-4 md:p-6">
             <PageBox title={t("ui_new.errors.restart_title")} description={t("ui_new.errors.restart_description")}>
                 <PrimaryButton onClick={async () => {
-                    await postJson("/action", {
+                    await postAction({
                             id: shc!.id,
                             type: "Restart",
                             target: "/device/" + shc!.id,
@@ -107,7 +107,7 @@ export const ErrorPage = () => {
                         loggingConf&& (loggingConf.properties.expiresAfterMinutes === 0&&navigate('/help/errors/advanced'))
 
                         if (loggingConf && loggingConf.properties.expiresAfterMinutes !== 0) {
-                            postJson("/action", {
+                            postAction({
                                 id: shc!.id,
                                 type: "SetLoggingConfig",
                                 target: "/device/" + shc!.id,

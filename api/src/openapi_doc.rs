@@ -175,6 +175,57 @@ pub struct SentryTestDoc {
     pub result: String,
 }
 
+#[derive(Serialize, Deserialize, ToSchema)]
+pub struct LoginRequestDoc {
+    pub username: String,
+    pub password: String,
+}
+
+#[derive(Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct DeviceStateEntryDoc {
+    /// Capability value; type depends on the capability (bool, number, string, ...)
+    pub value: Value,
+    pub last_changed: String,
+}
+
+#[derive(Serialize, Deserialize, ToSchema)]
+pub struct DeviceStateDoc {
+    pub id: String,
+    /// Map of state key (e.g. "onState", "isReachable") to its current value
+    pub state: std::collections::HashMap<String, DeviceStateEntryDoc>,
+}
+
+#[utoipa::path(
+    post,
+    path = "/action",
+    request_body = Value,
+    responses(
+        (status = 200, description = "LIVISI action result", body = Value),
+        (status = 400, description = "LIVISI rejected the action", body = Value)
+    )
+)]
+fn post_action_doc() {}
+
+#[utoipa::path(
+    post,
+    path = "/login",
+    request_body = LoginRequestDoc,
+    responses(
+        (status = 200, description = "Login successful", body = String),
+        (status = 400, description = "Login endpoint only available in basic auth mode", body = String),
+        (status = 401, description = "Username or password incorrect", body = String)
+    )
+)]
+fn post_login_doc() {}
+
+#[utoipa::path(
+    get,
+    path = "/device/states",
+    responses((status = 200, description = "Live device states from LIVISI", body = [DeviceStateDoc]))
+)]
+fn get_device_states_doc() {}
+
 #[utoipa::path(
     get,
     path = "/api/server",
@@ -397,6 +448,9 @@ fn get_capability_history_doc() {}
 #[derive(OpenApi)]
 #[openapi(
     paths(
+        post_action_doc,
+        post_login_doc,
+        get_device_states_doc,
         get_api_server_doc,
         get_api_all_doc,
         get_status_doc,
@@ -428,6 +482,9 @@ fn get_capability_history_doc() {}
     ),
     components(
         schemas(
+            LoginRequestDoc,
+            DeviceStateEntryDoc,
+            DeviceStateDoc,
             OidcConfigDoc,
             AuthModeDoc,
             ApiServerConfigDoc,

@@ -4,7 +4,7 @@ import {PrimaryButton} from "@/src/components/actionComponents/PrimaryButton.tsx
 import {useContentModel} from "@/src/store.tsx";
 import {useMemo, useState} from "react";
 import {useNavigate} from "react-router-dom";
-import {postJson} from "@/src/api/httpClient.ts";
+import {postAction} from "@/src/api/openapiClient.ts";
 import {useTranslation} from "react-i18next";
 
 const LOGGING_TIME = [
@@ -54,7 +54,7 @@ export const ErrorAdvancedPage = ()=>{
             }
             <PrimaryButton filled onClick={()=>{
                 loggingTime &&
-                postJson("/action", {
+                postAction({
                     id: shc!.id,
                     type: "SetLoggingConfig",
                     target: "/device/" + shc!.id,

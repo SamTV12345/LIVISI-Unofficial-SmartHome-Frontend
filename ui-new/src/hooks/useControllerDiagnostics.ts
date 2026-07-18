@@ -1,11 +1,6 @@
 import {useEffect, useState} from "react";
-import {getJson} from "@/src/api/httpClient.ts";
+import {openapiFetchClient} from "@/src/api/openapiClient.ts";
 import {useContentModel} from "@/src/store.tsx";
-
-type DeviceStateEntry = {
-    id: string,
-    state?: Record<string, {value?: unknown} | null> | null
-}
 
 export type ControllerDiagnostics = {
     cpu?: number,
@@ -42,8 +37,8 @@ export const useControllerDiagnostics = (pollMs = 30000) => {
 
         const load = async () => {
             try {
-                const states = await getJson<DeviceStateEntry[]>("/device/states");
-                const state = states.find((entry) => entry.id === controllerId)?.state;
+                const {data: states} = await openapiFetchClient.GET("/device/states", {signal: AbortSignal.timeout(15_000)});
+                const state = states?.find((entry) => entry.id === controllerId)?.state;
                 if (cancelled || !state) {
                     return;
                 }
