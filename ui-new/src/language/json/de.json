@@ -20,6 +20,7 @@
   "ISD2": "Dimmer",
   "ISR2": "Rollladen",
   "WMD": "Bewegungsmelder",
+  "RST": "Heizkörperthermostat (Ventil)",
   "1Day": "1 Tag",
   "1hour": "1 Stunde",
   "1Week": "1 Woche",
@@ -2349,6 +2350,13 @@
       "position_save_failed": "Position konnte nicht gesetzt werden.",
       "stop": "Stopp"
     },
+    "controller": {
+      "cpu": "CPU",
+      "description": "Systemauslastung der SmartHome Zentrale",
+      "disk": "Festplatte",
+      "memory": "Arbeitsspeicher",
+      "title": "Controller"
+    },
     "device_status": {
       "battery_low": "Batterie schwach",
       "unreachable": "Nicht erreichbar"
@@ -2375,6 +2383,12 @@
     "page_404": {
       "back_home": "Zurück zur Startseite",
       "not_found": "Seite nicht gefunden"
+    },
+    "radiator": {
+      "controlled_via_room_climate": "Steuerung über Raumklima-Gerät",
+      "setpoint": "Soll-Temperatur",
+      "temperature": "Ist-Temperatur",
+      "valve_position": "Ventilstellung"
     },
     "rule_editor": {
       "action_label": "Aktion",

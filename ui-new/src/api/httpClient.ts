@@ -17,7 +17,7 @@ type PostJsonOptions = {
     timeoutMs?: number;
 };
 
-export const postJson = async <TResponse>(path: string, body: unknown, options?: PostJsonOptions): Promise<TResponse> => {
+const requestJson = async <TResponse>(method: "GET" | "POST", path: string, body: unknown, options?: PostJsonOptions): Promise<TResponse> => {
     const controller = new AbortController();
     const timeout = setTimeout(() => {
         controller.abort();
@@ -33,9 +33,9 @@ export const postJson = async <TResponse>(path: string, body: unknown, options?:
         }
 
         const response = await fetch(path, {
-            method: "POST",
+            method,
             headers,
-            body: JSON.stringify(body),
+            body: body === undefined ? undefined : JSON.stringify(body),
             credentials: "same-origin",
             signal: controller.signal
         });
@@ -54,4 +54,12 @@ export const postJson = async <TResponse>(path: string, body: unknown, options?:
     } finally {
         clearTimeout(timeout);
     }
+};
+
+export const postJson = <TResponse>(path: string, body: unknown, options?: PostJsonOptions): Promise<TResponse> => {
+    return requestJson<TResponse>("POST", path, body, options);
+};
+
+export const getJson = <TResponse>(path: string, options?: PostJsonOptions): Promise<TResponse> => {
+    return requestJson<TResponse>("GET", path, undefined, options);
 };

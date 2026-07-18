@@ -25,6 +25,7 @@ import {SmokeDetector} from "@/src/components/actionComponents/SmokeDetector.tsx
 import {DimmerDevice} from "@/src/components/actionComponents/DimmerDevice.tsx";
 import {ShutterDevice} from "@/src/components/actionComponents/ShutterDevice.tsx";
 import {MotionDevice} from "@/src/components/actionComponents/MotionDevice.tsx";
+import {RadiatorThermostatDevice} from "@/src/components/actionComponents/RadiatorThermostatDevice.tsx";
 
 type DeviceDeciderProps = {
     device: Device
@@ -57,7 +58,7 @@ export const DeviceDecider:FC<DeviceDeciderProps> = ({ device }) => {
 
 const getDeviceComponent = (device: Device): ReactElement | null => {
     if (device.type === RADIATOR_THERMOSTAT) {
-        return null;
+        return <RadiatorThermostatDevice device={device} key={device.id} showRoom={true}/>;
     }
 
     if (device.type === ZWISCHENSTECKER) {

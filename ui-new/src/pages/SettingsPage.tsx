@@ -3,18 +3,31 @@ import {useNavigate} from "react-router-dom";
 import {PageComponent} from "@/src/components/actionComponents/PageComponent.tsx";
 import {PrimaryButton} from "@/src/components/actionComponents/PrimaryButton.tsx";
 import {ModernHero, ModernSection} from "@/src/components/layout/ModernSurface.tsx";
-import {HardDrive, LogOut, Mail, MapPin, Network, Router, Settings2, Shield, Wifi} from "lucide-react";
+import {Activity, Cpu, HardDrive, LogOut, Mail, MapPin, MemoryStick, Network, Router, Settings2, Shield, Wifi} from "lucide-react";
 import {apiQueryClient, openapiFetchClient} from "@/src/api/openapiClient.ts";
 import {queryClient} from "@/src/api/queryClient.ts";
 import {PageSkeleton} from "@/src/components/layout/PageSkeleton.tsx";
 import {clearAuthorizationHeader} from "@/src/api/authHeaderStore.ts";
 import {useTranslation} from "react-i18next";
 import {BellRing} from "lucide-react";
+import {useControllerDiagnostics} from "@/src/hooks/useControllerDiagnostics.ts";
+
+const clampPercent = (value: number) => Math.min(100, Math.max(0, value));
 
 const SettingsPageContent = () => {
     const navigate = useNavigate();
     const {t} = useTranslation();
     const {data: usbStorage} = apiQueryClient.useSuspenseQuery("get", "/usb_storage");
+    const diagnostics = useControllerDiagnostics();
+
+    const diagnosticTiles = useMemo(() => {
+        const candidates = [
+            {label: t("ui_new.controller.cpu", {defaultValue: "CPU"}), value: diagnostics?.cpu, icon: <Cpu size={18}/>},
+            {label: t("ui_new.controller.memory", {defaultValue: "RAM"}), value: diagnostics?.memory, icon: <MemoryStick size={18}/>},
+            {label: t("ui_new.controller.disk", {defaultValue: "Disk"}), value: diagnostics?.disk, icon: <HardDrive size={18}/>}
+        ];
+        return candidates.filter((tile): tile is typeof tile & {value: number} => typeof tile.value === "number");
+    }, [diagnostics, t]);
 
     const settingsCards = useMemo(() => [
         {title: t("ui_new.settings.card_device_drivers"), to: "/settings/deviceDrivers", icon: <Settings2 size={18}/>},
@@ -60,6 +73,29 @@ const SettingsPageContent = () => {
                     {label: t("ui_new.settings.stats_session"), value: t("ui_new.common.active")}
                 ]}
             />
+
+            {diagnosticTiles.length > 0 && (
+                <ModernSection
+                    title={t("ui_new.controller.title", {defaultValue: "Controller"})}
+                    description={t("ui_new.controller.description", {defaultValue: "System load of the SmartHome Controller"})}
+                    icon={<Activity size={16}/>}
+                >
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                        {diagnosticTiles.map((tile) => (
+                            <div key={tile.label} className="rounded-xl border border-gray-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
+                                <div className="inline-flex items-center gap-2 text-sm text-cyan-700">{tile.icon}{tile.label}</div>
+                                <div className="mt-2 text-lg font-semibold text-gray-900 dark:text-slate-100">{Math.round(tile.value)} %</div>
+                                <div className="mt-2 h-1.5 rounded-full bg-gray-100 dark:bg-slate-700">
+                                    <div
+                                        className="h-1.5 rounded-full bg-cyan-600"
+                                        style={{width: `${clampPercent(tile.value)}%`}}
+                                    />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </ModernSection>
+            )}
 
             <ModernSection title={t("ui_new.settings.section_areas")} description={t("ui_new.settings.section_areas_description")}>
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
