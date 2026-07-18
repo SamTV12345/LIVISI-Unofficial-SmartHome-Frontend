@@ -113,6 +113,13 @@
       "version": "Version",
       "yes": "Yes"
     },
+    "controller": {
+      "cpu": "CPU",
+      "description": "System load of the SmartHome Controller",
+      "disk": "Disk",
+      "memory": "RAM",
+      "title": "Controller"
+    },
     "device_detail": {
       "activated": "Activated",
       "analytics": "Analytics",
