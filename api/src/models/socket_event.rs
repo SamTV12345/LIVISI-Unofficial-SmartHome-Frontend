@@ -38,7 +38,7 @@ pub struct DeviceUnreachable {
     desc: String,
     source: String,
     timestamp: String,
-    devices: Vec<String>,
+    pub devices: Vec<String>,
     capabilities: Vec<String>,
     read: bool,
     state: bool,
@@ -103,6 +103,8 @@ pub enum Properties {
     CPUUsage(CPUUSage),
     HumidityChange(HumidityChange),
     Reachable(Reachable),
+    BatteryLow(BatteryLow),
+    IsSmokeAlarm(IsSmokeAlarm),
     ChangeReason(ChangeReason),
     Value(Value)
 }
@@ -117,8 +119,21 @@ pub struct ChangeReason {
 }
 
 #[derive(Serialize,Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct Reachable {
     pub is_reachable: bool
+}
+
+#[derive(Serialize,Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct BatteryLow {
+    pub is_battery_low: bool
+}
+
+#[derive(Serialize,Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct IsSmokeAlarm {
+    pub is_smoke_alarm: bool
 }
 
 

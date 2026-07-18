@@ -100,6 +100,10 @@ pub struct SentryAlert {
     pub location_name: Option<String>,
     pub is_open: bool,
     pub occurred_at: String,
+    /// Optional pre-built notification text (e.g. smoke alarm / low battery).
+    /// When absent the default open/close text is used.
+    #[serde(default)]
+    pub message: Option<String>,
 }
 
 #[derive(Serialize, Debug, Clone)]
@@ -126,10 +130,12 @@ impl NotificationPayload {
         Self {
             event: "sentry_sensor_changed",
             provider,
-            text: format!(
-                "Sentry mode: {}{} was {} at {}.",
-                alert.device_name, location, action_text, alert.occurred_at
-            ),
+            text: alert.message.clone().unwrap_or_else(|| {
+                format!(
+                    "Sentry mode: {}{} was {} at {}.",
+                    alert.device_name, location, action_text, alert.occurred_at
+                )
+            }),
             device_id: alert.device_id.clone(),
             device_name: alert.device_name.clone(),
             location_name: alert.location_name.clone(),
@@ -269,6 +275,7 @@ impl SentryService {
             location_name: Some("Entrance".to_string()),
             is_open: true,
             occurred_at: chrono::Utc::now().to_rfc3339(),
+            message: None,
         };
 
         send_notification_async(&settings.provider, &alert).await

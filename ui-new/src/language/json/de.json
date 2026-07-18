@@ -16,6 +16,10 @@
   "WSD2": "Rauchmelder",
   "WSC2": "Wandsender",
   "VRCC": "Heizkörperthermostat",
+  "ISS": "Lichtschalter",
+  "ISD2": "Dimmer",
+  "ISR2": "Rollladen",
+  "WMD": "Bewegungsmelder",
   "1Day": "1 Tag",
   "1hour": "1 Stunde",
   "1Week": "1 Woche",
@@ -2323,9 +2327,47 @@
       "type": "Typ",
       "unread_count": "{{count}} ungelesen"
     },
+    "dimmer": {
+      "auto_saved": "Automatisch gespeichert",
+      "brightness": "Helligkeit",
+      "save_failed": "Speichern fehlgeschlagen.",
+      "saving": "Speichern…",
+      "switch_off": "Ausschalten",
+      "switch_on": "Einschalten"
+    },
+    "motion": {
+      "brightness": "Helligkeit",
+      "last_motion": "Letzte Bewegung"
+    },
+    "shutter": {
+      "close": "Zu",
+      "closed": "Geschlossen",
+      "move_failed": "Fahrbefehl fehlgeschlagen.",
+      "open": "Auf",
+      "opened": "Geöffnet",
+      "position": "Position",
+      "position_save_failed": "Position konnte nicht gesetzt werden.",
+      "stop": "Stopp"
+    },
+    "device_status": {
+      "battery_low": "Batterie schwach",
+      "unreachable": "Nicht erreichbar"
+    },
+    "history": {
+      "capability": "Messwert",
+      "no_capabilities": "Dieses Gerät liefert keine aufzeichenbaren Messwerte.",
+      "no_data": "Keine Verlaufsdaten im gewählten Zeitraum.",
+      "range_24h": "24 h",
+      "range_30d": "30 Tage",
+      "range_7d": "7 Tage",
+      "title": "Verlauf",
+      "value": "Wert"
+    },
     "on_off": {
+      "energy_month": "Verbrauch (Monat)",
       "off_upper": "Ausgeschaltet",
       "on_upper": "Eingeschaltet",
+      "power": "Leistung",
       "switch_failed": "Schaltvorgang fehlgeschlagen.",
       "switch_off": "Schalter aus",
       "switch_on": "Schalter ein"

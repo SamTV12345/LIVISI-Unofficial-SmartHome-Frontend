@@ -37,6 +37,7 @@ import {queryClient} from "@/src/api/queryClient.ts";
 import {PageSkeleton} from "@/src/components/layout/PageSkeleton.tsx";
 import {AppErrorBoundary} from "@/src/components/layout/AppErrorBoundary.tsx";
 import {SentryPage} from "@/src/pages/SentryPage.tsx";
+import {HistoryScreen} from "@/src/pages/HistoryScreen.tsx";
 
 const applySystemTheme = () => {
     if (typeof window === "undefined") return;
@@ -74,6 +75,7 @@ const router = createBrowserRouter(createRoutesFromElements(
                 <Route index element={<DeviceScreen/>}/>
                 <Route path=":id" element={<DeviceDetailPage/>}/>
             </Route>
+            <Route path="history/:deviceId" element={<HistoryScreen/>}/>
             <Route path="services">
                 <Route index element={<ServicesScreen/>}/>
                 <Route path="mobile-access" element={<MobileAccessScreen/>}/>

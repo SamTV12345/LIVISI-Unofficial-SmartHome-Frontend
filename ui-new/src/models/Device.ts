@@ -14,6 +14,12 @@ export interface Device {
     locationData?: LocationResponse
     capabilityData?: CapabilityData[]
     capabilityState?: CapabilityStateDevice[]
+    state?: {
+        [key: string]: {
+            value: any,
+            lastChanged?: string
+        }
+    }
 }
 
 type CapabilityStateDevice = {

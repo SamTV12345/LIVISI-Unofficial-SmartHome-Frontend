@@ -23,7 +23,17 @@ export const FENSTERKONTAKT = "WDS"
 
 export const RAUCHMELDER = "WSD2"
 
-export const TYPES = [WANDSENDER, ZWISCHENSTECKER, HEATING, ZWISCHENSTECKER_OUTDOOR, FENSTERKONTAKT, RAUCHMELDER]
+// In-wall light switch actuator (ISS2 = newer hardware revision of ISS); both expose an onState boolean like PSS.
+export const LICHTSCHALTER = "ISS"
+export const LICHTSCHALTER_2 = "ISS2"
+
+export const DIMMER = "ISD2"
+export const ROLLLADEN = "ISR2"
+// Motion detector (WMDO = outdoor variant); both are read-only sensors (MotionDetectionSensor + LuminanceSensor).
+export const BEWEGUNGSMELDER = "WMD"
+export const BEWEGUNGSMELDER_OUTDOOR = "WMDO"
+
+export const TYPES = [WANDSENDER, ZWISCHENSTECKER, HEATING, ZWISCHENSTECKER_OUTDOOR, FENSTERKONTAKT, RAUCHMELDER, LICHTSCHALTER, LICHTSCHALTER_2, DIMMER, ROLLLADEN, BEWEGUNGSMELDER, BEWEGUNGSMELDER_OUTDOOR]
 
 export const ACTION_ENDPOINT = '/action'
 export const LOCATION_ENDPOINT = '/location'

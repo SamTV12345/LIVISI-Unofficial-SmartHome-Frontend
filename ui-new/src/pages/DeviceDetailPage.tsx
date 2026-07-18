@@ -17,6 +17,7 @@ import {
     Cpu,
     Droplets,
     Gauge,
+    History,
     Info,
     Layers,
     LineChart,
@@ -382,6 +383,10 @@ export const DeviceDetailPage = () => {
                                     <Wifi size={14}/>
                                     {socketConnected ? t("ui_new.common.realtime_connected") : t("ui_new.common.realtime_disconnected")}
                                 </span>
+                                <button type="button" onClick={() => { navigate(`/history/${device.id}`); }} className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-black/20 px-4 py-2 text-sm font-semibold">
+                                    <History size={16}/>
+                                    {t("ui_new.history.title")}
+                                </button>
                             </div>
                         </div>
                         <div className="relative z-10 mt-5 grid grid-cols-2 gap-2 md:grid-cols-4">
@@ -585,6 +590,7 @@ export const DeviceDetailPage = () => {
                         </div>
                         <div className="md:ml-auto flex flex-col gap-3 md:items-end">
                             <span className={cn("inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm", socketConnected ? "border-emerald-200/40 bg-emerald-200/20" : "border-amber-200/40 bg-amber-200/20")}><Wifi size={14}/>{socketConnected ? t("ui_new.common.realtime_connected") : t("ui_new.common.realtime_disconnected")}</span>
+                            <button type="button" onClick={() => { navigate(`/history/${device.id}`); }} className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-black/20 px-4 py-2 text-sm font-semibold"><History size={16}/>{t("ui_new.history.title")}</button>
                             {onStateCapability && <button type="button" onClick={() => { void toggleOnState(); }} disabled={switchPending} className={cn("inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold", onStateValue ? "border-emerald-200/40 bg-emerald-300/20" : "border-white/40 bg-black/20", switchPending && "cursor-not-allowed opacity-70")}><Power size={16}/>{switchPending ? t("ui_new.common.saving") : onStateValue ? t("ui_new.common.on") : t("ui_new.common.off")}</button>}
                         </div>
                     </div>

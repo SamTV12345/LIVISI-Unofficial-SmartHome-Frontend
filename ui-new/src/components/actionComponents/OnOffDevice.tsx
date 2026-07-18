@@ -13,6 +13,19 @@ type OnOffDeviceProps = {
     showRoom: boolean
 }
 
+// Reads the first numeric state value matching one of the given keys across all capabilities (same pattern as Heatingdevice).
+const readFirstNumberFromState = (device: Device, keys: string[]): number | undefined => {
+    for (const capability of device.capabilityState ?? []) {
+        for (const key of keys) {
+            const value = capability.state?.[key]?.value;
+            if (typeof value === "number") {
+                return value;
+            }
+        }
+    }
+    return undefined;
+};
+
 export const OnOffDevice: FC<OnOffDeviceProps> = ({device, showRoom = false}) => {
     const navigate = useNavigate();
     const {t} = useTranslation();
@@ -20,6 +33,10 @@ export const OnOffDevice: FC<OnOffDeviceProps> = ({device, showRoom = false}) =>
         return (device.capabilityState ?? []).find((capability) => typeof capability.state?.onState?.value === "boolean");
     }, [device.capabilityState]);
     const onStateFromStore = onStateCapability ? Boolean(onStateCapability.state?.onState?.value) : false;
+
+    // ponytail: exact LIVISI state key names unverified on real PSS/PSSO hardware — trying known variants, prune once confirmed
+    const powerInWatt = useMemo(() => readFirstNumberFromState(device, ["powerInWatt", "powerConsumptionWatt"]), [device]);
+    const energyMonthKwh = useMemo(() => readFirstNumberFromState(device, ["energyConsumptionMonthKwh", "energyPerMonthInKWh"]), [device]);
 
     const [turnedOn, setTurnedOn] = useState<boolean>(onStateFromStore);
     const [pending, setPending] = useState(false);
@@ -77,6 +94,20 @@ export const OnOffDevice: FC<OnOffDeviceProps> = ({device, showRoom = false}) =>
                 )}>
                     {turnedOn ? t("ui_new.common.on") : t("ui_new.common.off")}
                 </span>
+                {(powerInWatt !== undefined || energyMonthKwh !== undefined) && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                        {powerInWatt !== undefined && (
+                            <span className="inline-flex rounded-full border border-amber-200 bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
+                                {t("ui_new.on_off.power")}: {powerInWatt.toFixed(1)} W
+                            </span>
+                        )}
+                        {energyMonthKwh !== undefined && (
+                            <span className="inline-flex rounded-full border border-sky-200 bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-800">
+                                {t("ui_new.on_off.energy_month")}: {energyMonthKwh.toFixed(2)} kWh
+                            </span>
+                        )}
+                    </div>
+                )}
             </div>
             <span className="flex-1"></span>
             <button

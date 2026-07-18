@@ -38,7 +38,11 @@ pub struct DeviceStore {
     pub tags: Option<Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub location_data: Option<LocationResponse>,
-    pub capability_state: Option<CapabilityStateResponse>
+    pub capability_state: Option<CapabilityStateResponse>,
+    /// Device-level state (isReachable, isBatteryLow, ...) kept fresh via
+    /// websocket events. Uses the same key/value shape as /device/states.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub state: Option<HashMap<String, crate::api_lib::capability::CapValueType>>
 }
 
 #[derive(Default,Serialize,Deserialize, Debug,Clone)]
@@ -69,7 +73,49 @@ impl Data {
         let mut sentry_alert = None;
         match socket_event.get_source() {
             Source::Device => {
-                log::info!("device change")
+                log::info!("device change");
+                if let Some(id) = socket_event.get_id() {
+                    if let Some(device) = self.devices.get_mut(&id) {
+                        socket_event.device = Some(id.clone());
+                        match &socket_event.properties {
+                            Some(Properties::Reachable(reachable)) => {
+                                device.state.get_or_insert_with(HashMap::new);
+                                upsert_capability_value(
+                                    &mut device.state,
+                                    "isReachable",
+                                    interaction::FieldValue::BooleanValue(reachable.is_reachable),
+                                );
+                            }
+                            Some(Properties::BatteryLow(battery)) => {
+                                let previous = device
+                                    .state
+                                    .as_ref()
+                                    .and_then(|map| map.get("isBatteryLow"))
+                                    .and_then(extract_boolean_capability_value);
+                                device.state.get_or_insert_with(HashMap::new);
+                                upsert_capability_value(
+                                    &mut device.state,
+                                    "isBatteryLow",
+                                    interaction::FieldValue::BooleanValue(battery.is_battery_low),
+                                );
+                                if battery.is_battery_low && previous != Some(true) {
+                                    sentry_alert = build_message_sentry_alert(
+                                        device.id.clone(),
+                                        device.config.as_ref().and_then(|config| config.name.clone()),
+                                        device.location_data.as_ref().map(|location| location.config.name.clone()),
+                                        &socket_event.timestamp,
+                                        true,
+                                        |name, location, at| format!(
+                                            "Batterie schwach: {}{} meldet um {} eine schwache Batterie.",
+                                            name, location, at
+                                        ),
+                                    );
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+                }
             }
             Source::Capability => {
                 log::info!("capability change");
@@ -148,6 +194,36 @@ impl Data {
                                                                         &socket_event.timestamp,
                                                                     );
                                                                 }
+                                                            }
+                                                        }
+                                                        Properties::IsSmokeAlarm(smoke) => {
+                                                            let previous_alarm = cap_s
+                                                                .state
+                                                                .as_ref()
+                                                                .and_then(|map| map.get("isSmokeAlarm"))
+                                                                .and_then(extract_boolean_capability_value);
+                                                            upsert_capability_value(
+                                                                &mut cap_s.state,
+                                                                "isSmokeAlarm",
+                                                                interaction::FieldValue::BooleanValue(smoke.is_smoke_alarm),
+                                                            );
+                                                            // WSD/WSD2 smoke detectors raise a sentry
+                                                            // alert when the alarm switches on.
+                                                            if smoke.is_smoke_alarm
+                                                                && previous_alarm != Some(true)
+                                                                && sentry_device_type.starts_with("WSD")
+                                                            {
+                                                                sentry_alert = build_message_sentry_alert(
+                                                                    sentry_device_id.clone(),
+                                                                    sentry_device_name.clone(),
+                                                                    sentry_location_name.clone(),
+                                                                    &socket_event.timestamp,
+                                                                    true,
+                                                                    |name, location, at| format!(
+                                                                        "Rauchalarm: {}{} hat um {} Rauch erkannt!",
+                                                                        name, location, at
+                                                                    ),
+                                                                );
                                                             }
                                                         }
                                                         _ => {}
@@ -230,6 +306,23 @@ impl Data {
 
             }
         }
+
+        // "DeviceUnreachable" messages carry the affected devices in their data
+        // payload instead of a device-sourced property event.
+        if let Some(SocketData::DeviceUnreachable(unreachable)) = &socket_event.data {
+            for device_path in &unreachable.devices {
+                let device_id = device_path.trim_start_matches("/device/");
+                if let Some(device) = self.devices.get_mut(device_id) {
+                    device.state.get_or_insert_with(HashMap::new);
+                    upsert_capability_value(
+                        &mut device.state,
+                        "isReachable",
+                        interaction::FieldValue::BooleanValue(false),
+                    );
+                }
+            }
+        }
+
         sentry_alert
     }
 
@@ -256,7 +349,8 @@ impl Data {
                 capabilities: device.capabilities.clone(),
                 tags: device.tags.clone(),
                 location_data: None,
-                capability_state: None
+                capability_state: None,
+                state: None
             };
             self.devices.insert(device.id.clone().unwrap(), device_store);
         });
@@ -417,6 +511,35 @@ fn build_sentry_alert(
         location_name,
         is_open,
         occurred_at: occurred_at.to_string(),
+        message: None,
+    })
+}
+
+/// Builds a sentry alert with a pre-formatted German text (smoke alarm /
+/// low battery). `format_text` receives (device name, " in <Ort>" suffix,
+/// timestamp).
+fn build_message_sentry_alert(
+    device_id: Option<String>,
+    device_name: Option<String>,
+    location_name: Option<String>,
+    occurred_at: &str,
+    is_active: bool,
+    format_text: impl Fn(&str, &str, &str) -> String,
+) -> Option<SentryAlert> {
+    let device_id = device_id?;
+    let device_name = device_name?;
+    let location_suffix = location_name
+        .as_ref()
+        .map(|name| format!(" in {}", name))
+        .unwrap_or_default();
+
+    Some(SentryAlert {
+        message: Some(format_text(&device_name, &location_suffix, occurred_at)),
+        device_id,
+        device_name,
+        location_name,
+        is_open: is_active,
+        occurred_at: occurred_at.to_string(),
     })
 }
 
@@ -544,6 +667,145 @@ mod tests {
             },
             other => panic!("unexpected cap value variant: {:?}", other),
         }
+    }
+
+    #[test]
+    fn reachable_event_is_persisted_on_device_state() {
+        let mut data = wds_device_data();
+        let mut event: SocketEvent = serde_json::from_value(json!({
+            "type": "StateChanged",
+            "namespace": "core.RWE",
+            "desc": "/desc",
+            "source": "/device/device-1",
+            "timestamp": "2024-01-02T00:00:00Z",
+            "properties": { "isReachable": false }
+        }))
+        .unwrap();
+
+        let alert = data.handle_socket_event(&mut event);
+        assert!(alert.is_none());
+
+        let device = data.devices.get("device-1").unwrap();
+        let value = device.state.as_ref().unwrap().get("isReachable").unwrap();
+        assert_eq!(extract_boolean_capability_value(value), Some(false));
+        assert_eq!(event.device.as_deref(), Some("device-1"));
+    }
+
+    #[test]
+    fn battery_low_event_is_persisted_and_alerts() {
+        let mut data = wds_device_data();
+        let mut event: SocketEvent = serde_json::from_value(json!({
+            "type": "StateChanged",
+            "namespace": "core.RWE",
+            "desc": "/desc",
+            "source": "/device/device-1",
+            "timestamp": "2024-01-02T00:00:00Z",
+            "properties": { "isBatteryLow": true }
+        }))
+        .unwrap();
+
+        let alert = data.handle_socket_event(&mut event).expect("low battery must alert");
+        assert!(alert.message.unwrap().starts_with("Batterie schwach: Front Door"));
+
+        let device = data.devices.get("device-1").unwrap();
+        let value = device.state.as_ref().unwrap().get("isBatteryLow").unwrap();
+        assert_eq!(extract_boolean_capability_value(value), Some(true));
+
+        // Same event again: state stays, but no second alert.
+        let mut event2: SocketEvent = serde_json::from_value(json!({
+            "type": "StateChanged",
+            "namespace": "core.RWE",
+            "desc": "/desc",
+            "source": "/device/device-1",
+            "timestamp": "2024-01-02T00:01:00Z",
+            "properties": { "isBatteryLow": true }
+        }))
+        .unwrap();
+        assert!(data.handle_socket_event(&mut event2).is_none());
+    }
+
+    #[test]
+    fn smoke_alarm_on_wsd2_updates_cache_and_alerts() {
+        let mut data = Data::default();
+        let devices: DeviceResponse = serde_json::from_value(json!([
+            {
+                "manufacturer": "RWE",
+                "type": "WSD2",
+                "version": "1.0",
+                "product": "SHC.RWE",
+                "serialNumber": "serial-2",
+                "id": "device-2",
+                "capabilities": ["/capability/cap-2"],
+                "config": { "name": "Rauchmelder Flur" }
+            }
+        ]))
+        .unwrap();
+        data.set_devices(devices);
+        let states: CapabilityStateResponse = serde_json::from_value(json!([
+            {
+                "id": "cap-2",
+                "state": {
+                    "isSmokeAlarm": { "value": false, "lastChanged": "2024-01-01T00:00:00Z" }
+                }
+            }
+        ]))
+        .unwrap();
+        data.set_capabilities_state(states);
+
+        let mut event: SocketEvent = serde_json::from_value(json!({
+            "type": "StateChanged",
+            "namespace": "core.RWE",
+            "desc": "/desc",
+            "source": "/capability/cap-2",
+            "timestamp": "2024-01-02T00:00:00Z",
+            "properties": { "isSmokeAlarm": true }
+        }))
+        .unwrap();
+
+        let alert = data.handle_socket_event(&mut event).expect("smoke alarm must alert");
+        assert_eq!(alert.device_id, "device-2");
+        assert!(alert.message.unwrap().starts_with("Rauchalarm: Rauchmelder Flur"));
+
+        let device = data.devices.get("device-2").unwrap();
+        let cap = &device.capability_state.as_ref().unwrap().0[0];
+        let value = cap.state.as_ref().unwrap().get("isSmokeAlarm").unwrap();
+        assert_eq!(extract_boolean_capability_value(value), Some(true));
+    }
+
+    #[test]
+    fn device_unreachable_data_marks_devices_unreachable() {
+        let mut data = wds_device_data();
+        let mut event: SocketEvent = serde_json::from_value(json!({
+            "id": "msg-1",
+            "class": "message",
+            "type": "DeviceUnreachable",
+            "namespace": "core.RWE",
+            "desc": "/desc",
+            "source": "/message/msg-1",
+            "timestamp": "2024-01-02T00:00:00Z",
+            "read": false,
+            "data": {
+                "id": "msg-1",
+                "class": "message",
+                "type": "DeviceUnreachable",
+                "namespace": "core.RWE",
+                "desc": "/desc",
+                "source": "/message/msg-1",
+                "timestamp": "2024-01-02T00:00:00Z",
+                "devices": ["/device/device-1"],
+                "capabilities": [],
+                "read": false,
+                "state": true,
+                "properties": {}
+            }
+        }))
+        .unwrap();
+
+        let _ = data.handle_socket_event(&mut event);
+
+        let device = data.devices.get("device-1").unwrap();
+        let value = device.state.as_ref().unwrap().get("isReachable").unwrap();
+        assert_eq!(extract_boolean_capability_value(value), Some(false));
     }
 
     #[test]

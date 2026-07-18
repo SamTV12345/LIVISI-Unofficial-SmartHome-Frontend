@@ -1,7 +1,7 @@
 import {useMemo, useState} from "react";
 import {useContentModel} from "@/src/store.tsx";
 import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "@/src/components/actionComponents/Accordion.tsx";
-import {TYPES, ZWISCHENSTECKER, ZWISCHENSTECKER_OUTDOOR} from "@/src/constants/FieldConstants.ts";
+import {BEWEGUNGSMELDER, BEWEGUNGSMELDER_OUTDOOR, LICHTSCHALTER, LICHTSCHALTER_2, TYPES, ZWISCHENSTECKER, ZWISCHENSTECKER_OUTDOOR} from "@/src/constants/FieldConstants.ts";
 import {DeviceDecider} from "@/src/components/actionComponents/DeviceDecider.tsx";
 import {useTranslation} from "react-i18next";
 import {Device} from "@/src/models/Device.ts";
@@ -19,13 +19,21 @@ export const DeviceScreen = () => {
         if (!allDevices?.devices) return undefined;
         const map = new Map<string, Device[]>();
         TYPES.forEach((type) => {
-            if (type !== ZWISCHENSTECKER_OUTDOOR) {
+            if (type !== ZWISCHENSTECKER_OUTDOOR && type !== LICHTSCHALTER_2 && type !== BEWEGUNGSMELDER_OUTDOOR) {
                 map.set(type, []);
             }
         });
         for (const devDevice of Object.values(allDevices.devices)) {
             if (devDevice.type === ZWISCHENSTECKER_OUTDOOR) {
                 map.get(ZWISCHENSTECKER)?.push(devDevice);
+                continue;
+            }
+            if (devDevice.type === LICHTSCHALTER_2) {
+                map.get(LICHTSCHALTER)?.push(devDevice);
+                continue;
+            }
+            if (devDevice.type === BEWEGUNGSMELDER_OUTDOOR) {
+                map.get(BEWEGUNGSMELDER)?.push(devDevice);
                 continue;
             }
             map.get(devDevice.type)?.push(devDevice);

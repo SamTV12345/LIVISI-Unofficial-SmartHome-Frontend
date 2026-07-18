@@ -181,6 +181,64 @@ const patchCapabilityState = (
     };
 };
 
+const DEVICE_STATE_KEYS = ["isReachable", "isBatteryLow"];
+
+const patchDeviceState = (
+    current: AxiosDeviceResponse,
+    message: SocketMessage
+): RealtimePatchResult => {
+    const deviceId = message.source.replace("/device/", "");
+    const device = current.devices[deviceId];
+    if (!device || !isRecord(message.properties)) {
+        return {
+            nextAllThings: current,
+            patched: false,
+            needsRefresh: true
+        };
+    }
+
+    const state = {...(device.state ?? {})};
+    let changed = false;
+
+    for (const key of DEVICE_STATE_KEYS) {
+        const rawValue = message.properties[key];
+        const value = isPrimitive(rawValue)
+            ? rawValue
+            : (isRecord(rawValue) && isPrimitive(rawValue.value) ? rawValue.value : undefined);
+        if (value === undefined || state[key]?.value === value) {
+            continue;
+        }
+        state[key] = {
+            value,
+            lastChanged: message.timestamp
+        };
+        changed = true;
+    }
+
+    if (!changed) {
+        return {
+            nextAllThings: current,
+            patched: false,
+            needsRefresh: false
+        };
+    }
+
+    return {
+        nextAllThings: {
+            ...current,
+            devices: {
+                ...current.devices,
+                [deviceId]: {
+                    ...device,
+                    state
+                }
+            }
+        },
+        patched: true,
+        needsRefresh: false
+    };
+};
+
 const buildMessageFromSocket = (message: SocketMessage, existing?: Message): Message | undefined => {
     if (!message.id) {
         return existing;
@@ -308,6 +366,14 @@ export const applyRealtimeMessage = (
 
     if (message.class === "message" || message.source?.startsWith("/device/00000000000000000000000000000000")) {
         return patchMessage(current, message);
+    }
+
+    if (
+        message.source?.startsWith("/device/")
+        && isRecord(message.properties)
+        && DEVICE_STATE_KEYS.some((key) => key in (message.properties as Record<string, unknown>))
+    ) {
+        return patchDeviceState(current, message);
     }
 
     if (message.type?.toLowerCase().includes("configversion")) {
