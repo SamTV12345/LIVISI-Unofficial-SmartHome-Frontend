@@ -1,27 +1,26 @@
-use std::collections::HashMap;
-use serde_derive::Serialize;
-use serde_derive::Deserialize;
-use serde_json::Value;
-use crate::api_lib::capability::{CapValueType};
-use crate::api_lib::location::{LocationResponse};
 use crate::CLIENT_DATA;
+use crate::api_lib::capability::CapValueType;
+use crate::api_lib::location::LocationResponse;
 use crate::utils::header_utils::HeaderUtils;
+use serde_derive::Deserialize;
+use serde_derive::Serialize;
+use serde_json::Value;
+use std::collections::HashMap;
 
 #[derive(Clone)]
-pub struct Device{
+pub struct Device {
     pub base_url: String,
 }
 
-#[derive(Default,Serialize,Deserialize, Debug, Clone)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct DeviceResponse(pub Vec<DevicePost>);
 
-#[derive(Default,Serialize,Deserialize, Debug)]
+#[derive(Default, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct DeviceStateResponse(Vec<DeviceState>);
 
-
-#[derive(Default,Serialize,Deserialize, Debug,Clone)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct DevicePost {
     pub manufacturer: String,
@@ -32,7 +31,7 @@ pub struct DevicePost {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub location:Option<String>,
+    pub location: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub config: Option<DeviceConfig>,
     pub volatile: Option<Value>,
@@ -42,26 +41,19 @@ pub struct DevicePost {
     pub tags: Option<Value>,
     // Only required in the location
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub location_data: Option<LocationResponse>
+    pub location_data: Option<LocationResponse>,
 }
 
-#[derive(Default,Serialize,Deserialize, Debug)]
+#[derive(Default, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct DeviceState{
+pub struct DeviceState {
     pub id: String,
-    pub state: HashMap<String,CapValueType>
+    pub state: HashMap<String, CapValueType>,
 }
 
-
-#[derive(Default,Serialize,Deserialize, Debug,Clone)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct DeviceTags{
-    pub internal_state_id: Option<String>
-}
-
-#[derive(Default,Serialize,Deserialize, Debug,Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct DeviceConfig{
+pub struct DeviceConfig {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub activity_log_active: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -80,71 +72,37 @@ pub struct DeviceConfig{
     pub paired_since: Option<String>,
 }
 
-
 impl Device {
     pub fn new(server_url: &str) -> Self {
         Self {
-            base_url:format!("{}{}", server_url, "/device")
+            base_url: format!("{}{}", server_url, "/device"),
         }
     }
-   pub async fn get_devices(&self) -> Result<DeviceResponse, reqwest::Error> {
-       let api_client;
-       {
-           let locked_client = CLIENT_DATA.get().unwrap().lock();
-           api_client = locked_client.unwrap().client.clone()
-       }
-       let response = api_client.get(self.base_url.clone())
-           .headers(HeaderUtils::get_auth_token_header())
-            .send()
-            .await?;
-        response.json::<DeviceResponse>()
-            .await
-    }
-
-
-    pub async fn get_all_device_states(&self) ->DeviceStateResponse{
+    pub async fn get_devices(&self) -> Result<DeviceResponse, reqwest::Error> {
         let api_client;
         {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
             api_client = locked_client.unwrap().client.clone()
         }
-        let response = api_client.get(self.base_url.clone()+"/states")
+        let response = api_client
+            .get(self.base_url.clone())
+            .headers(HeaderUtils::get_auth_token_header())
+            .send()
+            .await?;
+        response.json::<DeviceResponse>().await
+    }
+
+    pub async fn get_all_device_states(&self) -> DeviceStateResponse {
+        let api_client;
+        {
+            let locked_client = CLIENT_DATA.get().unwrap().lock();
+            api_client = locked_client.unwrap().client.clone()
+        }
+        let response = api_client
+            .get(self.base_url.clone() + "/states")
             .send()
             .await
             .unwrap();
-        response.json::<DeviceStateResponse>()
-            .await
-            .unwrap()
-    }
-
-
-    pub async fn post_status(&self, device_post:DevicePost) -> String {
-        let api_client;
-        {
-            let locked_client = CLIENT_DATA.get().unwrap().lock();
-            api_client = locked_client.unwrap().client.clone()
-        }
-        let response = api_client.post(self.base_url.clone())
-            .json::<DevicePost>(&device_post)
-            .send()
-            .await;
-        match response {
-            Ok(response) => {
-                match response.status().as_u16() {
-                    200 => {
-                        
-                        response.text().await.unwrap()
-                    },
-                    _ => {
-                        
-                        response.text().await.unwrap()
-                    }
-                }
-            },
-            Err(e) => {
-                
-                e.to_string()
-            }
-        }
+        response.json::<DeviceStateResponse>().await.unwrap()
     }
 }

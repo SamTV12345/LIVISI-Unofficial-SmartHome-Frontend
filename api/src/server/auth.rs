@@ -1,24 +1,24 @@
+use axum::Json;
 use axum::extract::{Request, State};
-use axum::http::{header, StatusCode};
+use axum::http::{StatusCode, header};
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
-use axum::Json;
-use base64::engine::general_purpose;
 use base64::Engine;
+use base64::engine::general_purpose;
 use jsonwebtoken::jwk::JwkSet;
-use jsonwebtoken::{decode, decode_header, Algorithm, DecodingKey, Validation};
+use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode, decode_header};
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use std::env::var;
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
+use crate::AxumState;
 use crate::constants::constant_types::{
     AUTH_MODE, BASIC_AUTH, OIDC_AUDIENCE, OIDC_AUTH, OIDC_AUTHORITY, OIDC_CLIENT_ID,
     OIDC_REDIRECT_URI, OIDC_SCOPE, PASSWORD_BASIC, USERNAME_BASIC,
 };
-use crate::AxumState;
 
 #[derive(Serialize, Deserialize, Clone, Copy, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
@@ -221,7 +221,8 @@ impl OidcAuthRuntime {
                         let authorized_party = token_data.claims.get("azp").and_then(Value::as_str);
                         if authorized_party != Some(self.config.client_id.as_str()) {
                             last_error =
-                                "OIDC token validation failed: azp does not match OIDC_CLIENT_ID".to_string();
+                                "OIDC token validation failed: azp does not match OIDC_CLIENT_ID"
+                                    .to_string();
                             continue;
                         }
                     }
@@ -246,10 +247,10 @@ impl OidcAuthRuntime {
                 .jwks_cache
                 .lock()
                 .map_err(|_| "OIDC JWKS cache lock poisoned".to_string())?;
-            if let Some(cache) = cache.as_ref() {
-                if cache.fetched_at.elapsed() < Self::JWKS_CACHE_TTL {
-                    return Ok(cache.jwks.clone());
-                }
+            if let Some(cache) = cache.as_ref()
+                && cache.fetched_at.elapsed() < Self::JWKS_CACHE_TTL
+            {
+                return Ok(cache.jwks.clone());
             }
         }
 
@@ -294,10 +295,10 @@ fn env_flag_enabled(name: &str) -> bool {
         return false;
     };
 
-    match raw_value.trim().to_ascii_lowercase().as_str() {
-        "0" | "false" | "no" | "off" => false,
-        _ => true,
-    }
+    !matches!(
+        raw_value.trim().to_ascii_lowercase().as_str(),
+        "0" | "false" | "no" | "off"
+    )
 }
 
 fn resolve_auth_mode() -> AuthMode {

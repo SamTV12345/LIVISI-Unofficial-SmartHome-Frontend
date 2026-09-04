@@ -1,55 +1,57 @@
-use std::collections::HashMap;
-use serde_derive::Serialize;
 use serde_derive::Deserialize;
+use serde_derive::Serialize;
+use std::collections::HashMap;
 
 use crate::CLIENT_DATA;
 
 #[derive(Clone)]
-pub struct Location{
+pub struct Location {
     pub base_url: String,
 }
 
-#[derive(Default,Serialize,Deserialize, Debug, Clone)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct LocationResponse{
+pub struct LocationResponse {
     pub config: LocationConfig,
-    pub id:String,
+    pub id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tags: Option<HashMap<String, String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub devices: Option<Vec<String>>
+    pub devices: Option<Vec<String>>,
 }
 
-#[derive(Default,Serialize,Deserialize, Debug, Clone)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct LocationConfig{
+pub struct LocationConfig {
     pub name: String,
-    pub r#type: String
+    pub r#type: String,
 }
 
 impl Location {
     pub fn new(server_url: &str) -> Self {
         Self {
-            base_url: format!("{}{}", server_url, "/location")
+            base_url: format!("{}{}", server_url, "/location"),
         }
     }
 
-    pub async fn update_location(&self, location_data: LocationResponse, location_id: String) -> LocationResponse {
+    pub async fn update_location(
+        &self,
+        location_data: LocationResponse,
+        location_id: String,
+    ) -> LocationResponse {
         let api_client;
         {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
             api_client = locked_client.unwrap().client.clone()
         }
-        let response = api_client.put(self.base_url.clone()+"/"+&location_id)
+        let response = api_client
+            .put(self.base_url.clone() + "/" + &location_id)
             .json(&location_data)
             .send()
             .await
             .unwrap();
 
-            response
-                .json::<LocationResponse>()
-            .await
-            .unwrap()
+        response.json::<LocationResponse>().await.unwrap()
     }
 
     pub async fn delete_location(&self, location_id: String) -> LocationResponse {
@@ -58,15 +60,13 @@ impl Location {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
             api_client = locked_client.unwrap().client.clone()
         }
-        let response = api_client.delete(self.base_url.clone()+"/"+&location_id)
+        let response = api_client
+            .delete(self.base_url.clone() + "/" + &location_id)
             .send()
             .await
             .unwrap();
 
-            response
-                .json::<LocationResponse>()
-            .await
-            .unwrap()
+        response.json::<LocationResponse>().await.unwrap()
     }
 
     pub async fn create_location(&self, location_data: LocationResponse) -> LocationResponse {
@@ -75,16 +75,14 @@ impl Location {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
             api_client = locked_client.unwrap().client.clone()
         }
-        let response = api_client.post(self.base_url.clone())
+        let response = api_client
+            .post(self.base_url.clone())
             .json(&location_data)
             .send()
             .await
             .unwrap();
 
-            response
-                .json::<LocationResponse>()
-            .await
-            .unwrap()
+        response.json::<LocationResponse>().await.unwrap()
     }
 
     pub async fn get_locations(&self) -> Result<Vec<LocationResponse>, reqwest::Error> {
@@ -94,13 +92,9 @@ impl Location {
             api_client = locked_client.unwrap().client.clone()
         }
 
-        let response = api_client.get(self.base_url.clone())
-            .send()
-            .await?;
+        let response = api_client.get(self.base_url.clone()).send().await?;
 
-            response
-                .json::<Vec<LocationResponse>>()
-            .await
+        response.json::<Vec<LocationResponse>>().await
     }
 
     pub async fn get_location_by_id(&self, location_id: String) -> LocationResponse {
@@ -109,14 +103,12 @@ impl Location {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
             api_client = locked_client.unwrap().client.clone()
         }
-        let response = api_client.get(self.base_url.clone()+"/"+&location_id)
+        let response = api_client
+            .get(self.base_url.clone() + "/" + &location_id)
             .send()
             .await
             .unwrap();
 
-            response
-                .json::<LocationResponse>()
-            .await
-            .unwrap()
+        response.json::<LocationResponse>().await.unwrap()
     }
 }

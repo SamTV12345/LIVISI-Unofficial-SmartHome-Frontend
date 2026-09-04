@@ -1,33 +1,68 @@
 use std::collections::HashMap;
 
+use crate::CLIENT_DATA;
 use serde::Deserialize;
 use serde::Serialize;
-use serde_json::{json, Value};
-use crate::CLIENT_DATA;
+use serde_json::{Value, json};
 
-
-#[derive(Serialize,Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct Interaction{
+pub struct Interaction {
     pub base_url: String,
 }
 
-#[derive(Serialize,Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum InteractionType {
-Add, Subtract, Multiply, Divide,Modulo, Equal, NotEqual, Smaller,Greater,
-SmallerOrEqual, GreaterOrEqual, And, Or, Min, Max,Pow, Exp,
-Log, Abs, Round,
-GetEntityStateProperty,
-GetEventProperty, BitwiseAnd, BitwiseOr, BitwiseXOR, BitwiseNot,
-BitwiseLeftShift, BitwiseRightShift, GetMinute, GetHour, GetDayOfWeek, GetDayOfMonth,
-GetWeekdayOfMonth, GetMonth, GetYear, GetDayOfCentury, GetWeekOfCentury, GetMonthOfCentury,
-GetCurrentDateTime, Average, InBetween, GetMinuteOfDay, GetMinutesSinceLastChange,
-MemberInArea, MemberNotInArea
+    Add,
+    Subtract,
+    Multiply,
+    Divide,
+    Modulo,
+    Equal,
+    NotEqual,
+    Smaller,
+    Greater,
+    SmallerOrEqual,
+    GreaterOrEqual,
+    And,
+    Or,
+    Min,
+    Max,
+    Pow,
+    Exp,
+    Log,
+    Abs,
+    Round,
+    GetEntityStateProperty,
+    GetEventProperty,
+    BitwiseAnd,
+    BitwiseOr,
+    BitwiseXOR,
+    BitwiseNot,
+    BitwiseLeftShift,
+    BitwiseRightShift,
+    GetMinute,
+    GetHour,
+    GetDayOfWeek,
+    GetDayOfMonth,
+    GetWeekdayOfMonth,
+    GetMonth,
+    GetYear,
+    GetDayOfCentury,
+    GetWeekOfCentury,
+    GetMonthOfCentury,
+    GetCurrentDateTime,
+    Average,
+    InBetween,
+    GetMinuteOfDay,
+    GetMinutesSinceLastChange,
+    MemberInArea,
+    MemberNotInArea,
 }
 
-#[derive(Serialize,Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct InteractionResponse{
+pub struct InteractionResponse {
     pub id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub name: Option<String>,
@@ -43,9 +78,9 @@ pub struct InteractionResponse{
     pub is_internal: Option<bool>,
     pub rules: Vec<InteractionRule>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub tags: Option<HashMap<String,String>>,
+    pub tags: Option<HashMap<String, String>>,
     #[serde(flatten, default)]
-    pub extra: HashMap<String, Value>
+    pub extra: HashMap<String, Value>,
 }
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Details {}
@@ -60,9 +95,9 @@ pub enum FieldValue {
     Struct(Details),
 }
 
-#[derive(Serialize,Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct InteractionRule{
+pub struct InteractionRule {
     id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     condition_evaluation_delay: Option<i32>,
@@ -73,19 +108,19 @@ pub struct InteractionRule{
     #[serde(skip_serializing_if = "Option::is_none")]
     actions: Option<Vec<InteractionAction>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    tags: Option<HashMap<String,String>>
+    tags: Option<HashMap<String, String>>,
 }
 
-#[derive(Serialize,Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct ValueItem{
+pub struct ValueItem {
     pub r#type: String,
-    pub value: Option<FieldValue>
+    pub value: Option<FieldValue>,
 }
 
-#[derive(Serialize,Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct InteractionAction{
+pub struct InteractionAction {
     #[serde(skip_serializing_if = "Option::is_none")]
     id: Option<String>,
     r#type: String,
@@ -93,12 +128,12 @@ pub struct InteractionAction{
     target: String,
     params: Value,
     #[serde(skip_serializing_if = "Option::is_none")]
-    tags: Option<HashMap<String, String>>
+    tags: Option<HashMap<String, String>>,
 }
 
-#[derive(Serialize,Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct Triggers{
+pub struct Triggers {
     r#type: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     event_type: Option<String>,
@@ -108,37 +143,26 @@ pub struct Triggers{
     #[serde(skip_serializing_if = "Option::is_none")]
     namespace: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    properties: Option<HashMap<String,FieldValue>>,
+    properties: Option<HashMap<String, FieldValue>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     conditions: Option<Vec<InteractionCondition>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    tags: Option<HashMap<String, String>>
+    tags: Option<HashMap<String, String>>,
 }
 
-#[derive(Serialize,Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct InteractionCondition{
+pub struct InteractionCondition {
     r#type: InteractionType,
     params: Value, // Fix me
     #[serde(skip_serializing_if = "Option::is_none")]
-    tags: Option<HashMap<String, String>>
+    tags: Option<HashMap<String, String>>,
 }
 
-#[derive(Serialize,Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct InteractionActionParam(HashMap<String, String>);
-
-#[derive(Serialize,Deserialize, Debug, Clone)]
-pub struct InteractionConditionParam(HashMap<String, ValueItem>);
-
-#[derive(Serialize,Deserialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct InteractionParamParam(HashMap<String, ValueItem>);
-
-impl Interaction{
+impl Interaction {
     pub fn new(server_url: &str) -> Self {
         Self {
-            base_url: format!("{}{}", server_url, "/interaction")
+            base_url: format!("{}{}", server_url, "/interaction"),
         }
     }
 
@@ -149,51 +173,32 @@ impl Interaction{
             api_client = locked_client.unwrap().client.clone()
         }
 
-        let response = api_client.get(self.base_url.clone())
-            .send()
-            .await?;
+        let response = api_client.get(self.base_url.clone()).send().await?;
 
-            response.json::<Vec<InteractionResponse>>()
-            .await
+        response.json::<Vec<InteractionResponse>>().await
     }
 
-    pub async fn get_interaction_by_id(&self, id:String) ->
-                                                                        InteractionResponse {
+    pub async fn get_interaction_by_id(&self, id: String) -> InteractionResponse {
         let api_client;
         {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
             api_client = locked_client.unwrap().client.clone()
         }
 
-        let response = api_client.get(self.base_url.clone()+"/"+&id)
+        let response = api_client
+            .get(self.base_url.clone() + "/" + &id)
             .send()
             .await
             .unwrap();
 
-        response.json::<InteractionResponse>()
-            .await
-            .unwrap()
+        response.json::<InteractionResponse>().await.unwrap()
     }
 
-    pub async fn delete_interaction_by_id(&self, id:String) ->
-    InteractionResponse {
-        let api_client;
-        {
-            let locked_client = CLIENT_DATA.get().unwrap().lock();
-            api_client = locked_client.unwrap().client.clone()
-        }
-
-        let response = api_client.delete(self.base_url.clone()+"/"+&id)
-            .send()
-            .await
-            .unwrap();
-
-        response.json::<InteractionResponse>()
-            .await
-            .unwrap()
-    }
-
-    pub async fn update_interaction_by_id(&self, id: String, interaction_data: Value) -> Result<Value, String> {
+    pub async fn update_interaction_by_id(
+        &self,
+        id: String,
+        interaction_data: Value,
+    ) -> Result<Value, String> {
         let api_client;
         {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
@@ -214,7 +219,10 @@ impl Interaction{
             .map_err(|err| format!("Could not read interaction update response: {}", err))?;
 
         if !status.is_success() {
-            return Err(format!("Interaction update failed with status {}: {}", status, text));
+            return Err(format!(
+                "Interaction update failed with status {}: {}",
+                status, text
+            ));
         }
 
         serde_json::from_str::<Value>(&text)
@@ -232,7 +240,7 @@ impl Interaction{
 
         let direct_candidates = vec![
             self.base_url.clone() + "/" + &id + "/trigger",
-            self.base_url.clone() + "/" + &id + "/execute"
+            self.base_url.clone() + "/" + &id + "/execute",
         ];
 
         for endpoint in direct_candidates {
@@ -246,7 +254,10 @@ impl Interaction{
                             "raw": text
                         })));
                     }
-                    errors.push(format!("POST {} failed with {}: {}", endpoint, status, text));
+                    errors.push(format!(
+                        "POST {} failed with {}: {}",
+                        endpoint, status, text
+                    ));
                 }
                 Err(err) => {
                     errors.push(format!("POST {} failed: {}", endpoint, err));
@@ -255,7 +266,8 @@ impl Interaction{
         }
 
         let interaction_target = format!("/interaction/{}", id);
-        let action_base = self.base_url
+        let action_base = self
+            .base_url
             .strip_suffix("/interaction")
             .unwrap_or(self.base_url.as_str())
             .trim_end_matches('/');
@@ -288,7 +300,12 @@ impl Interaction{
         ];
 
         for payload in action_candidates {
-            match api_client.post(action_endpoint.clone()).json(&payload).send().await {
+            match api_client
+                .post(action_endpoint.clone())
+                .json(&payload)
+                .send()
+                .await
+            {
                 Ok(response) => {
                     let status = response.status();
                     let text = response.text().await.unwrap_or_default();
@@ -299,10 +316,16 @@ impl Interaction{
                         })));
                     }
 
-                    errors.push(format!("POST {} with payload {} failed with {}: {}", action_endpoint, payload, status, text));
+                    errors.push(format!(
+                        "POST {} with payload {} failed with {}: {}",
+                        action_endpoint, payload, status, text
+                    ));
                 }
                 Err(err) => {
-                    errors.push(format!("POST {} with payload {} failed: {}", action_endpoint, payload, err));
+                    errors.push(format!(
+                        "POST {} with payload {} failed: {}",
+                        action_endpoint, payload, err
+                    ));
                 }
             }
         }

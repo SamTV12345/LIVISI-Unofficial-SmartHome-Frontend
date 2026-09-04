@@ -1,36 +1,31 @@
-
-
-
-use serde_derive::Serialize;
-use serde_derive::Deserialize;
 use crate::CLIENT_DATA;
+use serde_derive::Deserialize;
+use serde_derive::Serialize;
 
 #[derive(Clone)]
-pub struct User{
-    pub base_url: String
+pub struct User {
+    pub base_url: String,
 }
 
-
-#[derive(Default,Serialize,Deserialize, Debug)]
+#[derive(Default, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct UserResponse{
+pub struct UserResponse {
     pub account_name: String,
     pub password: String,
     pub tenant_id: String,
-    pub data:UserData
+    pub data: UserData,
 }
 
-
-#[derive(Default,Serialize,Deserialize, Debug)]
+#[derive(Default, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct UserData {
-    latest_ta_c_accepted: bool
+    latest_ta_c_accepted: bool,
 }
 
 impl User {
     pub fn new(server_url: &str) -> Self {
         Self {
-            base_url: format!("{}{}", server_url, "/user")
+            base_url: format!("{}{}", server_url, "/user"),
         }
     }
 
@@ -41,13 +36,8 @@ impl User {
             api_client = locked_client.unwrap().client.clone()
         }
 
-        let response = api_client.get(self.base_url.clone())
-            .send()
-            .await
-            .unwrap();
+        let response = api_client.get(self.base_url.clone()).send().await.unwrap();
 
-            response.json::<UserResponse>()
-            .await
-            .unwrap()
+        response.json::<UserResponse>().await.unwrap()
     }
 }

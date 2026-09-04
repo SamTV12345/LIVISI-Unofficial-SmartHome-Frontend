@@ -1,28 +1,28 @@
-use std::collections::HashMap;
-use reqwest::{Response};
-use serde_derive::Serialize;
-use serde_derive::Deserialize;
 use crate::CLIENT_DATA;
+use reqwest::Response;
+use serde_derive::Deserialize;
+use serde_derive::Serialize;
+use std::collections::HashMap;
 
 #[derive(Clone)]
-pub struct Message{
+pub struct Message {
     pub base_url: String,
 }
 
 #[derive(Deserialize, Serialize, Clone)]
 pub struct MessageRead {
-    pub read: bool
+    pub read: bool,
 }
 
-#[derive(Default,Serialize,Deserialize, Debug, Clone)]
-pub struct MessageResponse{
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
+pub struct MessageResponse {
     pub id: String,
-    pub  r#type: String,
+    pub r#type: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub  class: Option<String>,
-    pub  namespace: Option<String>,
-    pub  timestamp: String,
-    pub  read: bool,
+    pub class: Option<String>,
+    pub namespace: Option<String>,
+    pub timestamp: String,
+    pub read: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub devices: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -32,12 +32,12 @@ pub struct MessageResponse{
     #[serde(skip_serializing_if = "Option::is_none")]
     pub properties: Option<MessageProperties>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub tags: Option<HashMap<String,String>>
+    pub tags: Option<HashMap<String, String>>,
 }
 
-#[derive(Default,Serialize,Deserialize, Debug, Clone)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct MessageProperties{
+pub struct MessageProperties {
     pub device_location: Option<String>,
     pub device_name: Option<String>,
     pub device_serial: Option<String>,
@@ -47,13 +47,13 @@ pub struct MessageProperties{
     pub read: Option<bool>,
     pub change_reason: Option<String>,
     pub expires_after_minutes: Option<i32>,
-    pub timestamp: Option<String>
+    pub timestamp: Option<String>,
 }
 
 impl Message {
     pub fn new(server_url: &str) -> Self {
         Self {
-            base_url: server_url.to_string() +"/message"
+            base_url: server_url.to_string() + "/message",
         }
     }
 
@@ -63,12 +63,9 @@ impl Message {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
             api_client = locked_client.unwrap().client.clone()
         }
-        let response = api_client.get(self.base_url.clone())
-            .send()
-            .await?;
+        let response = api_client.get(self.base_url.clone()).send().await?;
 
-            response.json::<Vec<MessageResponse>>()
-            .await
+        response.json::<Vec<MessageResponse>>().await
     }
 
     pub async fn get_message_by_id(&self, message_id: String) -> MessageResponse {
@@ -77,38 +74,37 @@ impl Message {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
             api_client = locked_client.unwrap().client.clone()
         }
-        let response = api_client.get(self.base_url.clone()+ &format!("/{}", message_id))
+        let response = api_client
+            .get(self.base_url.clone() + &format!("/{}", message_id))
             .send()
             .await
             .unwrap();
 
-            response.json::<MessageResponse>()
-            .await
-            .unwrap()
+        response.json::<MessageResponse>().await.unwrap()
     }
 
-    pub async fn delete_message_by_id(&self, message_id: String)
-        -> Response {
+    pub async fn delete_message_by_id(&self, message_id: String) -> Response {
         let api_client;
         {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
             api_client = locked_client.unwrap().client.clone()
         }
-        api_client.delete(self.base_url.clone()+&format!("/{}",message_id))
+        api_client
+            .delete(self.base_url.clone() + &format!("/{}", message_id))
             .send()
             .await
             .unwrap()
     }
 
-    pub async fn update_mesage_read(&self, message_id: String, read: MessageRead)
-                                    -> Response {
+    pub async fn update_mesage_read(&self, message_id: String, read: MessageRead) -> Response {
         let api_client;
         {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
             api_client = locked_client.unwrap().client.clone()
         }
 
-        api_client.put(self.base_url.clone()+&format!("/{}",message_id))
+        api_client
+            .put(self.base_url.clone() + &format!("/{}", message_id))
             .json(&read)
             .send()
             .await

@@ -94,7 +94,9 @@ pub(crate) fn sorted_locations(
     sorted_locations
 }
 
-pub(crate) fn sorted_interactions(interactions: &[InteractionResponse]) -> Vec<InteractionResponse> {
+pub(crate) fn sorted_interactions(
+    interactions: &[InteractionResponse],
+) -> Vec<InteractionResponse> {
     let mut sorted_interactions = interactions.to_vec();
     sorted_interactions.sort_by(|left, right| {
         let left_name = normalized_sort_key(left.name.as_deref().unwrap_or(&left.id));

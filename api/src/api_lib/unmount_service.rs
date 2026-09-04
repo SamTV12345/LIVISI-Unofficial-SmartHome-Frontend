@@ -1,12 +1,12 @@
 use serde_derive::{Deserialize, Serialize};
 
-use crate::api_lib::livisi_response_type::LivisResponseType;
 use crate::CLIENT_DATA;
+use crate::api_lib::livisi_response_type::LivisResponseType;
 
 #[derive(Clone)]
 pub struct USBService {
     base_url: String,
-    usb_status: String
+    usb_status: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -18,7 +18,7 @@ impl USBService {
     pub fn new(base_url: &str) -> Self {
         USBService {
             base_url: format!("{}{}", base_url, "/unmount"),
-            usb_status: format!("{}{}", base_url, "/usb_storage")
+            usb_status: format!("{}{}", base_url, "/usb_storage"),
         }
     }
 
@@ -29,23 +29,24 @@ impl USBService {
             api_client = locked_client.unwrap().client.clone()
         }
 
-        api_client.get(self.base_url.clone())
-           .send()
-           .await.unwrap().text().await.unwrap();
+        api_client
+            .get(self.base_url.clone())
+            .send()
+            .await
+            .unwrap()
+            .text()
+            .await
+            .unwrap();
     }
 
-    pub async fn get_usb_status(&self) -> LivisResponseType<USBStatus> {
+    pub async fn get_usb_status(&self) -> Result<LivisResponseType<USBStatus>, reqwest::Error> {
         let api_client;
         {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
             api_client = locked_client.unwrap().client.clone()
         }
-        let response = api_client.get(self.usb_status.clone())
-            .send()
-            .await.expect("Error getting USB status.");
+        let response = api_client.get(self.usb_status.clone()).send().await?;
 
-        response.json::<LivisResponseType<USBStatus>>()
-            .await
-            .expect("Error parsing USB status.")
+        response.json::<LivisResponseType<USBStatus>>().await
     }
 }

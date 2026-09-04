@@ -1,11 +1,5 @@
-use std::collections::HashMap;
-use std::sync::Mutex;
-use chrono::Utc;
-use serde_derive::{Deserialize, Serialize};
-use serde_json::Value;
-use crate::api_lib::{capability, interaction};
-use crate::api_lib::capability::{CapabilityConfig, CapabilityResponse, CapabilityStateResponse};
 use crate::api_lib::capability::CapValueType::CapValueItem;
+use crate::api_lib::capability::{CapabilityConfig, CapabilityResponse, CapabilityStateResponse};
 use crate::api_lib::device::{DeviceConfig, DeviceResponse};
 use crate::api_lib::email::EmailAPI;
 use crate::api_lib::interaction::InteractionResponse;
@@ -13,11 +7,17 @@ use crate::api_lib::location::LocationResponse;
 use crate::api_lib::message::MessageResponse;
 use crate::api_lib::status::StatusResponse;
 use crate::api_lib::user_storage::UserStorageResponse;
+use crate::api_lib::{capability, interaction};
 use crate::models::socket_event::{Properties, SocketData, SocketEvent, Source};
 use crate::models::token::Token;
 use crate::sentry::{SentryAlert, SentrySettings};
+use chrono::Utc;
+use serde_derive::{Deserialize, Serialize};
+use serde_json::Value;
+use std::collections::HashMap;
+use std::sync::Mutex;
 
-#[derive(Default,Serialize,Deserialize, Debug,Clone)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct DeviceStore {
     pub manufacturer: String,
@@ -28,7 +28,7 @@ pub struct DeviceStore {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub location:Option<String>,
+    pub location: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub config: Option<DeviceConfig>,
     pub volatile: Option<Value>,
@@ -42,18 +42,18 @@ pub struct DeviceStore {
     /// Device-level state (isReachable, isBatteryLow, ...) kept fresh via
     /// websocket events. Uses the same key/value shape as /device/states.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub state: Option<HashMap<String, crate::api_lib::capability::CapValueType>>
+    pub state: Option<HashMap<String, crate::api_lib::capability::CapValueType>>,
 }
 
-#[derive(Default,Serialize,Deserialize, Debug,Clone)]
-pub struct  CapabilitiesStore {
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
+pub struct CapabilitiesStore {
     pub id: String,
     pub r#type: String,
     pub device: String,
-    pub config: CapabilityConfig
+    pub config: CapabilityConfig,
 }
 
-#[derive(Default,Serialize,Deserialize, Debug, Clone)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
 pub struct Data {
     pub devices: HashMap<String, DeviceStore>,
     pub status: Option<StatusResponse>,
@@ -64,9 +64,8 @@ pub struct Data {
     pub email: Option<EmailAPI>,
     pub sentry_settings: Option<SentrySettings>,
     #[serde(default)]
-    pub interactions: Vec<InteractionResponse>
+    pub interactions: Vec<InteractionResponse>,
 }
-
 
 impl Data {
     pub fn handle_socket_event(&mut self, socket_event: &mut SocketEvent) -> Option<SentryAlert> {
@@ -74,46 +73,54 @@ impl Data {
         match socket_event.get_source() {
             Source::Device => {
                 log::info!("device change");
-                if let Some(id) = socket_event.get_id() {
-                    if let Some(device) = self.devices.get_mut(&id) {
-                        socket_event.device = Some(id.clone());
-                        match &socket_event.properties {
-                            Some(Properties::Reachable(reachable)) => {
-                                device.state.get_or_insert_with(HashMap::new);
-                                upsert_capability_value(
-                                    &mut device.state,
-                                    "isReachable",
-                                    interaction::FieldValue::BooleanValue(reachable.is_reachable),
-                                );
-                            }
-                            Some(Properties::BatteryLow(battery)) => {
-                                let previous = device
-                                    .state
-                                    .as_ref()
-                                    .and_then(|map| map.get("isBatteryLow"))
-                                    .and_then(extract_boolean_capability_value);
-                                device.state.get_or_insert_with(HashMap::new);
-                                upsert_capability_value(
-                                    &mut device.state,
-                                    "isBatteryLow",
-                                    interaction::FieldValue::BooleanValue(battery.is_battery_low),
-                                );
-                                if battery.is_battery_low && previous != Some(true) {
-                                    sentry_alert = build_message_sentry_alert(
-                                        device.id.clone(),
-                                        device.config.as_ref().and_then(|config| config.name.clone()),
-                                        device.location_data.as_ref().map(|location| location.config.name.clone()),
-                                        &socket_event.timestamp,
-                                        true,
-                                        |name, location, at| format!(
+                if let Some(id) = socket_event.get_id()
+                    && let Some(device) = self.devices.get_mut(&id)
+                {
+                    socket_event.device = Some(id.clone());
+                    match &socket_event.properties {
+                        Some(Properties::Reachable(reachable)) => {
+                            device.state.get_or_insert_with(HashMap::new);
+                            upsert_capability_value(
+                                &mut device.state,
+                                "isReachable",
+                                interaction::FieldValue::BooleanValue(reachable.is_reachable),
+                            );
+                        }
+                        Some(Properties::BatteryLow(battery)) => {
+                            let previous = device
+                                .state
+                                .as_ref()
+                                .and_then(|map| map.get("isBatteryLow"))
+                                .and_then(extract_boolean_capability_value);
+                            device.state.get_or_insert_with(HashMap::new);
+                            upsert_capability_value(
+                                &mut device.state,
+                                "isBatteryLow",
+                                interaction::FieldValue::BooleanValue(battery.is_battery_low),
+                            );
+                            if battery.is_battery_low && previous != Some(true) {
+                                sentry_alert = build_message_sentry_alert(
+                                    device.id.clone(),
+                                    device
+                                        .config
+                                        .as_ref()
+                                        .and_then(|config| config.name.clone()),
+                                    device
+                                        .location_data
+                                        .as_ref()
+                                        .map(|location| location.config.name.clone()),
+                                    &socket_event.timestamp,
+                                    true,
+                                    |name, location, at| {
+                                        format!(
                                             "Batterie schwach: {}{} meldet um {} eine schwache Batterie.",
                                             name, location, at
-                                        ),
-                                    );
-                                }
+                                        )
+                                    },
+                                );
                             }
-                            _ => {}
                         }
+                        _ => {}
                     }
                 }
             }
@@ -122,8 +129,8 @@ impl Data {
                 self.devices.iter_mut().for_each(|(id, device)| {
                     if let Some(capabilities) = &device.capabilities {
                         let found_id = &socket_event.get_id();
-                        if let Some(found_id) = found_id.clone() {
-                            if capabilities.contains(&socket_event.source) {
+                        if let Some(found_id) = found_id.clone()
+                            && capabilities.contains(&socket_event.source) {
                                 let sentry_device_type = device.r#type.clone();
                                 let sentry_device_id = device.id.clone();
                                 let sentry_device_name =
@@ -234,25 +241,22 @@ impl Data {
                                     })
                                 }
                             }
-                        }
                     }
                 })
             }
             Source::Location => {
                 log::info!("location change")
-
             }
             Source::User => {
                 log::info!("user change")
-
             }
             Source::System => {
                 log::info!("system change");
 
-                if let Some(Properties::ConfigVersion(config_version)) = &socket_event.properties {
-                    if let Some(status) = self.status.as_mut() {
-                        status.config_version = config_version.config_version;
-                    }
+                if let Some(Properties::ConfigVersion(config_version)) = &socket_event.properties
+                    && let Some(status) = self.status.as_mut()
+                {
+                    status.config_version = config_version.config_version;
                 }
 
                 if let Some(SocketData::ConfigVersion(config_version_data)) = &socket_event.data {
@@ -262,10 +266,10 @@ impl Data {
                     self.set_interactions(config_version_data.interactions.clone());
                 }
             }
-            Source::Message =>{
+            Source::Message => {
                 if let Some(id) = socket_event.id.clone() {
                     let mut found_item = false;
-                    self.messages.iter_mut().for_each(|m|{
+                    self.messages.iter_mut().for_each(|m| {
                         if m.id == id {
                             found_item = true;
                             m.class = socket_event.class.clone();
@@ -274,7 +278,6 @@ impl Data {
                     });
 
                     if !found_item {
-
                         //TODO hier weiter:
 
                         /*
@@ -286,7 +289,7 @@ impl Data {
                             Err(_) => None,
                         };
 
-                        self.messages.push(MessageResponse{
+                        self.messages.push(MessageResponse {
                             id,
                             timestamp: socket_event.timestamp.clone(),
                             read: socket_event.read.unwrap_or(false),
@@ -300,10 +303,7 @@ impl Data {
                             tags: None,
                         })
                     }
-
                 }
-
-
             }
         }
 
@@ -335,7 +335,7 @@ impl Data {
     }
 
     pub fn set_devices(&mut self, devices: DeviceResponse) {
-        devices.0.into_iter().for_each(|device|{
+        devices.0.into_iter().for_each(|device| {
             let device_store = DeviceStore {
                 manufacturer: device.manufacturer.clone(),
                 r#type: device.r#type.clone(),
@@ -350,9 +350,10 @@ impl Data {
                 tags: device.tags.clone(),
                 location_data: None,
                 capability_state: None,
-                state: None
+                state: None,
             };
-            self.devices.insert(device.id.clone().unwrap(), device_store);
+            self.devices
+                .insert(device.id.clone().unwrap(), device_store);
         });
     }
 
@@ -362,39 +363,35 @@ impl Data {
 
     pub fn set_locations(&mut self, locations: Vec<LocationResponse>) {
         self.locations.clone_from(&locations);
-        self.devices.iter_mut().for_each(|(id,device)| {
-
-            match &device.location {
-                Some(location) => {
-                    let opt_location = locations.iter().find(|location_iter| location_iter.id ==
-                        location.replace("/location/","").clone());
-                    if opt_location.is_some(){
-                        let wrapped = opt_location.unwrap();
-                        device.location_data = Some(LocationResponse{
-                            id: wrapped.id.clone(),
-                            config: wrapped.config.clone(),
-                            devices: None,
-                            tags: wrapped.tags.clone()
-                        });
-                        self.locations.iter_mut().for_each(|location| {
-                            if location.id == wrapped.id {
-                                if location.devices.is_none() {
-                                    location.devices = Some(vec![id.clone()]);
-                                }
-                                else {
-                                    location.devices.as_mut().unwrap().push(id.clone());
-                                }
+        self.devices.iter_mut().for_each(|(id, device)| {
+            if let Some(location) = &device.location {
+                let opt_location = locations.iter().find(|location_iter| {
+                    location_iter.id == location.replace("/location/", "").clone()
+                });
+                if let Some(wrapped) = opt_location {
+                    device.location_data = Some(LocationResponse {
+                        id: wrapped.id.clone(),
+                        config: wrapped.config.clone(),
+                        devices: None,
+                        tags: wrapped.tags.clone(),
+                    });
+                    self.locations.iter_mut().for_each(|location| {
+                        if location.id == wrapped.id {
+                            if let Some(devices) = &mut location.devices {
+                                devices.push(id.clone());
+                            } else {
+                                location.devices = Some(vec![id.clone()]);
                             }
-                        });
-                    }
-                },
-                None => {}
+                        }
+                    });
+                }
             }
         });
     }
 
     pub fn set_capabilities(&mut self, capabilities: CapabilityResponse) {
-        self.capabilities = capabilities.0
+        self.capabilities = capabilities
+            .0
             .iter()
             .map(|capability| CapabilitiesStore {
                 id: capability.id.clone(),
@@ -405,19 +402,17 @@ impl Data {
             .collect::<Vec<_>>();
     }
 
-
     pub fn set_capabilities_state(&mut self, capabilities_arg: CapabilityStateResponse) {
         self.devices.iter_mut().for_each(|(_, device)| {
             if let Some(capabilities) = &device.capabilities {
                 let mut cap = Vec::new();
-                capabilities.iter()
-                    .for_each(|capability| {
-                    let capability_store = capabilities_arg.0
-                        .iter()
-                        .find(|capability_store| capability_store.id == *capability.replace("/capability/",""));
-                        if let Some(capability_store) = capability_store {
-                            cap.push(capability_store.clone());
-                        }
+                capabilities.iter().for_each(|capability| {
+                    let capability_store = capabilities_arg.0.iter().find(|capability_store| {
+                        capability_store.id == *capability.replace("/capability/", "")
+                    });
+                    if let Some(capability_store) = capability_store {
+                        cap.push(capability_store.clone());
+                    }
                 });
                 device.capability_state = Some(CapabilityStateResponse(cap));
             }
@@ -439,14 +434,14 @@ impl Data {
 
 pub struct Store {
     pub token: Mutex<Token>,
-    pub data: Mutex<Data>
+    pub data: Mutex<Data>,
 }
 
 impl Store {
     pub fn new(token: Token) -> Self {
         Self {
             token: Mutex::new(token),
-            data: Mutex::new(Data{
+            data: Mutex::new(Data {
                 status: None,
                 devices: HashMap::new(),
                 user_storage: None,
@@ -456,7 +451,7 @@ impl Store {
                 email: None,
                 sentry_settings: None,
                 interactions: Vec::new(),
-            })
+            }),
         }
     }
 }
@@ -480,12 +475,16 @@ fn upsert_capability_value(
     }
 }
 
-fn extract_boolean_capability_value(capability_value: &crate::api_lib::capability::CapValueType) -> Option<bool> {
+fn extract_boolean_capability_value(
+    capability_value: &crate::api_lib::capability::CapValueType,
+) -> Option<bool> {
     match capability_value {
-        crate::api_lib::capability::CapValueType::CapabilityInnerVal(value) => match &value.value.value {
-            Some(interaction::FieldValue::BooleanValue(value)) => Some(*value),
-            _ => None,
-        },
+        crate::api_lib::capability::CapValueType::CapabilityInnerVal(value) => {
+            match &value.value.value {
+                Some(interaction::FieldValue::BooleanValue(value)) => Some(*value),
+                _ => None,
+            }
+        }
         crate::api_lib::capability::CapValueType::CapValueItem(value) => match &value.value {
             Some(interaction::FieldValue::BooleanValue(value)) => Some(*value),
             _ => None,
@@ -704,8 +703,15 @@ mod tests {
         }))
         .unwrap();
 
-        let alert = data.handle_socket_event(&mut event).expect("low battery must alert");
-        assert!(alert.message.unwrap().starts_with("Batterie schwach: Front Door"));
+        let alert = data
+            .handle_socket_event(&mut event)
+            .expect("low battery must alert");
+        assert!(
+            alert
+                .message
+                .unwrap()
+                .starts_with("Batterie schwach: Front Door")
+        );
 
         let device = data.devices.get("device-1").unwrap();
         let value = device.state.as_ref().unwrap().get("isBatteryLow").unwrap();
@@ -762,9 +768,16 @@ mod tests {
         }))
         .unwrap();
 
-        let alert = data.handle_socket_event(&mut event).expect("smoke alarm must alert");
+        let alert = data
+            .handle_socket_event(&mut event)
+            .expect("smoke alarm must alert");
         assert_eq!(alert.device_id, "device-2");
-        assert!(alert.message.unwrap().starts_with("Rauchalarm: Rauchmelder Flur"));
+        assert!(
+            alert
+                .message
+                .unwrap()
+                .starts_with("Rauchalarm: Rauchmelder Flur")
+        );
 
         let device = data.devices.get("device-2").unwrap();
         let cap = &device.capability_state.as_ref().unwrap().0[0];
@@ -832,4 +845,3 @@ mod tests {
         );
     }
 }
-

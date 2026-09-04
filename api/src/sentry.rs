@@ -179,8 +179,7 @@ impl NotificationProvider for TelegramNotificationProvider {
 
         Err(format!(
             "Telegram notification failed with status {}: {}",
-            status,
-            response_body
+            status, response_body
         ))
     }
 }
@@ -236,7 +235,10 @@ impl SentryService {
             .unwrap_or_default()
     }
 
-    pub async fn update_settings(&self, settings: SentrySettings) -> Result<SentrySettings, String> {
+    pub async fn update_settings(
+        &self,
+        settings: SentrySettings,
+    ) -> Result<SentrySettings, String> {
         settings.validate_for_save()?;
         self.repository.save_settings(&settings).await?;
 
@@ -254,7 +256,10 @@ impl SentryService {
         }
 
         if let Err(err) = settings.validate_for_send() {
-            log::warn!("Skipping sentry notification because provider configuration is invalid: {}", err);
+            log::warn!(
+                "Skipping sentry notification because provider configuration is invalid: {}",
+                err
+            );
             return;
         }
 
@@ -336,8 +341,7 @@ async fn send_notification_async(
             } else {
                 Err(format!(
                     "Telegram notification failed with status {}: {}",
-                    status,
-                    response_body
+                    status, response_body
                 ))
             }
         }

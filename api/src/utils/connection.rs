@@ -1,28 +1,26 @@
+use crate::api_lib::capability::Capability;
+use crate::api_lib::device::Device;
+use crate::api_lib::email::Email;
+use crate::api_lib::interaction::Interaction;
+use crate::api_lib::location::Location;
+use crate::api_lib::message;
+use crate::api_lib::status::Status;
+use crate::api_lib::user_storage::UserStorage;
+use crate::constants::constant_types::SERVER_URL;
+use crate::models::client_data::ClientData;
+use crate::models::token::{Token, TokenRequest};
+use crate::store::{Data, Store};
+use crate::utils::header_utils::HeaderUtils;
+use crate::{CLIENT_DATA, STORE_DATA, lock_and_call};
 use std::env::var;
 use std::fs;
 use std::sync::Mutex;
-use crate::models::token::{Token, TokenRequest};
-use crate::utils::header_utils::HeaderUtils;
-use crate::constants::constant_types::{SERVER_URL};
-use crate::api_lib::capability::Capability;
-use crate::api_lib::device::{Device};
-use crate::api_lib::location::{Location};
-use crate::api_lib::user_storage::UserStorage;
-use crate::{CLIENT_DATA, lock_and_call, STORE_DATA};
-use crate::api_lib::email::Email;
-use crate::api_lib::interaction::Interaction;
-use crate::api_lib::message;
-use crate::api_lib::status::Status;
-use crate::models::client_data::ClientData;
-use crate::store::{Data, Store};
 
 #[derive(Clone)]
-pub struct MemPrefill {
-}
+pub struct MemPrefill {}
 
-
-use clap::Parser;
 use crate::api_lib::livisi_response_type::LivisResponseType;
+use clap::Parser;
 
 /// Simple program to greet a person
 #[derive(Parser, Debug, Clone)]
@@ -34,11 +32,11 @@ pub struct Args {
 }
 
 impl MemPrefill {
-
-    pub async fn get_token() -> Result<Token, ()>{
+    pub async fn get_token() -> Result<Token, ()> {
         let client = reqwest::Client::new();
         let auth_url = var("BASE_URL").unwrap() + "/auth/token";
-        let result = client.post(auth_url)
+        let result = client
+            .post(auth_url)
             .headers(HeaderUtils::get_headers())
             .json::<TokenRequest>(&TokenRequest::default())
             .send()
@@ -46,41 +44,33 @@ impl MemPrefill {
 
         let response = result;
         match response {
-            Ok(e)=>{
-                match e.json::<LivisResponseType<Token>>().await {
-                    Ok(e) => {
-                        match e {
-                            LivisResponseType::Ok(e) => {
-                                return Ok(e)
-                            }
-                            LivisResponseType::Err(e) => {
-                                log::error!("Livisi rejected token request: {}", e);
-                                return Err(());
-                            }
-                        }
-                    }
-                    Err(e) => {
-                        log::error!("Could not parse Livisi token response: {}" ,e);
+            Ok(e) => match e.json::<LivisResponseType<Token>>().await {
+                Ok(e) => match e {
+                    LivisResponseType::Ok(e) => return Ok(e),
+                    LivisResponseType::Err(e) => {
+                        log::error!("Livisi rejected token request: {}", e);
                         return Err(());
                     }
+                },
+                Err(e) => {
+                    log::error!("Could not parse Livisi token response: {}", e);
+                    return Err(());
                 }
-            }
-            Err(e)=>{
+            },
+            Err(e) => {
                 log::error!("Error: {}", e);
             }
         }
         Err(())
     }
 
-
-    pub async fn do_db_initialization(args: &Args){
+    pub async fn do_db_initialization(args: &Args) {
         log::info!("Doing db initialization");
 
         let base_url = var(SERVER_URL).unwrap();
 
-
         match args.file.clone() {
-            Some(e)=>{
+            Some(e) => {
                 let _ = STORE_DATA.set(Store::new(Token::default()));
                 log::info!("Reading from file: {}", e);
                 match fs::read_to_string(e) {
@@ -102,7 +92,7 @@ impl MemPrefill {
                     }
                 }
             }
-            None=>{
+            None => {
                 let token = Self::get_token().await;
 
                 if let Ok(t) = token {
@@ -114,12 +104,11 @@ impl MemPrefill {
                         }
                         None => {
                             let e = STORE_DATA.set(Store::new(t.clone()));
-                            if e.is_err(){
+                            if e.is_err() {
                                 log::error!("Error setting store data");
                             }
                         }
                     }
-
 
                     match CLIENT_DATA.get() {
                         Some(e) => {
@@ -129,8 +118,9 @@ impl MemPrefill {
                             res.token.clone_from(&data.token);
                         }
                         None => {
-                            let e = CLIENT_DATA.set(Mutex::new(ClientData::new(t.clone().access_token)));
-                            if e.is_err(){
+                            let e = CLIENT_DATA
+                                .set(Mutex::new(ClientData::new(t.clone().access_token)));
+                            if e.is_err() {
                                 log::error!("Error setting client data");
                             }
                         }
@@ -168,18 +158,30 @@ impl MemPrefill {
                     // Devices must be refreshed before the joins below (locations,
                     // capabilities, capability states all attach onto the device map).
                     refresh!(devices.get_devices(), set_devices, "devices");
-                    refresh!(capabilities.get_capabilities(), set_capabilities, "capabilities");
+                    refresh!(
+                        capabilities.get_capabilities(),
+                        set_capabilities,
+                        "capabilities"
+                    );
                     refresh!(locations.get_locations(), set_locations, "locations");
                     refresh!(
                         capabilities.get_all_capability_states(),
                         set_capabilities_state,
                         "capability states"
                     );
-                    refresh!(user_storage.get_user_storage(), set_user_storage, "user storage");
+                    refresh!(
+                        user_storage.get_user_storage(),
+                        set_user_storage,
+                        "user storage"
+                    );
                     refresh!(status.get_status(), set_status, "status");
                     refresh!(message.get_messages(), set_messages, "messages");
                     refresh!(email.get_email_settings(), set_email, "email settings");
-                    refresh!(interaction.get_interaction(), set_interactions, "interactions");
+                    refresh!(
+                        interaction.get_interaction(),
+                        set_interactions,
+                        "interactions"
+                    );
                 }
             }
         }

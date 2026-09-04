@@ -1,29 +1,25 @@
-
-
-use serde::Serialize;
-use serde::Deserialize;
-use serde_json::Value;
 use crate::CLIENT_DATA;
+use serde::Deserialize;
+use serde::Serialize;
+use serde_json::Value;
 
-#[derive(Default,Serialize,Deserialize, Debug, Clone)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct Home{
+pub struct Home {
     pub base_url: String,
 }
 
-
-#[derive(Default,Serialize,Deserialize, Debug, Clone)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
 #[serde(default, rename_all = "camelCase")]
-pub struct HomeSetupResponse{
+pub struct HomeSetupResponse {
     pub config: HomeSetupConfig,
     pub id: Option<String>,
-    pub tags: Option<Value>
+    pub tags: Option<Value>,
 }
 
-
-#[derive(Default,Serialize,Deserialize, Debug, Clone)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
 #[serde(default, rename_all = "camelCase")]
-pub struct HomeSetupConfig{
+pub struct HomeSetupConfig {
     pub country: String,
     pub geo_location: String,
     pub household_type: String,
@@ -31,13 +27,13 @@ pub struct HomeSetupConfig{
     pub name: String,
     pub number_of_floors: i32,
     pub number_of_persons: i32,
-    pub post_code: String
+    pub post_code: String,
 }
 
-impl Home{
+impl Home {
     pub fn new(server_url: &str) -> Self {
         Self {
-            base_url: format!("{}{}", server_url, "/home")
+            base_url: format!("{}{}", server_url, "/home"),
         }
     }
 

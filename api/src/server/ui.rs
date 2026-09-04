@@ -1,7 +1,7 @@
 use axum::extract::{Path, State};
-use axum::http::{header, StatusCode};
+use axum::http::{StatusCode, header};
 use axum::response::{IntoResponse, Redirect, Response};
-use include_dir::{include_dir, Dir};
+use include_dir::{Dir, include_dir};
 use path_clean::clean;
 
 use crate::AxumState;

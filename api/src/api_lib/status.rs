@@ -1,18 +1,15 @@
-
-use serde_derive::Serialize;
-use serde_derive::Deserialize;
 use crate::CLIENT_DATA;
-
-
+use serde_derive::Deserialize;
+use serde_derive::Serialize;
 
 #[derive(Clone)]
-pub struct Status{
+pub struct Status {
     base_url: String,
 }
 
-#[derive(Default,Serialize,Deserialize, Debug, Clone)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct StatusResponse{
+pub struct StatusResponse {
     pub app_version: String,
     pub config_version: i32,
     pub connected: bool,
@@ -20,10 +17,10 @@ pub struct StatusResponse{
     pub network: StatusNetwork,
     pub os_version: String,
     pub serial_number: String,
-    pub operation_status: String
+    pub operation_status: String,
 }
 
-#[derive(Default,Serialize,Deserialize, Debug, Clone)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct StatusNetwork {
     pub backend_available: bool,
@@ -44,20 +41,17 @@ pub struct StatusNetwork {
 impl Status {
     pub fn new(server_url: &str) -> Self {
         Self {
-            base_url: format!("{}{}", server_url, "/status")
+            base_url: format!("{}{}", server_url, "/status"),
         }
     }
-   pub async fn get_status(&self) -> Result<StatusResponse, reqwest::Error> {
-       let api_client;
-       {
-           let locked_client = CLIENT_DATA.get().unwrap().lock();
-           api_client = locked_client.unwrap().client.clone()
-       }
-        let response = api_client.get(self.base_url.clone())
-            .send()
-            .await?;
+    pub async fn get_status(&self) -> Result<StatusResponse, reqwest::Error> {
+        let api_client;
+        {
+            let locked_client = CLIENT_DATA.get().unwrap().lock();
+            api_client = locked_client.unwrap().client.clone()
+        }
+        let response = api_client.get(self.base_url.clone()).send().await?;
 
-            response.json::<StatusResponse>()
-            .await
+        response.json::<StatusResponse>().await
     }
 }

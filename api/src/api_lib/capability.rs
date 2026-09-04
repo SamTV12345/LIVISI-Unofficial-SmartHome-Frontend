@@ -1,93 +1,64 @@
-
-use serde_derive::Serialize;
+use crate::api_lib::interaction::FieldValue;
 use serde_derive::Deserialize;
-use crate::api_lib::interaction::{FieldValue};
+use serde_derive::Serialize;
 
-use std::collections::HashMap;
 use crate::CLIENT_DATA;
+use std::collections::HashMap;
 
 #[derive(Clone)]
-pub struct Capability{
+pub struct Capability {
     pub base_url: String,
-    pub server_url: String
+    pub server_url: String,
 }
 
-#[derive(Default,Serialize,Deserialize, Debug)]
+#[derive(Default, Serialize, Deserialize, Debug)]
 pub struct CapabilityResponse(pub Vec<CapabilityInner>);
 
-#[derive(Default,Serialize,Deserialize, Debug)]
-pub struct CapabilityInner{
+#[derive(Default, Serialize, Deserialize, Debug)]
+pub struct CapabilityInner {
     pub id: String,
     pub r#type: String,
     pub device: String,
-    pub config: CapabilityConfig
+    pub config: CapabilityConfig,
 }
 
-#[derive(Default,Serialize,Deserialize, Debug, Clone)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct CapabilityConfig{
+pub struct CapabilityConfig {
     pub activity_log_active: bool,
-    pub name: String
+    pub name: String,
 }
 
-#[derive(Default,Serialize,Deserialize, Debug, Clone)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
 pub struct CapabilityStateResponse(pub Vec<CapabilityStateInner>);
 
-#[derive(Default,Serialize,Deserialize, Debug, Clone)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct CapabilityStateInner{
+pub struct CapabilityStateInner {
     pub id: String,
-    pub state: Option<HashMap<String,CapValueType>>
+    pub state: Option<HashMap<String, CapValueType>>,
 }
 
-#[derive(Serialize,Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CapabilityInnerVal {
     pub value: CapValueItem,
 }
 
-#[derive(Serialize,Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(untagged)]
 pub enum CapValueType {
     CapabilityInnerVal(CapabilityInnerVal),
     CapValueItem(CapValueItem),
 }
 
-#[derive(Serialize,Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct CapValueItem{
+pub struct CapValueItem {
     pub value: Option<FieldValue>,
     pub last_changed: String,
 }
 
-#[derive(Default,Serialize,Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct IntegerCapabilityState{
-    pub value: i32,
-    pub last_changed: String,
-}
-
-#[derive(Default,Serialize,Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct FloatCapabilityState{
-    pub value: f32,
-    pub last_changed: String,
-}
-
-#[derive(Default,Serialize,Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct StringCapabilityState{
-    pub value: String,
-    pub last_changed: String,
-}
-
-#[derive(Default,Serialize,Deserialize, Debug)]
-#[serde(rename_all = "camelCase")]
-pub struct BooleanCapabilityState{
-    pub value: bool,
-    pub last_changed: String
-}
-
-#[derive(Default,Serialize,Deserialize, Debug)]
+#[derive(Default, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct CapabilityTempData {
     event_type: String,
@@ -97,28 +68,29 @@ pub struct CapabilityTempData {
     entity_id: String,
 }
 
-
-impl Capability{
+impl Capability {
     pub fn new(server_url: &str) -> Self {
         Self {
             server_url: server_url.to_string(),
-            base_url: format!("{}{}", server_url,"/capability")
+            base_url: format!("{}{}", server_url, "/capability"),
         }
     }
 
-    pub async fn get_historic_data(&self, path: &str) -> Result<Vec<CapabilityTempData>, reqwest::Error> {
+    pub async fn get_historic_data(
+        &self,
+        path: &str,
+    ) -> Result<Vec<CapabilityTempData>, reqwest::Error> {
         let api_client;
-            {
-                let locked_client = CLIENT_DATA.get().unwrap().lock();
-                api_client = locked_client.unwrap().client.clone()
-            }
-        let response = api_client.get(self.server_url.clone()+path)
+        {
+            let locked_client = CLIENT_DATA.get().unwrap().lock();
+            api_client = locked_client.unwrap().client.clone()
+        }
+        let response = api_client
+            .get(self.server_url.clone() + path)
             .send()
             .await?;
 
-            response
-                .json::<Vec<CapabilityTempData>>()
-                .await
+        response.json::<Vec<CapabilityTempData>>().await
     }
 
     pub async fn get_capabilities(&self) -> Result<CapabilityResponse, reqwest::Error> {
@@ -128,30 +100,24 @@ impl Capability{
             api_client = locked_client.unwrap().client.clone()
         }
 
-        let response = api_client.get(self.base_url.clone())
-            .send()
-            .await?;
+        let response = api_client.get(self.base_url.clone()).send().await?;
 
-            response
-                .json::<CapabilityResponse>()
-                .await
+        response.json::<CapabilityResponse>().await
     }
 
-
-
-
-    pub async fn get_all_capability_states(&self) -> Result<CapabilityStateResponse, reqwest::Error> {
+    pub async fn get_all_capability_states(
+        &self,
+    ) -> Result<CapabilityStateResponse, reqwest::Error> {
         let api_client;
         {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
             api_client = locked_client.unwrap().client.clone()
         }
-        let response = api_client.get(self.base_url.clone()+"/states")
+        let response = api_client
+            .get(self.base_url.clone() + "/states")
             .send()
             .await?;
 
-            response
-                .json::<CapabilityStateResponse>()
-                .await
+        response.json::<CapabilityStateResponse>().await
     }
 }

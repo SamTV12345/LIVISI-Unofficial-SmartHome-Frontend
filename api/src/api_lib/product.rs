@@ -1,7 +1,7 @@
 use serde_json::Value;
 
-use crate::utils::header_utils::HeaderUtils;
 use crate::CLIENT_DATA;
+use crate::utils::header_utils::HeaderUtils;
 
 #[derive(Clone)]
 pub struct Product {

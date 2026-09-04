@@ -7,9 +7,9 @@ mod server;
 mod store;
 mod utils;
 
+use axum::Router;
 use axum::middleware;
 use axum::routing::{get, post};
-use axum::Router;
 use clap::Parser;
 use kv::Config;
 use std::env::var;
@@ -32,14 +32,16 @@ use crate::api_lib::unmount_service::USBService;
 use crate::api_lib::user::User;
 use crate::api_lib::user_storage::UserStorage;
 use crate::models::client_data::ClientData;
+use crate::sentry::SentryService;
 use crate::server::auth::{
-    auth_middleware, build_auth_runtime, get_api_config, login, AuthRuntime,
+    AuthRuntime, auth_middleware, build_auth_runtime, get_api_config, login,
 };
 use crate::server::handlers::*;
 use crate::server::health::{liveness_probe, readiness_probe, shutdown_signal};
-use crate::server::ui::{get_images, get_resources, get_ui_file, index, root_redirect, ui_redirect};
+use crate::server::ui::{
+    get_images, get_resources, get_ui_file, index, root_redirect, ui_redirect,
+};
 use crate::server::ws::{init_socket, start_connection};
-use crate::sentry::SentryService;
 use crate::store::Store;
 use crate::utils::connection::{Args, MemPrefill};
 use crate::utils::logging::init_logging;
@@ -80,12 +82,14 @@ async fn main() -> std::io::Result<()> {
     let args = Args::parse();
     init_socket(base_url.clone(), &args).await;
     MemPrefill::do_db_initialization(&args).await;
-    let sentry_service = SentryService::new().await.expect("Could not initialize sentry service");
+    let sentry_service = SentryService::new()
+        .await
+        .expect("Could not initialize sentry service");
     let _ = SENTRY_SERVICE_DATA.set(sentry_service.clone());
-    if let Some(store_data) = STORE_DATA.get() {
-        if let Ok(mut data) = store_data.data.lock() {
-            data.set_sentry_settings(sentry_service.get_settings());
-        }
+    if let Some(store_data) = STORE_DATA.get()
+        && let Ok(mut data) = store_data.data.lock()
+    {
+        data.set_sentry_settings(sentry_service.get_settings());
     }
 
     let status = Status::new(&base_url);

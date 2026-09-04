@@ -1,38 +1,37 @@
-use std::collections::HashMap;
+use crate::api_lib::interaction::{FieldValue, InteractionResponse};
 use serde_derive::{Deserialize, Serialize};
 use serde_json::Value;
-use crate::api_lib::interaction::{FieldValue, InteractionResponse};
+use std::collections::HashMap;
 
-
-#[derive(Serialize,Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct SocketEvent {
     pub id: Option<String>,
     pub r#type: String,
-    pub  namespace: String,
-    pub  desc: String,
+    pub namespace: String,
+    pub desc: String,
     pub class: Option<String>,
     pub source: String,
-    pub  timestamp: String,
-    pub  properties: Option<Properties>,
-    pub  context: Option<HashMap<String, FieldValue>>,
+    pub timestamp: String,
+    pub properties: Option<Properties>,
+    pub context: Option<HashMap<String, FieldValue>>,
     pub data: Option<SocketData>,
     pub device: Option<String>,
-    pub read: Option<bool>
+    pub read: Option<bool>,
 }
 
-#[derive(Serialize,Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(untagged)]
 pub enum SocketData {
     ConfigVersion(ConfigVersion),
     DeviceUnreachable(Box<DeviceUnreachable>),
-    Value(Value)
+    Value(Value),
 }
 
-#[derive(Serialize,Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct DeviceUnreachable {
     id: String,
-    class:String,
+    class: String,
     r#type: String,
     namespace: String,
     desc: String,
@@ -45,13 +44,12 @@ pub struct DeviceUnreachable {
     properties: HashMap<String, Value>,
 }
 
-#[derive(Serialize,Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ConfigVersion {
     pub config_version: i32,
-    pub interactions: Vec<InteractionResponse>
+    pub interactions: Vec<InteractionResponse>,
 }
-
 
 pub enum Source {
     Device,
@@ -59,12 +57,12 @@ pub enum Source {
     Location,
     User,
     System,
-    Message
+    Message,
 }
 
 impl SocketEvent {
     pub fn get_source(&self) -> Source {
-        return if self.source.starts_with("/device") {
+        if self.source.starts_with("/device") {
             Source::Device
         } else if self.source.starts_with("/capability") {
             Source::Capability
@@ -72,23 +70,22 @@ impl SocketEvent {
             Source::Location
         } else if self.source.starts_with("/user") {
             Source::User
-        } else if let Some(m) = self.class.clone(){
+        } else if let Some(m) = self.class.clone() {
             if m == "message" {
-               return Source::Message
+                return Source::Message;
             }
             Source::System
         } else {
             Source::System
-        };
+        }
     }
 
     pub fn get_id(&self) -> Option<String> {
-        return self.source.split("/").last().map(|s| s.to_string());
+        self.source.split("/").last().map(|s| s.to_string())
     }
 }
 
-
-#[derive(Serialize,Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(untagged)]
 pub enum Properties {
     PointTemperature(PointTemperature),
@@ -106,100 +103,98 @@ pub enum Properties {
     BatteryLow(BatteryLow),
     IsSmokeAlarm(IsSmokeAlarm),
     ChangeReason(ChangeReason),
-    Value(Value)
+    Value(Value),
 }
 
-#[derive(Serialize,Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ChangeReason {
     pub change_reason: String,
     pub expires_after_minutes: i32,
     pub module: String,
-    pub requester_info: String
+    pub requester_info: String,
 }
 
-#[derive(Serialize,Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Reachable {
-    pub is_reachable: bool
+    pub is_reachable: bool,
 }
 
-#[derive(Serialize,Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct BatteryLow {
-    pub is_battery_low: bool
+    pub is_battery_low: bool,
 }
 
-#[derive(Serialize,Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct IsSmokeAlarm {
-    pub is_smoke_alarm: bool
+    pub is_smoke_alarm: bool,
 }
 
-
-#[derive(Serialize,Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct HumidityChange {
-    pub humidity: f64
+    pub humidity: f64,
 }
 
-#[derive(Serialize,Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct CPUUSage {
-    pub cpu_usage: f64
+    pub cpu_usage: f64,
 }
 
-
-#[derive(Serialize,Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct HeatingSetPoint {
-    pub setpoint_temperature: f64
+    pub setpoint_temperature: f64,
 }
 
-#[derive(Serialize,Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct DeviceConfigurationState {
-    pub device_configuration_state: String
+    pub device_configuration_state: String,
 }
 
-#[derive(Serialize,Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ZustandChange {
-    pub value: bool
+    pub value: bool,
 }
 
-#[derive(Serialize,Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct PropertyConfigVersion {
-    pub config_version: i32
+    pub config_version: i32,
 }
 
-#[derive(Serialize,Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct PointTemperature {
-    pub point_temperature: f64
+    pub point_temperature: f64,
 }
 
-#[derive(Default,Serialize,Deserialize, Debug)]
+#[derive(Default, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Temperature {
-    pub temperature: f64
+    pub temperature: f64,
 }
 
-#[derive(Default,Serialize,Deserialize, Debug)]
+#[derive(Default, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct Threshold {
     pub threshold: f64,
-    pub status: String
+    pub status: String,
 }
 
-#[derive(Default,Serialize,Deserialize, Debug)]
+#[derive(Default, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct OnState {
-    pub on_state: bool
+    pub on_state: bool,
 }
 
-#[derive(Default,Serialize,Deserialize, Debug)]
+#[derive(Default, Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct IsOpenState {
-    pub is_open: bool
+    pub is_open: bool,
 }

@@ -1,17 +1,17 @@
-use serde_derive::{Deserialize, Serialize};
 use crate::CLIENT_DATA;
+use serde_derive::{Deserialize, Serialize};
 
 #[derive(Clone)]
 pub struct Email {
     pub base_url: String,
 }
 
-#[derive(Default,Serialize,Deserialize, Debug, Clone)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
 pub struct EmailResponse {
-    pub result: String
+    pub result: String,
 }
 
-#[derive(Default,Serialize,Deserialize, Debug, Clone)]
+#[derive(Default, Serialize, Deserialize, Debug, Clone)]
 pub struct EmailAPI {
     server_address: String,
     server_port_number: i32,
@@ -22,11 +22,10 @@ pub struct EmailAPI {
     notification_device_low_battery: bool,
 }
 
-
 impl Email {
     pub fn new(server_url: &str) -> Self {
         Self {
-            base_url: format!("{}{}", server_url, "/email")
+            base_url: format!("{}{}", server_url, "/email"),
         }
     }
 
@@ -36,15 +35,13 @@ impl Email {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
             api_client = locked_client.unwrap().client.clone()
         }
-        let response = api_client.get(self.base_url.clone()+"/settings")
+        let response = api_client
+            .get(self.base_url.clone() + "/settings")
             .send()
             .await?;
 
-            response
-                .json::<EmailAPI>()
-            .await
+        response.json::<EmailAPI>().await
     }
-
 
     pub async fn update_email_settings(&self, email_data: &EmailAPI) -> u16 {
         let api_client;
@@ -52,7 +49,8 @@ impl Email {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
             api_client = locked_client.unwrap().client.clone()
         }
-        let response = api_client.put(self.base_url.clone()+"/settings")
+        let response = api_client
+            .put(self.base_url.clone() + "/settings")
             .json(&email_data)
             .send()
             .await
@@ -67,7 +65,8 @@ impl Email {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
             api_client = locked_client.unwrap().client.clone()
         }
-        api_client.get(self.base_url.clone()+"/test")
+        api_client
+            .get(self.base_url.clone() + "/test")
             .send()
             .await
             .unwrap()

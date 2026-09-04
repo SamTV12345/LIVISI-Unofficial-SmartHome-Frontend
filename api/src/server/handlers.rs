@@ -1,10 +1,10 @@
+use axum::Json;
 use axum::extract::{Path, State};
 use axum::http::{StatusCode, Uri};
 use axum::response::{IntoResponse, Response};
-use axum::Json;
 use chrono::{DateTime, Days, NaiveDate, Utc};
 use serde::Serialize;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 use sunrise::{Coordinates, SolarDay, SolarEvent};
 use utoipa::OpenApi;
 
@@ -263,8 +263,9 @@ pub(crate) async fn post_action(
     Json(action_data): Json<ActionPost>,
 ) -> Response {
     match state.action.post_action(action_data).await {
-        LivisResponseType::Ok(result) => (StatusCode::OK, Json(result)).into_response(),
-        LivisResponseType::Err(err) => map_livisi_error(err),
+        Ok(LivisResponseType::Ok(result)) => (StatusCode::OK, Json(result)).into_response(),
+        Ok(LivisResponseType::Err(err)) => map_livisi_error(err),
+        Err(err) => upstream_error(err),
     }
 }
 
@@ -295,10 +296,10 @@ pub(crate) async fn update_interaction_by_id(
         Ok(response) => {
             match state.interaction.get_interaction().await {
                 Ok(refreshed_interactions) => {
-                    if let Some(store_data) = STORE_DATA.get() {
-                        if let Ok(mut data) = store_data.data.lock() {
-                            data.set_interactions(refreshed_interactions);
-                        }
+                    if let Some(store_data) = STORE_DATA.get()
+                        && let Ok(mut data) = store_data.data.lock()
+                    {
+                        data.set_interactions(refreshed_interactions);
                     }
                 }
                 Err(err) => log::error!(
@@ -333,8 +334,11 @@ pub(crate) async fn unmount_usb_storage(State(state): State<AxumState>) -> Respo
     (StatusCode::OK, "USB storage unmounted.").into_response()
 }
 
-pub(crate) async fn get_usb_status(State(state): State<AxumState>) -> impl IntoResponse {
-    Json(state.usb_service.get_usb_status().await)
+pub(crate) async fn get_usb_status(State(state): State<AxumState>) -> Response {
+    match state.usb_service.get_usb_status().await {
+        Ok(status) => Json(status).into_response(),
+        Err(err) => upstream_error(err),
+    }
 }
 
 pub(crate) async fn get_email_settings(State(state): State<AxumState>) -> Response {
@@ -349,10 +353,10 @@ pub(crate) async fn update_email_settings(
     Json(email_data): Json<EmailAPI>,
 ) -> Response {
     let status = state.email.update_email_settings(&email_data).await;
-    if let Some(store_data) = STORE_DATA.get() {
-        if let Ok(mut store) = store_data.data.lock() {
-            store.email = Some(email_data);
-        }
+    if let Some(store_data) = STORE_DATA.get()
+        && let Ok(mut store) = store_data.data.lock()
+    {
+        store.email = Some(email_data);
     }
     StatusCode::from_u16(status)
         .unwrap_or(StatusCode::INTERNAL_SERVER_ERROR)
@@ -377,10 +381,10 @@ pub(crate) async fn update_sentry_settings(
         .await
     {
         Ok(updated_settings) => {
-            if let Some(store_data) = STORE_DATA.get() {
-                if let Ok(mut store) = store_data.data.lock() {
-                    store.set_sentry_settings(updated_settings.clone());
-                }
+            if let Some(store_data) = STORE_DATA.get()
+                && let Ok(mut store) = store_data.data.lock()
+            {
+                store.set_sentry_settings(updated_settings.clone());
             }
             (StatusCode::OK, Json(updated_settings)).into_response()
         }
@@ -485,10 +489,10 @@ fn first_future_event(
     first: Option<DateTime<Utc>>,
     second: Option<DateTime<Utc>>,
 ) -> Option<DateTime<Utc>> {
-    if let Some(time) = first {
-        if time > now {
-            return Some(time);
-        }
+    if let Some(time) = first
+        && time > now
+    {
+        return Some(time);
     }
     second.filter(|time| *time > now)
 }

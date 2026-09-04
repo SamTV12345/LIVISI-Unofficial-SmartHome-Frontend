@@ -63,7 +63,7 @@ async fn websocket_session(mut socket: WebSocket) {
     }
 }
 
-fn build_livisi_ws_url(base_url: &str, token: &str) -> Option<Url> {
+fn build_livisi_ws_url(base_url: &str, token: &str, is_classic: bool) -> Option<Url> {
     let ws_base = if base_url.starts_with("https://") {
         base_url.replacen("https://", "wss://", 1)
     } else {
@@ -79,12 +79,35 @@ fn build_livisi_ws_url(base_url: &str, token: &str) -> Option<Url> {
             }
         };
 
-    if let Err(err) = url.set_port(Some(9090)) {
-        log::error!("Could not set websocket port to 9090: {:?}", err);
+    // SHC 1 ("Classic") hosts the events websocket on the same port as its REST
+    // API (8080); SHC 2 uses a dedicated port (9090). See the openHAB
+    // livisismarthome binding's URLCreator.createEventsURL().
+    let port = if is_classic { 8080 } else { 9090 };
+    if let Err(err) = url.set_port(Some(port)) {
+        log::error!("Could not set websocket port to {}: {:?}", port, err);
         return None;
     }
 
     Some(url)
+}
+
+/// Determines whether the connected SHC is the first-generation ("Classic")
+/// controller. Classic controllers are exposed as a device with type "SHC";
+/// the second generation uses "SHCA" (see the openHAB binding's DeviceDTO).
+fn is_classic_controller() -> bool {
+    match STORE_DATA.get() {
+        Some(store_data) => match store_data.data.lock() {
+            Ok(data) => data.devices.values().any(|device| device.r#type == "SHC"),
+            Err(err) => {
+                log::warn!(
+                    "Could not acquire store lock to detect controller type: {}",
+                    err
+                );
+                false
+            }
+        },
+        None => false,
+    }
 }
 
 fn process_socket_payload(payload: &str) {
@@ -109,10 +132,10 @@ fn process_socket_payload(payload: &str) {
         return;
     };
 
-    if let Some(alert) = sentry_alert {
-        if let Some(sentry_service) = SENTRY_SERVICE_DATA.get() {
-            sentry_service.dispatch_alert(alert);
-        }
+    if let Some(alert) = sentry_alert
+        && let Some(sentry_service) = SENTRY_SERVICE_DATA.get()
+    {
+        sentry_service.dispatch_alert(alert);
     }
 
     if let Some(SocketValue(props)) = &parsed_message.properties {
@@ -166,7 +189,8 @@ pub(crate) async fn init_socket(base_url: String, x: &Args) {
                 Ok(token) => {
                     let token_encoded =
                         urlencoding::encode(token.access_token.as_str()).into_owned();
-                    if let Some(url) = build_livisi_ws_url(&base_url, &token_encoded) {
+                    let is_classic = is_classic_controller();
+                    if let Some(url) = build_livisi_ws_url(&base_url, &token_encoded, is_classic) {
                         match connect(url.as_str()) {
                             Ok((mut socket, _response)) => {
                                 log::info!("Connected to Livisi websocket.");
