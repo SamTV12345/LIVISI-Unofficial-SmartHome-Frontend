@@ -51,7 +51,9 @@ impl Location {
             .await
             .unwrap();
 
-        response.json::<LocationResponse>().await.unwrap()
+        crate::api_lib::parse_json::<LocationResponse>(response)
+            .await
+            .unwrap()
     }
 
     pub async fn delete_location(&self, location_id: String) -> LocationResponse {
@@ -66,7 +68,9 @@ impl Location {
             .await
             .unwrap();
 
-        response.json::<LocationResponse>().await.unwrap()
+        crate::api_lib::parse_json::<LocationResponse>(response)
+            .await
+            .unwrap()
     }
 
     pub async fn create_location(&self, location_data: LocationResponse) -> LocationResponse {
@@ -82,10 +86,12 @@ impl Location {
             .await
             .unwrap();
 
-        response.json::<LocationResponse>().await.unwrap()
+        crate::api_lib::parse_json::<LocationResponse>(response)
+            .await
+            .unwrap()
     }
 
-    pub async fn get_locations(&self) -> Result<Vec<LocationResponse>, reqwest::Error> {
+    pub async fn get_locations(&self) -> Result<Vec<LocationResponse>, crate::api_lib::ApiError> {
         let api_client;
         {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
@@ -94,7 +100,7 @@ impl Location {
 
         let response = api_client.get(self.base_url.clone()).send().await?;
 
-        response.json::<Vec<LocationResponse>>().await
+        crate::api_lib::parse_json::<Vec<LocationResponse>>(response).await
     }
 
     pub async fn get_location_by_id(&self, location_id: String) -> LocationResponse {
@@ -109,6 +115,8 @@ impl Location {
             .await
             .unwrap();
 
-        response.json::<LocationResponse>().await.unwrap()
+        crate::api_lib::parse_json::<LocationResponse>(response)
+            .await
+            .unwrap()
     }
 }

@@ -27,6 +27,6 @@ impl Product {
             .send()
             .await
             .unwrap();
-        response.json::<Value>().await.unwrap()
+        crate::api_lib::parse_json::<Value>(response).await.unwrap()
     }
 }

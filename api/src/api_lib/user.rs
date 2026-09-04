@@ -38,6 +38,8 @@ impl User {
 
         let response = api_client.get(self.base_url.clone()).send().await.unwrap();
 
-        response.json::<UserResponse>().await.unwrap()
+        crate::api_lib::parse_json::<UserResponse>(response)
+            .await
+            .unwrap()
     }
 }

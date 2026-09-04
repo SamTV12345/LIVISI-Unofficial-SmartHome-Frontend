@@ -39,7 +39,9 @@ impl USBService {
             .unwrap();
     }
 
-    pub async fn get_usb_status(&self) -> Result<LivisResponseType<USBStatus>, reqwest::Error> {
+    pub async fn get_usb_status(
+        &self,
+    ) -> Result<LivisResponseType<USBStatus>, crate::api_lib::ApiError> {
         let api_client;
         {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
@@ -47,6 +49,6 @@ impl USBService {
         }
         let response = api_client.get(self.usb_status.clone()).send().await?;
 
-        response.json::<LivisResponseType<USBStatus>>().await
+        crate::api_lib::parse_json::<LivisResponseType<USBStatus>>(response).await
     }
 }

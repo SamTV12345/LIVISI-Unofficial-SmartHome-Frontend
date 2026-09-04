@@ -48,7 +48,7 @@ impl Action {
     pub async fn post_action(
         &self,
         action: ActionPost,
-    ) -> Result<LivisResponseType<ActionPostResponse>, reqwest::Error> {
+    ) -> Result<LivisResponseType<ActionPostResponse>, crate::api_lib::ApiError> {
         let api_client;
         {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
@@ -59,10 +59,7 @@ impl Action {
             .json(&action)
             .send()
             .await?;
-        match response
-            .json::<LivisResponseType<ActionPostResponse>>()
-            .await
-        {
+        match crate::api_lib::parse_json::<LivisResponseType<ActionPostResponse>>(response).await {
             Ok(parsed) => Ok(parsed),
             Err(err) => {
                 log::warn!(

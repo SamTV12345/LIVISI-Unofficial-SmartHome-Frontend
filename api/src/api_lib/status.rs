@@ -44,7 +44,7 @@ impl Status {
             base_url: format!("{}{}", server_url, "/status"),
         }
     }
-    pub async fn get_status(&self) -> Result<StatusResponse, reqwest::Error> {
+    pub async fn get_status(&self) -> Result<StatusResponse, crate::api_lib::ApiError> {
         let api_client;
         {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
@@ -52,6 +52,6 @@ impl Status {
         }
         let response = api_client.get(self.base_url.clone()).send().await?;
 
-        response.json::<StatusResponse>().await
+        crate::api_lib::parse_json::<StatusResponse>(response).await
     }
 }

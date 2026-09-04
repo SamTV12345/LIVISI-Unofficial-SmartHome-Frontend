@@ -57,7 +57,7 @@ impl Message {
         }
     }
 
-    pub async fn get_messages(&self) -> Result<Vec<MessageResponse>, reqwest::Error> {
+    pub async fn get_messages(&self) -> Result<Vec<MessageResponse>, crate::api_lib::ApiError> {
         let api_client;
         {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
@@ -65,7 +65,7 @@ impl Message {
         }
         let response = api_client.get(self.base_url.clone()).send().await?;
 
-        response.json::<Vec<MessageResponse>>().await
+        crate::api_lib::parse_json::<Vec<MessageResponse>>(response).await
     }
 
     pub async fn get_message_by_id(&self, message_id: String) -> MessageResponse {
@@ -80,7 +80,9 @@ impl Message {
             .await
             .unwrap();
 
-        response.json::<MessageResponse>().await.unwrap()
+        crate::api_lib::parse_json::<MessageResponse>(response)
+            .await
+            .unwrap()
     }
 
     pub async fn delete_message_by_id(&self, message_id: String) -> Response {

@@ -34,6 +34,8 @@ impl Hash {
             .await
             .unwrap();
 
-        response.json::<HashResponse>().await.unwrap()
+        crate::api_lib::parse_json::<HashResponse>(response)
+            .await
+            .unwrap()
     }
 }

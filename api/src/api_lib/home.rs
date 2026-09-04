@@ -58,8 +58,7 @@ impl Home {
             return Err(format!("/home/setup returned status {}", status));
         }
 
-        response
-            .json::<HomeSetupResponse>()
+        crate::api_lib::parse_json::<HomeSetupResponse>(response)
             .await
             .map_err(|error| format!("Could not decode /home/setup response: {}", error))
     }

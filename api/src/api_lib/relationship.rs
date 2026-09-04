@@ -37,6 +37,8 @@ impl Relationship {
         }
         let response = api_client.get(self.base_url.clone()).send().await.unwrap();
 
-        response.json::<Vec<RelationshipResponse>>().await.unwrap()
+        crate::api_lib::parse_json::<Vec<RelationshipResponse>>(response)
+            .await
+            .unwrap()
     }
 }

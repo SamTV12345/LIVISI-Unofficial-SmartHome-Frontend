@@ -44,7 +44,7 @@ impl MemPrefill {
 
         let response = result;
         match response {
-            Ok(e) => match e.json::<LivisResponseType<Token>>().await {
+            Ok(e) => match crate::api_lib::parse_json::<LivisResponseType<Token>>(e).await {
                 Ok(e) => match e {
                     LivisResponseType::Ok(e) => return Ok(e),
                     LivisResponseType::Err(e) => {

@@ -29,7 +29,7 @@ impl Email {
         }
     }
 
-    pub async fn get_email_settings(&self) -> Result<EmailAPI, reqwest::Error> {
+    pub async fn get_email_settings(&self) -> Result<EmailAPI, crate::api_lib::ApiError> {
         let api_client;
         {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
@@ -40,7 +40,7 @@ impl Email {
             .send()
             .await?;
 
-        response.json::<EmailAPI>().await
+        crate::api_lib::parse_json::<EmailAPI>(response).await
     }
 
     pub async fn update_email_settings(&self, email_data: &EmailAPI) -> u16 {
@@ -65,12 +65,12 @@ impl Email {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
             api_client = locked_client.unwrap().client.clone()
         }
-        api_client
+        let response = api_client
             .get(self.base_url.clone() + "/test")
             .send()
             .await
-            .unwrap()
-            .json::<EmailResponse>()
+            .unwrap();
+        crate::api_lib::parse_json::<EmailResponse>(response)
             .await
             .unwrap()
     }

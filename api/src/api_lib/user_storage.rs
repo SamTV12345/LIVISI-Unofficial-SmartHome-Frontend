@@ -18,7 +18,7 @@ impl UserStorage {
         }
     }
 
-    pub async fn get_user_storage(&self) -> Result<UserStorageResponse, reqwest::Error> {
+    pub async fn get_user_storage(&self) -> Result<UserStorageResponse, crate::api_lib::ApiError> {
         let api_client;
         {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
@@ -30,6 +30,6 @@ impl UserStorage {
             .send()
             .await?;
 
-        response.json::<UserStorageResponse>().await
+        crate::api_lib::parse_json::<UserStorageResponse>(response).await
     }
 }

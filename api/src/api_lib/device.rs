@@ -78,7 +78,7 @@ impl Device {
             base_url: format!("{}{}", server_url, "/device"),
         }
     }
-    pub async fn get_devices(&self) -> Result<DeviceResponse, reqwest::Error> {
+    pub async fn get_devices(&self) -> Result<DeviceResponse, crate::api_lib::ApiError> {
         let api_client;
         {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
@@ -89,7 +89,7 @@ impl Device {
             .headers(HeaderUtils::get_auth_token_header())
             .send()
             .await?;
-        response.json::<DeviceResponse>().await
+        crate::api_lib::parse_json::<DeviceResponse>(response).await
     }
 
     pub async fn get_all_device_states(&self) -> DeviceStateResponse {
@@ -103,6 +103,8 @@ impl Device {
             .send()
             .await
             .unwrap();
-        response.json::<DeviceStateResponse>().await.unwrap()
+        crate::api_lib::parse_json::<DeviceStateResponse>(response)
+            .await
+            .unwrap()
     }
 }

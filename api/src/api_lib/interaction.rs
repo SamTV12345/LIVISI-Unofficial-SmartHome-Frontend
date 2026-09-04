@@ -166,7 +166,9 @@ impl Interaction {
         }
     }
 
-    pub async fn get_interaction(&self) -> Result<Vec<InteractionResponse>, reqwest::Error> {
+    pub async fn get_interaction(
+        &self,
+    ) -> Result<Vec<InteractionResponse>, crate::api_lib::ApiError> {
         let api_client;
         {
             let locked_client = CLIENT_DATA.get().unwrap().lock();
@@ -175,7 +177,7 @@ impl Interaction {
 
         let response = api_client.get(self.base_url.clone()).send().await?;
 
-        response.json::<Vec<InteractionResponse>>().await
+        crate::api_lib::parse_json::<Vec<InteractionResponse>>(response).await
     }
 
     pub async fn get_interaction_by_id(&self, id: String) -> InteractionResponse {
@@ -191,7 +193,9 @@ impl Interaction {
             .await
             .unwrap();
 
-        response.json::<InteractionResponse>().await.unwrap()
+        crate::api_lib::parse_json::<InteractionResponse>(response)
+            .await
+            .unwrap()
     }
 
     pub async fn update_interaction_by_id(
