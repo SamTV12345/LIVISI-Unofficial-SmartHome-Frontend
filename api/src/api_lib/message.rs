@@ -2,6 +2,7 @@ use crate::CLIENT_DATA;
 use reqwest::Response;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
+use serde_json::Value;
 use std::collections::HashMap;
 
 #[derive(Clone)]
@@ -48,6 +49,11 @@ pub struct MessageProperties {
     pub change_reason: Option<String>,
     pub expires_after_minutes: Option<i32>,
     pub timestamp: Option<String>,
+    /// Captures message-specific properties not modelled above (product/app
+    /// install messages: productType, productVersion, appName, appVersion,
+    /// product, ...) so they reach the frontend instead of being dropped.
+    #[serde(flatten, default)]
+    pub extra: HashMap<String, Value>,
 }
 
 impl Message {

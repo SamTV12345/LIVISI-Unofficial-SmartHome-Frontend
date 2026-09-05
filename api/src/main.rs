@@ -1,4 +1,5 @@
 mod api_lib;
+mod backup;
 mod constants;
 mod models;
 mod openapi_doc;
@@ -31,6 +32,7 @@ use crate::api_lib::status::Status;
 use crate::api_lib::unmount_service::USBService;
 use crate::api_lib::user::User;
 use crate::api_lib::user_storage::UserStorage;
+use crate::backup::{BackupRepository, restore_latest_snapshot, save_current_snapshot};
 use crate::models::client_data::ClientData;
 use crate::sentry::SentryService;
 use crate::server::auth::{
@@ -49,6 +51,7 @@ use crate::utils::logging::init_logging;
 pub static CLIENT_DATA: OnceLock<Mutex<ClientData>> = OnceLock::new();
 pub static STORE_DATA: OnceLock<Store> = OnceLock::new();
 pub static SENTRY_SERVICE_DATA: OnceLock<SentryService> = OnceLock::new();
+pub static BACKUP_REPOSITORY: OnceLock<BackupRepository> = OnceLock::new();
 
 #[derive(Clone)]
 struct AxumState {
@@ -81,7 +84,29 @@ async fn main() -> std::io::Result<()> {
 
     let args = Args::parse();
     init_socket(base_url.clone(), &args).await;
-    MemPrefill::do_db_initialization(&args).await;
+
+    // Config snapshots let us restore a broken/empty SHC from the last known
+    // good state. The connection is non-fatal: without it the gateway still
+    // runs, it just doesn't persist snapshots.
+    match BackupRepository::connect().await {
+        Ok(repository) => {
+            let _ = BACKUP_REPOSITORY.set(repository);
+        }
+        Err(err) => {
+            log::warn!("Could not initialize backup repository: {}", err);
+        }
+    }
+
+    if args.restore {
+        log::info!("Restoring configuration from the latest snapshot.");
+        if let Err(err) = restore_latest_snapshot().await {
+            log::error!("Could not restore snapshot: {}", err);
+        }
+    } else {
+        MemPrefill::do_db_initialization(&args).await;
+        save_current_snapshot().await;
+    }
+
     let sentry_service = SentryService::new()
         .await
         .expect("Could not initialize sentry service");
@@ -141,8 +166,13 @@ async fn main() -> std::io::Result<()> {
         interval.tick().await;
         loop {
             interval.tick().await;
+            if scheduler_args.restore {
+                log::info!("Skipping refresh in restore mode.");
+                continue;
+            }
             log::info!("Fetching data");
             MemPrefill::do_db_initialization(&scheduler_args).await;
+            save_current_snapshot().await;
         }
     });
 

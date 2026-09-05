@@ -26,9 +26,13 @@ use clap::Parser;
 #[derive(Parser, Debug, Clone)]
 #[command(version, about, long_about = None)]
 pub struct Args {
-    /// Name of the person to greet
+    /// Path to a JSON file to load the store from instead of the SHC.
     #[arg(short, long)]
     pub file: Option<String>,
+
+    /// Restore the latest config snapshot from Postgres instead of fetching fresh data.
+    #[arg(long)]
+    pub restore: bool,
 }
 
 impl MemPrefill {
