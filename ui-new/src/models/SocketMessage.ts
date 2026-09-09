@@ -2,7 +2,7 @@ export type SocketMessage = {
     id?: string,
     type: string,
     namespace: string,
-    desc: string,
+    desc?: string,
     class?: string,
     source: string,
     timestamp: string,

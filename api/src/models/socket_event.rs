@@ -8,7 +8,8 @@ pub struct SocketEvent {
     pub id: Option<String>,
     pub r#type: String,
     pub namespace: String,
-    pub desc: String,
+    /// Optional: the SHC Classic (HW1) omits this field on websocket events.
+    pub desc: Option<String>,
     pub class: Option<String>,
     pub source: String,
     pub timestamp: String,
@@ -98,6 +99,12 @@ pub enum Properties {
     DeviceConfigurationState(DeviceConfigurationState),
     HeatingSetPoint(HeatingSetPoint),
     CPUUsage(CPUUSage),
+    CPULoad(CPULoad),
+    MemoryUsage(MemoryUsage),
+    MemoryLoad(MemoryLoad),
+    DiskUsage(DiskUsage),
+    OperationStatus(OperationStatus),
+    OSState(OSState),
     HumidityChange(HumidityChange),
     Reachable(Reachable),
     BatteryLow(BatteryLow),
@@ -142,6 +149,42 @@ pub struct HumidityChange {
 #[serde(rename_all = "camelCase")]
 pub struct CPUUSage {
     pub cpu_usage: f64,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CPULoad {
+    #[serde(rename = "CPULoad")]
+    pub cpu_load: f64,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct MemoryUsage {
+    pub memory_usage: f64,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct MemoryLoad {
+    pub memory_load: f64,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct DiskUsage {
+    pub disk_usage: f64,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct OperationStatus {
+    pub operation_status: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct OSState {
+    #[serde(rename = "OSState")]
+    pub os_state: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

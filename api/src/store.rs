@@ -120,6 +120,62 @@ impl Data {
                                 );
                             }
                         }
+                        Some(Properties::CPUUsage(cpu)) => {
+                            device.state.get_or_insert_with(HashMap::new);
+                            upsert_capability_value(
+                                &mut device.state,
+                                "cpuUsage",
+                                interaction::FieldValue::FloatValue(cpu.cpu_usage as f32),
+                            );
+                        }
+                        Some(Properties::CPULoad(cpu)) => {
+                            device.state.get_or_insert_with(HashMap::new);
+                            upsert_capability_value(
+                                &mut device.state,
+                                "cpuUsage",
+                                interaction::FieldValue::FloatValue(cpu.cpu_load as f32),
+                            );
+                        }
+                        Some(Properties::MemoryUsage(memory)) => {
+                            device.state.get_or_insert_with(HashMap::new);
+                            upsert_capability_value(
+                                &mut device.state,
+                                "memoryUsage",
+                                interaction::FieldValue::FloatValue(memory.memory_usage as f32),
+                            );
+                        }
+                        Some(Properties::MemoryLoad(memory)) => {
+                            device.state.get_or_insert_with(HashMap::new);
+                            upsert_capability_value(
+                                &mut device.state,
+                                "memoryUsage",
+                                interaction::FieldValue::FloatValue(memory.memory_load as f32),
+                            );
+                        }
+                        Some(Properties::DiskUsage(disk)) => {
+                            device.state.get_or_insert_with(HashMap::new);
+                            upsert_capability_value(
+                                &mut device.state,
+                                "diskUsage",
+                                interaction::FieldValue::FloatValue(disk.disk_usage as f32),
+                            );
+                        }
+                        Some(Properties::OperationStatus(status)) => {
+                            device.state.get_or_insert_with(HashMap::new);
+                            upsert_capability_value(
+                                &mut device.state,
+                                "operationStatus",
+                                interaction::FieldValue::StringValue(status.operation_status.clone()),
+                            );
+                        }
+                        Some(Properties::OSState(status)) => {
+                            device.state.get_or_insert_with(HashMap::new);
+                            upsert_capability_value(
+                                &mut device.state,
+                                "operationStatus",
+                                interaction::FieldValue::StringValue(status.os_state.clone()),
+                            );
+                        }
                         _ => {}
                     }
                 }
