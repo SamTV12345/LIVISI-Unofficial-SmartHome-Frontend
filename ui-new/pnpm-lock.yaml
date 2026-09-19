@@ -50,8 +50,8 @@ importers:
         specifier: ^5.102.8
         version: 5.102.8(react@19.3.0)
       apexcharts:
-        specifier: ^6.7.0
-        version: 6.7.0
+        specifier: ^7.4.0
+        version: 7.4.0
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -84,7 +84,7 @@ importers:
         version: 19.3.0
       react-apexcharts:
         specifier: ^2.1.1
-        version: 2.1.1(apexcharts@6.7.0)(react@19.3.0)
+        version: 2.1.1(apexcharts@7.4.0)(react@19.3.0)
       react-dom:
         specifier: ^19.3.0
         version: 19.3.0(react@19.3.0)
@@ -1553,8 +1553,11 @@ packages:
     resolution: {integrity: sha512-zbB9rCJAT1rbjiVDb2hqKFHNYLxgtk8NURxZ3IZwD3F6NtxbXZQCnnSi1Lkx+IDohdPlFp222wVALIheZJQSEg==}
     engines: {node: '>=8'}
 
-  apexcharts@6.7.0:
-    resolution: {integrity: sha512-1Z8AACzw2W2I/JOLh2jHVVHWYtOIf1Yr9/A99r1+YJwb31V2Wmi4fzfscWOJAAf47nW4qRWvLm+ZLEm0GeiqjQ==}
+  apex-commons@0.8.1:
+    resolution: {integrity: sha512-F7fqJVh0smeTu1d86uuRSNNZvaM/l11GNQMbu6oAiSvuXp+K8KCufg0oZTy2VQBEEipRLAdFqkHnphlVpTG0Gw==}
+
+  apexcharts@7.4.0:
+    resolution: {integrity: sha512-p7c9d44vWfR6vLyg4gZr1nNwD8dL8+BYXP1kysbDS0jZgca8YF+IVUQMtOnkGc8L4SMRHgadnPj54xbDP75tsQ==}
     engines: {node: ^20.19.0 || ^22.12.0 || >=24.0.0}
 
   argparse@2.0.1:
@@ -4031,7 +4034,11 @@ snapshots:
     dependencies:
       color-convert: 2.0.1
 
-  apexcharts@6.7.0: {}
+  apex-commons@0.8.1: {}
+
+  apexcharts@7.4.0:
+    dependencies:
+      apex-commons: 0.8.1
 
   argparse@2.0.1: {}
 
@@ -4698,9 +4705,9 @@ snapshots:
     dependencies:
       hookified: 2.2.0
 
-  react-apexcharts@2.1.1(apexcharts@6.7.0)(react@19.3.0):
+  react-apexcharts@2.1.1(apexcharts@7.4.0)(react@19.3.0):
     dependencies:
-      apexcharts: 6.7.0
+      apexcharts: 7.4.0
       prop-types: 15.8.1
       react: 19.3.0
 
